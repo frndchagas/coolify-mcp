@@ -9,25 +9,40 @@ import {
 	MCP_HTTP_PORT,
 	MCP_TRANSPORT,
 } from './config.js';
-import { getVersion } from './coolify/client.js';
+import { MCP_VERSION } from './coolify/constants.js';
+import { initializeClient } from './coolify/client.js';
+import { version } from './generated/sdk.gen.js';
 
 const server = new McpServer({
 	name: 'coolify-mcp',
-	version: '0.1.1',
+	version: MCP_VERSION,
 });
 
+initializeClient();
 registerCoolifyTools(server);
 
 function normalizeVersion(value: string) {
 	return value.replace(/^v/i, '');
 }
 
+function extractVersion(data: unknown): string {
+	if (typeof data === 'string') return data;
+	if (data && typeof data === 'object' && 'version' in data) {
+		return String((data as { version: unknown }).version);
+	}
+	return 'unknown';
+}
+
 async function checkVersion() {
 	try {
-		const current = await getVersion();
+		const result = await version();
+		if ('error' in result && result.error) {
+			throw new Error('Failed to fetch version');
+		}
+		const data = 'data' in result ? result.data : undefined;
+		const current = extractVersion(data);
 		if (normalizeVersion(current) !== normalizeVersion(COOLIFY_OPENAPI_REF)) {
-			const message =
-				`Coolify version mismatch. Server=${current}, OpenAPI=${COOLIFY_OPENAPI_REF}.`;
+			const message = `Coolify version mismatch. Server=${current}, OpenAPI=${COOLIFY_OPENAPI_REF}.`;
 			if (COOLIFY_STRICT_VERSION) {
 				throw new Error(message);
 			}

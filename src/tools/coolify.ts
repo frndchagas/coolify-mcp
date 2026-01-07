@@ -1,180 +1,251 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import * as z from 'zod';
-import { request } from '../coolify/client.js';
-import { COOLIFY_ALLOW_WRITE } from '../config.js';
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { COOLIFY_ALLOW_WRITE } from "../config.js";
+import * as sdk from "../generated/sdk.gen.js";
+import * as z from "../generated/zod.gen.js";
 
-function ensureWriteAllowed() {
-	if (!COOLIFY_ALLOW_WRITE) {
-		throw new Error('Write operations are disabled (COOLIFY_ALLOW_WRITE=false).');
-	}
+async function unwrap<T>(
+  promise: Promise<{ data?: T; error?: unknown }>
+): Promise<T> {
+  const result = await promise;
+  if (result.error) {
+    const msg =
+      typeof result.error === "object" &&
+      result.error !== null &&
+      "message" in result.error
+        ? String((result.error as { message: unknown }).message)
+        : "API request failed";
+    throw new Error(msg);
+  }
+  return result.data as T;
+}
+
+// Convert any data to Record for structuredContent (single conversion point)
+function toRecord(data: unknown): Record<string, unknown> {
+  if (data === null || data === undefined) return {};
+  if (typeof data === "object" && !Array.isArray(data)) {
+    return data as Record<string, unknown>;
+  }
+  // Wrap primitives and arrays in a data property
+  return { data };
+}
+
+const ok = (text: string, data: unknown) => ({
+  content: [{ type: "text" as const, text }],
+  structuredContent: toRecord(data),
+});
+
+const list = (text: string, items: unknown) => ok(text, { items });
+
+function requireWrite() {
+  if (!COOLIFY_ALLOW_WRITE) {
+    throw new Error(
+      "Write operations are disabled (COOLIFY_ALLOW_WRITE=false)."
+    );
+  }
 }
 
 export function registerCoolifyTools(server: McpServer) {
-	server.registerTool(
-		'coolify.listResources',
-		{
-			title: 'List resources',
-			description: 'List Coolify resources (apps, databases, etc).',
-			inputSchema: {},
-			outputSchema: { resources: z.array(z.unknown()) },
-		},
-		async () => {
-			const data = await request('GET', '/api/v1/resources');
-			return {
-				content: [{ type: 'text', text: 'Resources fetched.' }],
-				structuredContent: { resources: data },
-			};
-		}
-	);
+  server.registerTool(
+    "coolify.listResources",
+    {
+      title: "List resources",
+      description: "List all Coolify resources.",
+      inputSchema: {},
+    },
+    async () => list("Resources fetched.", await unwrap(sdk.listResources()))
+  );
 
-	server.registerTool(
-		'coolify.getApplication',
-		{
-			title: 'Get application',
-			description: 'Get application details by UUID.',
-			inputSchema: { uuid: z.string() },
-			outputSchema: { application: z.unknown() },
-		},
-		async ({ uuid }) => {
-			const data = await request('GET', `/api/v1/applications/${uuid}`);
-			return {
-				content: [{ type: 'text', text: `Application ${uuid} fetched.` }],
-				structuredContent: { application: data },
-			};
-		}
-	);
+  server.registerTool(
+    "coolify.listApplications",
+    {
+      title: "List applications",
+      description: "List all Coolify applications.",
+      inputSchema: {},
+    },
+    async () =>
+      list("Applications fetched.", await unwrap(sdk.listApplications()))
+  );
 
-	server.registerTool(
-		'coolify.listEnvs',
-		{
-			title: 'List application env vars',
-			description: 'List environment variables for an application.',
-			inputSchema: { appUuid: z.string() },
-			outputSchema: { envs: z.array(z.unknown()) },
-		},
-		async ({ appUuid }) => {
-			const data = await request('GET', `/api/v1/applications/${appUuid}/envs`);
-			return {
-				content: [{ type: 'text', text: `Env vars for ${appUuid} fetched.` }],
-				structuredContent: { envs: data },
-			};
-		}
-	);
+  server.registerTool(
+    "coolify.listDatabases",
+    {
+      title: "List databases",
+      description: "List all Coolify databases.",
+      inputSchema: {},
+    },
+    async () => list("Databases fetched.", await unwrap(sdk.listDatabases()))
+  );
 
-	server.registerTool(
-		'coolify.upsertEnv',
-		{
-			title: 'Upsert environment variable',
-			description: 'Upsert an environment variable for an application.',
-			inputSchema: {
-				appUuid: z.string(),
-				key: z.string(),
-				value: z.string(),
-				is_buildtime: z.boolean().optional(),
-				is_runtime: z.boolean().optional(),
-			},
-			outputSchema: { env: z.unknown() },
-		},
-		async ({ appUuid, key, value, is_buildtime = true, is_runtime = true }) => {
-			ensureWriteAllowed();
-			const data = await request('PATCH', `/api/v1/applications/${appUuid}/envs`, {
-				body: { key, value, is_buildtime, is_runtime },
-			});
-			return {
-				content: [{ type: 'text', text: `Env ${key} upserted for ${appUuid}.` }],
-				structuredContent: { env: data },
-			};
-		}
-	);
+  server.registerTool(
+    "coolify.listDeployments",
+    {
+      title: "List deployments",
+      description: "List currently running deployments.",
+      inputSchema: {},
+    },
+    async () =>
+      list("Running deployments fetched.", await unwrap(sdk.listDeployments()))
+  );
 
-	server.registerTool(
-		'coolify.deploy',
-		{
-			title: 'Trigger deploy',
-			description: 'Trigger a deployment for an application.',
-			inputSchema: { appUuid: z.string(), force: z.boolean().optional() },
-			outputSchema: { deployment: z.unknown() },
-		},
-		async ({ appUuid, force = true }) => {
-			ensureWriteAllowed();
-			const data = await request('POST', '/api/v1/deploy', {
-				query: { uuid: appUuid, force: String(force) },
-			});
-			return {
-				content: [{ type: 'text', text: `Deploy triggered for ${appUuid}.` }],
-				structuredContent: { deployment: data },
-			};
-		}
-	);
+  server.registerTool(
+    "coolify.listEnvs",
+    {
+      title: "List env vars",
+      description: "List environment variables for an application.",
+      inputSchema: z.zListEnvsByApplicationUuidData.shape.path.shape,
+    },
+    async ({ uuid }) =>
+      list(
+        `Env vars for ${uuid} fetched.`,
+        await unwrap(sdk.listEnvsByApplicationUuid({ path: { uuid } }))
+      )
+  );
 
-	server.registerTool(
-		'coolify.getDeployment',
-		{
-			title: 'Get deployment',
-			description: 'Get deployment status by UUID.',
-			inputSchema: { deploymentUuid: z.string() },
-			outputSchema: { deployment: z.unknown() },
-		},
-		async ({ deploymentUuid }) => {
-			const data = await request('GET', `/api/v1/deployments/${deploymentUuid}`);
-			return {
-				content: [{ type: 'text', text: `Deployment ${deploymentUuid} fetched.` }],
-				structuredContent: { deployment: data },
-			};
-		}
-	);
+  server.registerTool(
+    "coolify.listAppDeployments",
+    {
+      title: "List app deployments",
+      description:
+        "List deployments for an application with pagination (skip/take).",
+      inputSchema: {
+        ...z.zListDeploymentsByAppUuidData.shape.path.shape,
+        ...z.zListDeploymentsByAppUuidData.shape.query.unwrap().shape,
+      },
+    },
+    async ({ uuid, ...query }) =>
+      list(
+        `Deployments for ${uuid} fetched.`,
+        await unwrap(sdk.listDeploymentsByAppUuid({ path: { uuid }, query }))
+      )
+  );
 
-	server.registerTool(
-		'coolify.getLogs',
-		{
-			title: 'Get application logs',
-			description: 'Fetch runtime logs for an application.',
-			inputSchema: { appUuid: z.string() },
-			outputSchema: { logs: z.string() },
-		},
-		async ({ appUuid }) => {
-			const data = await request<{ logs?: string }>(
-				'GET',
-				`/api/v1/applications/${appUuid}/logs`
-			);
-			return {
-				content: [{ type: 'text', text: 'Logs fetched.' }],
-				structuredContent: { logs: data.logs ?? '' },
-			};
-		}
-	);
+  server.registerTool(
+    "coolify.getApplication",
+    {
+      title: "Get application",
+      description: "Get application details by UUID.",
+      inputSchema: z.zGetApplicationByUuidData.shape.path.shape,
+    },
+    async ({ uuid }) =>
+      ok(
+        `Application ${uuid} fetched.`,
+        await unwrap(sdk.getApplicationByUuid({ path: { uuid } }))
+      )
+  );
 
-	server.registerTool(
-		'coolify.listDatabases',
-		{
-			title: 'List databases',
-			description: 'List Coolify databases.',
-			inputSchema: {},
-			outputSchema: { databases: z.array(z.unknown()) },
-		},
-		async () => {
-			const data = await request('GET', '/api/v1/databases');
-			return {
-				content: [{ type: 'text', text: 'Databases fetched.' }],
-				structuredContent: { databases: data },
-			};
-		}
-	);
+  server.registerTool(
+    "coolify.getDatabase",
+    {
+      title: "Get database",
+      description: "Get database details by UUID.",
+      inputSchema: z.zGetDatabaseByUuidData.shape.path.shape,
+    },
+    async ({ uuid }) =>
+      ok(
+        `Database ${uuid} fetched.`,
+        await unwrap(sdk.getDatabaseByUuid({ path: { uuid } }))
+      )
+  );
 
-	server.registerTool(
-		'coolify.getDatabase',
-		{
-			title: 'Get database',
-			description: 'Get database details by UUID.',
-			inputSchema: { uuid: z.string() },
-			outputSchema: { database: z.unknown() },
-		},
-		async ({ uuid }) => {
-			const data = await request('GET', `/api/v1/databases/${uuid}`);
-			return {
-				content: [{ type: 'text', text: `Database ${uuid} fetched.` }],
-				structuredContent: { database: data },
-			};
-		}
-	);
+  server.registerTool(
+    "coolify.getDeployment",
+    {
+      title: "Get deployment",
+      description: "Get deployment status and logs by UUID.",
+      inputSchema: z.zGetDeploymentByUuidData.shape.path.shape,
+    },
+    async ({ uuid }) =>
+      ok(
+        `Deployment ${uuid} fetched.`,
+        await unwrap(sdk.getDeploymentByUuid({ path: { uuid } }))
+      )
+  );
+
+  server.registerTool(
+    "coolify.getLogs",
+    {
+      title: "Get logs",
+      description: "Fetch runtime logs for an application.",
+      inputSchema: {
+        ...z.zGetApplicationLogsByUuidData.shape.path.shape,
+        ...z.zGetApplicationLogsByUuidData.shape.query.unwrap().shape,
+      },
+    },
+    async ({ uuid, ...query }) =>
+      ok(
+        "Logs fetched.",
+        await unwrap(sdk.getApplicationLogsByUuid({ path: { uuid }, query }))
+      )
+  );
+
+  server.registerTool(
+    "coolify.createEnv",
+    {
+      title: "Create env var",
+      description: "Create a new environment variable for an application.",
+      inputSchema: {
+        ...z.zCreateEnvByApplicationUuidData.shape.path.shape,
+        ...z.zCreateEnvByApplicationUuidData.shape.body.shape,
+      },
+    },
+    async ({ uuid, ...body }) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createEnvByApplicationUuid({ path: { uuid }, body })
+      );
+      return ok(`Env var ${body.key} created.`, data);
+    }
+  );
+
+  server.registerTool(
+    "coolify.updateEnv",
+    {
+      title: "Update env var",
+      description:
+        "Update an existing environment variable for an application.",
+      inputSchema: {
+        ...z.zUpdateEnvByApplicationUuidData.shape.path.shape,
+        ...z.zUpdateEnvByApplicationUuidData.shape.body.shape,
+      },
+    },
+    async ({ uuid, ...body }) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.updateEnvByApplicationUuid({ path: { uuid }, body })
+      );
+      return ok(`Env var ${body.key} updated.`, data);
+    }
+  );
+
+  server.registerTool(
+    "coolify.deploy",
+    {
+      title: "Trigger deploy",
+      description: "Trigger a deployment for an application by UUID or tag.",
+      inputSchema: z.zDeployByTagOrUuidData.shape.query.unwrap().shape,
+    },
+    async (query) => {
+      requireWrite();
+      return ok(
+        "Deployment triggered.",
+        await unwrap(sdk.deployByTagOrUuid({ query }))
+      );
+    }
+  );
+
+  server.registerTool(
+    "coolify.cancelDeployment",
+    {
+      title: "Cancel deployment",
+      description: "Cancel a running deployment by UUID.",
+      inputSchema: z.zCancelDeploymentByUuidData.shape.path.shape,
+    },
+    async ({ uuid }) => {
+      requireWrite();
+      return ok(
+        `Deployment ${uuid} cancelled.`,
+        await unwrap(sdk.cancelDeploymentByUuid({ path: { uuid } }))
+      );
+    }
+  );
 }
