@@ -98,17 +98,20 @@ npm run update         # Fetch + regenerate
 
 ## Tools
 
-- `coolify.listResources`
-- `coolify.listApplications`
-- `coolify.getApplication`
-- `coolify.getLogs`
-- `coolify.listEnvs`
-- `coolify.createEnv`
-- `coolify.updateEnv`
-- `coolify.deploy`
-- `coolify.getDeployment`
-- `coolify.listDatabases`
-- `coolify.getDatabase`
+Tools are exposed under your MCP server name. Example: if you register the server as
+`coolify`, the full tool name is `coolify.listResources`.
+
+- `listResources`
+- `listApplications`
+- `getApplication`
+- `getLogs`
+- `listEnvs`
+- `createEnv`
+- `updateEnv`
+- `deploy`
+- `getDeployment`
+- `listDatabases`
+- `getDatabase`
 
 ## MCP Usage Examples
 

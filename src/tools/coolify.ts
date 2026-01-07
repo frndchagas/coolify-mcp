@@ -46,7 +46,7 @@ function requireWrite() {
 
 export function registerCoolifyTools(server: McpServer) {
   server.registerTool(
-    "coolify.listResources",
+    "listResources",
     {
       title: "List resources",
       description: "List all Coolify resources.",
@@ -56,7 +56,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.listApplications",
+    "listApplications",
     {
       title: "List applications",
       description: "List all Coolify applications.",
@@ -67,7 +67,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.listDatabases",
+    "listDatabases",
     {
       title: "List databases",
       description: "List all Coolify databases.",
@@ -77,7 +77,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.listDeployments",
+    "listDeployments",
     {
       title: "List deployments",
       description: "List currently running deployments.",
@@ -88,7 +88,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.listEnvs",
+    "listEnvs",
     {
       title: "List env vars",
       description: "List environment variables for an application.",
@@ -102,7 +102,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.listAppDeployments",
+    "listAppDeployments",
     {
       title: "List app deployments",
       description:
@@ -120,7 +120,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.getApplication",
+    "getApplication",
     {
       title: "Get application",
       description: "Get application details by UUID.",
@@ -134,7 +134,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.getDatabase",
+    "getDatabase",
     {
       title: "Get database",
       description: "Get database details by UUID.",
@@ -148,7 +148,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.getDeployment",
+    "getDeployment",
     {
       title: "Get deployment",
       description: "Get deployment status and logs by UUID.",
@@ -162,7 +162,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.getLogs",
+    "getLogs",
     {
       title: "Get logs",
       description: "Fetch runtime logs for an application.",
@@ -179,7 +179,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.createEnv",
+    "createEnv",
     {
       title: "Create env var",
       description: "Create a new environment variable for an application.",
@@ -198,7 +198,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.updateEnv",
+    "updateEnv",
     {
       title: "Update env var",
       description:
@@ -218,7 +218,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.deploy",
+    "deploy",
     {
       title: "Trigger deploy",
       description: "Trigger a deployment for an application by UUID or tag.",
@@ -234,7 +234,7 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "coolify.cancelDeployment",
+    "cancelDeployment",
     {
       title: "Cancel deployment",
       description: "Cancel a running deployment by UUID.",
