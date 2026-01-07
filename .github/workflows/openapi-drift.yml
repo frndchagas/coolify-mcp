@@ -1,0 +1,57 @@
+name: OpenAPI Drift
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve pinned OpenAPI URL
+        id: pinned
+        run: |
+          node -e "const fs=require('fs');const text=fs.readFileSync('src/coolify/constants.ts','utf8');const m=text.match(/COOLIFY_OPENAPI_RAW_URL\\s*=\\s*`([^`]+)`/);if(!m){throw new Error('COOLIFY_OPENAPI_RAW_URL not found');}console.log('url='+m[1]);" >> $GITHUB_OUTPUT
+
+      - name: Download specs
+        run: |
+          curl -sSL '${{ steps.pinned.outputs.url }}' -o /tmp/openapi-pinned.json
+          curl -sSL 'https://raw.githubusercontent.com/coollabsio/coolify/v4.x/openapi.json' -o /tmp/openapi-latest.json
+
+      - name: Compare specs
+        id: diff
+        run: |
+          if diff -q /tmp/openapi-pinned.json /tmp/openapi-latest.json >/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Prepare issue body
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          cat <<'EOF' > /tmp/openapi-drift.md
+          The Coolify OpenAPI spec on `v4.x` differs from the pinned version in this repo.
+
+          - Pinned: `${{ steps.pinned.outputs.url }}`
+          - Latest: `https://raw.githubusercontent.com/coollabsio/coolify/v4.x/openapi.json`
+
+          Recommended action:
+          1) Review the diff
+          2) Update `COOLIFY_VERSION` if appropriate
+          3) Regenerate types
+          EOF
+
+      - name: Create issue
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "Coolify OpenAPI drift detected"
+          content-filepath: /tmp/openapi-drift.md
