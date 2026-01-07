@@ -32,7 +32,8 @@ npx -y @fndchagas/coolify-mcp
 
 ## Registry Listings
 
-- MCP Registry: https://registry.modelcontextprotocol.io/servers/io.github.frndchagas/coolify-mcp
+- MCP Registry (API): https://registry.modelcontextprotocol.io/v0/servers/io.github.frndchagas/coolify-mcp
+- MCP Registry Docs: https://registry.modelcontextprotocol.io/docs
 
 ## Use with Claude Code CLI
 
