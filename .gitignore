@@ -4,3 +4,5 @@ node_modules
 .env.*
 dist
 *.log
+.mcpregistry_github_token
+.mcpregistry_registry_token
