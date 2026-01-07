@@ -37,6 +37,7 @@ jobs:
       - name: Resolve version
         id: version
         run: |
+          git pull --rebase origin main
           NAME=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")
           if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
@@ -45,6 +46,7 @@ jobs:
             echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
             git add package.json package-lock.json
             git commit -m "chore: release v$NEW_VERSION [skip ci]"
+            git pull --rebase origin main
             git push
           else
             echo "version=$VERSION" >> $GITHUB_OUTPUT
