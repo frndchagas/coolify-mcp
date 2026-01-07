@@ -1,20 +1,20 @@
 # coolify-mcp
 
-MCP server for Coolify, pinned to a specific Coolify OpenAPI version.
+MCP server for Coolify API.
 
-## Pinned Coolify version
+## Pinned Coolify Version
 
-This repo is pinned to:
+Version is defined in `src/coolify/constants.ts`. To update:
 
-- `v4.0.0-beta.460`
-- OpenAPI file: `openapi/coolify/v4.0.0-beta.460.json`
+1. Edit `COOLIFY_VERSION` in `src/coolify/constants.ts`
+2. Run `npm run update`
 
 ## Requirements
 
 - Node 18+
 - A Coolify API token
 
-## Install (package)
+## Install
 
 ```bash
 npm install -g @fndchagas/coolify-mcp
@@ -22,7 +22,7 @@ npm install -g @fndchagas/coolify-mcp
 npx -y @fndchagas/coolify-mcp
 ```
 
-## Use with Claude Code CLI (stdio)
+## Use with Claude Code CLI
 
 ```bash
 claude mcp add coolify \
@@ -31,13 +31,13 @@ claude mcp add coolify \
   -- npx -y @fndchagas/coolify-mcp
 ```
 
-Optional: disable write tools (deploy/upsert) by adding:
+Disable write tools (deploy/env mutations):
 
 ```bash
 --env COOLIFY_ALLOW_WRITE=false
 ```
 
-## Use with OpenAI Codex CLI (stdio)
+## Use with OpenAI Codex CLI
 
 ```bash
 codex mcp add coolify \
@@ -55,70 +55,51 @@ args = ["-y", "@fndchagas/coolify-mcp"]
 env = { COOLIFY_BASE_URL = "https://coolify.example.com", COOLIFY_TOKEN = "<token>" }
 ```
 
-## Install (dev)
+## Development
 
 ```bash
 npm install
-```
-
-## Generate types (if OpenAPI changes)
-
-```bash
-npm run generate:openapi
-```
-
-## Run (stdio)
-
-```bash
-COOLIFY_BASE_URL="https://coolify.example.com" \
-COOLIFY_TOKEN="<token>" \
-MCP_TRANSPORT=stdio \
 npm run dev
 ```
 
-## Run (HTTP)
+## Scripts
 
 ```bash
-COOLIFY_BASE_URL="https://coolify.example.com" \
-COOLIFY_TOKEN="<token>" \
-MCP_TRANSPORT=http \
-PORT=7331 \
-npm run dev
+npm run dev            # Run in development mode
+npm run build          # Build TypeScript
+npm run generate       # Regenerate types from OpenAPI
+npm run fetch:openapi  # Fetch latest OpenAPI spec
+npm run update         # Fetch + regenerate
 ```
 
-Endpoint: `POST http://localhost:7331/mcp`
+## Environment Variables
 
-## Run (both)
-
-```bash
-MCP_TRANSPORT=both npm run dev
-```
-
-## Environment variables
-
-- `COOLIFY_BASE_URL` (required)
-- `COOLIFY_TOKEN` (required)
-- `COOLIFY_OPENAPI_REF` (default: `v4.0.0-beta.460`)
-- `COOLIFY_STRICT_VERSION` (default: `false`)
-- `COOLIFY_ALLOW_WRITE` (default: `true`)
-- `MCP_TRANSPORT` (`stdio`, `http`, `both`)
-- `PORT` (HTTP port, default `7331`)
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `COOLIFY_BASE_URL` | required | Coolify API URL |
+| `COOLIFY_TOKEN` | required | API token |
+| `COOLIFY_STRICT_VERSION` | `false` | Fail on version mismatch |
+| `COOLIFY_ALLOW_WRITE` | `true` | Enable write operations |
+| `MCP_TRANSPORT` | `stdio` | Transport: `stdio`, `http`, `both` |
+| `PORT` | `7331` | HTTP port |
 
 ## Tools
 
 - `coolify.listResources`
+- `coolify.listApplications`
 - `coolify.getApplication`
+- `coolify.getLogs`
 - `coolify.listEnvs`
-- `coolify.upsertEnv`
+- `coolify.createEnv`
+- `coolify.updateEnv`
 - `coolify.deploy`
 - `coolify.getDeployment`
-- `coolify.getLogs`
 - `coolify.listDatabases`
 - `coolify.getDatabase`
 
-## MCP usage examples
+## MCP Usage Examples
 
-### HTTP client (Streamable HTTP)
+### HTTP Client
 
 ```ts
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -131,31 +112,21 @@ const transport = new StreamableHTTPClientTransport(
 
 await client.connect(transport);
 
-const tools = await client.listTools();
-console.log(tools.tools.map((t) => t.name));
-
 const resources = await client.callTool({
   name: 'coolify.listResources',
   arguments: {},
 });
 console.log(resources.structuredContent);
 
-const logs = await client.callTool({
-  name: 'coolify.getLogs',
-  arguments: { appUuid: 'nwggo800g800oosow8ks4c88' },
-});
-console.log(logs.structuredContent);
-
 await client.close();
 ```
 
-### Stdio client (spawn server)
+### Stdio Client
 
 ```ts
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
-// Ensure COOLIFY_BASE_URL and COOLIFY_TOKEN are set in the environment
 const client = new Client({ name: 'coolify-client', version: '1.0.0' });
 const transport = new StdioClientTransport({
   command: 'node',
@@ -166,7 +137,7 @@ await client.connect(transport);
 
 const result = await client.callTool({
   name: 'coolify.getApplication',
-  arguments: { uuid: 'nwggo800g800oosow8ks4c88' },
+  arguments: { uuid: 'your-app-uuid' },
 });
 console.log(result.structuredContent);
 
