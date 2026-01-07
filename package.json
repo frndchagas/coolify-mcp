@@ -22,6 +22,18 @@
     "typescript": "5.9.3"
   },
   "description": "MCP server for Coolify API.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "coolify",
+    "coolify-mcp",
+    "devops",
+    "deployment",
+    "infrastructure",
+    "api",
+    "typescript",
+    "node"
+  ],
   "license": "MIT",
   "author": "Fernando Chagas",
   "repository": {

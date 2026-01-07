@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+import { createRequire } from 'node:module';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -9,9 +11,11 @@ import {
 	MCP_HTTP_PORT,
 	MCP_TRANSPORT,
 } from './config.js';
-import { MCP_VERSION } from './coolify/constants.js';
 import { initializeClient } from './coolify/client.js';
 import { version } from './generated/sdk.gen.js';
+
+const require = createRequire(import.meta.url);
+const { version: MCP_VERSION } = require('../package.json') as { version: string };
 
 const server = new McpServer({
 	name: 'coolify-mcp',
