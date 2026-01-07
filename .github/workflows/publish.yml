@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   publish:
@@ -56,3 +57,24 @@ jobs:
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Sync server.json version
+        run: |
+          node -e "const fs=require('fs');const pkg=require('./package.json');const server=JSON.parse(fs.readFileSync('server.json','utf8'));server.version=pkg.version;if (server.packages?.[0]) server.packages[0].version=pkg.version;fs.writeFileSync('server.json', JSON.stringify(server,null,2)+'\\n');"
+
+      - name: Install mcp-publisher
+        run: |
+          VERSION="latest"
+          ARCH="$(uname -m)"
+          case "$ARCH" in
+            x86_64) ARCH="amd64" ;;
+            aarch64|arm64) ARCH="arm64" ;;
+          esac
+          OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          curl -sL "https://github.com/modelcontextprotocol/registry/releases/download/${VERSION}/mcp-publisher_${OS}_${ARCH}.tar.gz" | tar xz
+          mv mcp-publisher /usr/local/bin/mcp-publisher
+
+      - name: Publish to MCP Registry (OIDC)
+        run: |
+          mcp-publisher login github-oidc
+          mcp-publisher publish

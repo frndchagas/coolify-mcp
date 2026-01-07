@@ -1,5 +1,13 @@
 # coolify-mcp
 
+[![npm version](https://img.shields.io/npm/v/@fndchagas/coolify-mcp.svg)](https://www.npmjs.com/package/@fndchagas/coolify-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/@fndchagas/coolify-mcp.svg)](https://www.npmjs.com/package/@fndchagas/coolify-mcp)
+[![license](https://img.shields.io/npm/l/@fndchagas/coolify-mcp.svg)](LICENSE)
+[![node version](https://img.shields.io/node/v/@fndchagas/coolify-mcp.svg)](package.json)
+[![typescript](https://img.shields.io/badge/TypeScript-5.9.3-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![CI](https://github.com/frndchagas/coolify-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/frndchagas/coolify-mcp/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/frndchagas/coolify-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/frndchagas/coolify-mcp)
+
 MCP server for Coolify API.
 
 ## Pinned Coolify Version
@@ -21,6 +29,10 @@ npm install -g @fndchagas/coolify-mcp
 # or
 npx -y @fndchagas/coolify-mcp
 ```
+
+## Registry Listings
+
+- MCP Registry: https://registry.modelcontextprotocol.io/servers/io.github.frndchagas/coolify-mcp
 
 ## Use with Claude Code CLI
 
