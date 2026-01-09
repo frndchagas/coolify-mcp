@@ -36,6 +36,11 @@
           "default": "true"
         },
         {
+          "name": "COOLIFY_ALLOW_UNSAFE_LOGS",
+          "description": "Allow raw logs without redaction (unsafe).",
+          "default": "false"
+        },
+        {
           "name": "COOLIFY_OPENAPI_REF",
           "description": "Override OpenAPI version ref (optional)."
         }

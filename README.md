@@ -93,6 +93,7 @@ npm run update         # Fetch + regenerate
 | `COOLIFY_TOKEN` | required | API token |
 | `COOLIFY_STRICT_VERSION` | `false` | Fail on version mismatch |
 | `COOLIFY_ALLOW_WRITE` | `true` | Enable write operations |
+| `COOLIFY_ALLOW_UNSAFE_LOGS` | `false` | Allow raw logs without redaction |
 | `MCP_TRANSPORT` | `stdio` | Transport: `stdio`, `http`, `both` |
 | `PORT` | `7331` | HTTP port |
 
@@ -101,17 +102,30 @@ npm run update         # Fetch + regenerate
 Tools are exposed under your MCP server name. Example: if you register the server as
 `coolify`, the full tool name is `coolify.listResources`.
 
-- `listResources`
-- `listApplications`
-- `getApplication`
-- `getLogs`
-- `listEnvs`
+- `listResources` (args: `limit`, `offset`, `summary`, `type`, `status`)
+- `listApplications` (args: `limit`, `offset`, `summary` - defaults to true)
+- `getApplication` (args: `uuid`, `fields`, `showSecrets`)
+- `getLogs` (args: `uuid`, `lines`, `logMode`)
+- `listEnvs` (args: `uuid`, `showSecrets` - secrets masked by default)
 - `createEnv`
+- `upsertEnv`
 - `updateEnv`
 - `deploy`
-- `getDeployment`
-- `listDatabases`
-- `getDatabase`
+- `getDeployment` (args: `uuid`, `includeLogs`, `logMode`)
+- `listDeployments` (args: `limit`, `offset`, `includeLogs`, `logMode`)
+- `listAppDeployments` (args: `uuid`, `skip`, `take`, `includeLogs`, `logMode`)
+- `listDatabases` (args: `limit`, `offset`, `type`, `showSecrets`, `summary` - defaults to true)
+- `getDatabase` (args: `uuid`, `showSecrets`)
+
+Notes:
+- `listResources`/`listDatabases` return a `meta` object with pagination info when `limit` or `offset` is provided.
+- `listEnvs` masks sensitive values by default. Use `showSecrets: true` only when necessary.
+- `getApplication` masks sensitive values by default. Use `showSecrets: true` only when necessary.
+- `listDeployments`/`listAppDeployments` omit inline logs by default. Use `includeLogs: true` to include them (logs are redacted line-by-line, best-effort).
+- `logMode` controls log sanitization: `safe` (default), `strict` (more aggressive), `raw` (requires `COOLIFY_ALLOW_UNSAFE_LOGS=true`).
+- `upsertEnv` updates by key; if the key exists for both preview and non-preview, pass `is_preview` to disambiguate.
+- `upsertEnv` defaults `is_preview` to false when omitted.
+- Delete env is not available via this MCP (Coolify API does not expose it in the OpenAPI spec used here).
 
 ## MCP Usage Examples
 
