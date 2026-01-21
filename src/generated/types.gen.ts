@@ -5,6 +5,252 @@ export type ClientOptions = {
 };
 
 /**
+ * Service model
+ */
+export type Service = {
+    /**
+     * The unique identifier of the service. Only used for database identification.
+     */
+    id?: number;
+    /**
+     * The unique identifier of the service.
+     */
+    uuid?: string;
+    /**
+     * The name of the service.
+     */
+    name?: string;
+    /**
+     * The unique identifier of the environment where the service is attached to.
+     */
+    environment_id?: number;
+    /**
+     * The unique identifier of the server where the service is running.
+     */
+    server_id?: number;
+    /**
+     * The description of the service.
+     */
+    description?: string;
+    /**
+     * The raw docker-compose.yml file of the service.
+     */
+    docker_compose_raw?: string;
+    /**
+     * The docker-compose.yml file that is parsed and modified by Coolify.
+     */
+    docker_compose?: string;
+    /**
+     * Destination type.
+     */
+    destination_type?: string;
+    /**
+     * The unique identifier of the destination where the service is running.
+     */
+    destination_id?: number;
+    /**
+     * The flag to connect the service to the predefined Docker network.
+     */
+    connect_to_docker_network?: boolean;
+    /**
+     * The flag to enable the container label escape.
+     */
+    is_container_label_escape_enabled?: boolean;
+    /**
+     * The flag to enable the container label readonly.
+     */
+    is_container_label_readonly_enabled?: boolean;
+    /**
+     * The hash of the service configuration.
+     */
+    config_hash?: string;
+    /**
+     * The type of the service.
+     */
+    service_type?: string;
+    /**
+     * The date and time when the service was created.
+     */
+    created_at?: string;
+    /**
+     * The date and time when the service was last updated.
+     */
+    updated_at?: string;
+    /**
+     * The date and time when the service was deleted.
+     */
+    deleted_at?: string;
+};
+
+/**
+ * Server Settings model
+ */
+export type ServerSetting = {
+    id?: number;
+    concurrent_builds?: number;
+    deployment_queue_limit?: number;
+    dynamic_timeout?: number;
+    force_disabled?: boolean;
+    force_server_cleanup?: boolean;
+    is_build_server?: boolean;
+    is_cloudflare_tunnel?: boolean;
+    is_jump_server?: boolean;
+    is_logdrain_axiom_enabled?: boolean;
+    is_logdrain_custom_enabled?: boolean;
+    is_logdrain_highlight_enabled?: boolean;
+    is_logdrain_newrelic_enabled?: boolean;
+    is_metrics_enabled?: boolean;
+    is_reachable?: boolean;
+    is_sentinel_enabled?: boolean;
+    is_swarm_manager?: boolean;
+    is_swarm_worker?: boolean;
+    is_terminal_enabled?: boolean;
+    is_usable?: boolean;
+    logdrain_axiom_api_key?: string;
+    logdrain_axiom_dataset_name?: string;
+    logdrain_custom_config?: string;
+    logdrain_custom_config_parser?: string;
+    logdrain_highlight_project_id?: string;
+    logdrain_newrelic_base_uri?: string;
+    logdrain_newrelic_license_key?: string;
+    sentinel_metrics_history_days?: number;
+    sentinel_metrics_refresh_rate_seconds?: number;
+    sentinel_token?: string;
+    docker_cleanup_frequency?: string;
+    docker_cleanup_threshold?: number;
+    server_id?: number;
+    wildcard_domain?: string;
+    created_at?: string;
+    updated_at?: string;
+    /**
+     * The flag to indicate if the unused volumes should be deleted.
+     */
+    delete_unused_volumes?: boolean;
+    /**
+     * The flag to indicate if the unused networks should be deleted.
+     */
+    delete_unused_networks?: boolean;
+};
+
+/**
+ * Server model
+ */
+export type Server = {
+    /**
+     * The server ID.
+     */
+    id?: number;
+    /**
+     * The server UUID.
+     */
+    uuid?: string;
+    /**
+     * The server name.
+     */
+    name?: string;
+    /**
+     * The server description.
+     */
+    description?: string;
+    /**
+     * The IP address.
+     */
+    ip?: string;
+    /**
+     * The user.
+     */
+    user?: string;
+    /**
+     * The port number.
+     */
+    port?: number;
+    /**
+     * The proxy configuration.
+     */
+    proxy?: {
+        [key: string]: unknown;
+    };
+    /**
+     * The proxy type.
+     */
+    proxy_type?: 'traefik' | 'caddy' | 'none';
+    /**
+     * The flag to indicate if the high disk usage notification has been sent.
+     */
+    high_disk_usage_notification_sent?: boolean;
+    /**
+     * The flag to indicate if the unreachable notification has been sent.
+     */
+    unreachable_notification_sent?: boolean;
+    /**
+     * The unreachable count for your server.
+     */
+    unreachable_count?: number;
+    /**
+     * The validation logs.
+     */
+    validation_logs?: string;
+    /**
+     * The flag to indicate if the log drain notification has been sent.
+     */
+    log_drain_notification_sent?: boolean;
+    /**
+     * The swarm cluster configuration.
+     */
+    swarm_cluster?: string;
+    settings?: ServerSetting;
+};
+
+/**
+ * Project model
+ */
+export type Project = {
+    id?: number;
+    uuid?: string;
+    name?: string;
+    description?: string;
+    /**
+     * The environments of the project.
+     */
+    environments?: Array<Environment>;
+};
+
+/**
+ * Environment model
+ */
+export type Environment = {
+    id?: number;
+    name?: string;
+    project_id?: number;
+    created_at?: string;
+    updated_at?: string;
+    description?: string;
+};
+
+/**
+ * Private Key model
+ */
+export type PrivateKey = {
+    id?: number;
+    uuid?: string;
+    name?: string;
+    description?: string;
+    private_key?: string;
+    /**
+     * The public key of the private key.
+     */
+    public_key?: string;
+    /**
+     * The fingerprint of the private key.
+     */
+    fingerprint?: string;
+    is_git_related?: boolean;
+    team_id?: number;
+    created_at?: string;
+    updated_at?: string;
+};
+
+/**
  * Environment Variable model
  */
 export type EnvironmentVariable = {
@@ -419,6 +665,1671 @@ export type ListApplicationsResponses = {
 
 export type ListApplicationsResponse = ListApplicationsResponses[keyof ListApplicationsResponses];
 
+export type CreatePublicApplicationData = {
+    /**
+     * Application object that needs to be created.
+     */
+    body: {
+        /**
+         * The project UUID.
+         */
+        project_uuid: string;
+        /**
+         * The server UUID.
+         */
+        server_uuid: string;
+        /**
+         * The environment name. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * The git repository URL.
+         */
+        git_repository: string;
+        /**
+         * The git branch.
+         */
+        git_branch: string;
+        /**
+         * The build pack type.
+         */
+        build_pack: 'nixpacks' | 'static' | 'dockerfile' | 'dockercompose';
+        /**
+         * The ports to expose.
+         */
+        ports_exposes: string;
+        /**
+         * The destination UUID.
+         */
+        destination_uuid?: string;
+        /**
+         * The application name.
+         */
+        name?: string;
+        /**
+         * The application description.
+         */
+        description?: string;
+        /**
+         * The application domains.
+         */
+        domains?: string;
+        /**
+         * The git commit SHA.
+         */
+        git_commit_sha?: string;
+        /**
+         * The docker registry image name.
+         */
+        docker_registry_image_name?: string;
+        /**
+         * The docker registry image tag.
+         */
+        docker_registry_image_tag?: string;
+        /**
+         * The flag to indicate if the application is static.
+         */
+        is_static?: boolean;
+        /**
+         * The static image.
+         */
+        static_image?: 'nginx:alpine';
+        /**
+         * The install command.
+         */
+        install_command?: string;
+        /**
+         * The build command.
+         */
+        build_command?: string;
+        /**
+         * The start command.
+         */
+        start_command?: string;
+        /**
+         * The ports mappings.
+         */
+        ports_mappings?: string;
+        /**
+         * The base directory for all commands.
+         */
+        base_directory?: string;
+        /**
+         * The publish directory.
+         */
+        publish_directory?: string;
+        /**
+         * Health check enabled.
+         */
+        health_check_enabled?: boolean;
+        /**
+         * Health check path.
+         */
+        health_check_path?: string;
+        /**
+         * Health check port.
+         */
+        health_check_port?: string;
+        /**
+         * Health check host.
+         */
+        health_check_host?: string;
+        /**
+         * Health check method.
+         */
+        health_check_method?: string;
+        /**
+         * Health check return code.
+         */
+        health_check_return_code?: number;
+        /**
+         * Health check scheme.
+         */
+        health_check_scheme?: string;
+        /**
+         * Health check response text.
+         */
+        health_check_response_text?: string;
+        /**
+         * Health check interval in seconds.
+         */
+        health_check_interval?: number;
+        /**
+         * Health check timeout in seconds.
+         */
+        health_check_timeout?: number;
+        /**
+         * Health check retries count.
+         */
+        health_check_retries?: number;
+        /**
+         * Health check start period in seconds.
+         */
+        health_check_start_period?: number;
+        /**
+         * Memory limit.
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit.
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness.
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation.
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit.
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set.
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares.
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Custom labels.
+         */
+        custom_labels?: string;
+        /**
+         * Custom docker run options.
+         */
+        custom_docker_run_options?: string;
+        /**
+         * Post deployment command.
+         */
+        post_deployment_command?: string;
+        /**
+         * Post deployment command container.
+         */
+        post_deployment_command_container?: string;
+        /**
+         * Pre deployment command.
+         */
+        pre_deployment_command?: string;
+        /**
+         * Pre deployment command container.
+         */
+        pre_deployment_command_container?: string;
+        /**
+         * Manual webhook secret for Github.
+         */
+        manual_webhook_secret_github?: string;
+        /**
+         * Manual webhook secret for Gitlab.
+         */
+        manual_webhook_secret_gitlab?: string;
+        /**
+         * Manual webhook secret for Bitbucket.
+         */
+        manual_webhook_secret_bitbucket?: string;
+        /**
+         * Manual webhook secret for Gitea.
+         */
+        manual_webhook_secret_gitea?: string;
+        /**
+         * How to set redirect with Traefik / Caddy. www<->non-www.
+         */
+        redirect?: 'www' | 'non-www' | 'both';
+        /**
+         * The flag to indicate if the application should be deployed instantly.
+         */
+        instant_deploy?: boolean;
+        /**
+         * The Dockerfile content.
+         */
+        dockerfile?: string;
+        /**
+         * The Docker Compose location.
+         */
+        docker_compose_location?: string;
+        /**
+         * The Docker Compose raw content.
+         */
+        docker_compose_raw?: string;
+        /**
+         * The Docker Compose custom start command.
+         */
+        docker_compose_custom_start_command?: string;
+        /**
+         * The Docker Compose custom build command.
+         */
+        docker_compose_custom_build_command?: string;
+        /**
+         * The Docker Compose domains.
+         */
+        docker_compose_domains?: Array<unknown>;
+        /**
+         * The watch paths.
+         */
+        watch_paths?: string;
+        /**
+         * Use build server.
+         */
+        use_build_server?: boolean;
+        /**
+         * HTTP Basic Authentication enabled.
+         */
+        is_http_basic_auth_enabled?: boolean;
+        /**
+         * Username for HTTP Basic Authentication
+         */
+        http_basic_auth_username?: string;
+        /**
+         * Password for HTTP Basic Authentication
+         */
+        http_basic_auth_password?: string;
+        /**
+         * The flag to connect the service to the predefined Docker network.
+         */
+        connect_to_docker_network?: boolean;
+        /**
+         * Force domain usage even if conflicts are detected. Default is false.
+         */
+        force_domain_override?: boolean;
+        /**
+         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
+         */
+        autogenerate_domain?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/applications/public';
+};
+
+export type CreatePublicApplicationErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Domain conflicts detected.
+     */
+    409: {
+        message?: string;
+        warning?: string;
+        conflicts?: Array<{
+            domain?: string;
+            resource_name?: string;
+            resource_uuid?: string;
+            resource_type?: 'application' | 'service' | 'instance';
+            message?: string;
+        }>;
+    };
+};
+
+export type CreatePublicApplicationError = CreatePublicApplicationErrors[keyof CreatePublicApplicationErrors];
+
+export type CreatePublicApplicationResponses = {
+    /**
+     * Application created successfully.
+     */
+    201: {
+        uuid?: string;
+    };
+};
+
+export type CreatePublicApplicationResponse = CreatePublicApplicationResponses[keyof CreatePublicApplicationResponses];
+
+export type CreatePrivateGithubAppApplicationData = {
+    /**
+     * Application object that needs to be created.
+     */
+    body: {
+        /**
+         * The project UUID.
+         */
+        project_uuid: string;
+        /**
+         * The server UUID.
+         */
+        server_uuid: string;
+        /**
+         * The environment name. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * The Github App UUID.
+         */
+        github_app_uuid: string;
+        /**
+         * The git repository URL.
+         */
+        git_repository: string;
+        /**
+         * The git branch.
+         */
+        git_branch: string;
+        /**
+         * The ports to expose.
+         */
+        ports_exposes: string;
+        /**
+         * The destination UUID.
+         */
+        destination_uuid?: string;
+        /**
+         * The build pack type.
+         */
+        build_pack: 'nixpacks' | 'static' | 'dockerfile' | 'dockercompose';
+        /**
+         * The application name.
+         */
+        name?: string;
+        /**
+         * The application description.
+         */
+        description?: string;
+        /**
+         * The application domains.
+         */
+        domains?: string;
+        /**
+         * The git commit SHA.
+         */
+        git_commit_sha?: string;
+        /**
+         * The docker registry image name.
+         */
+        docker_registry_image_name?: string;
+        /**
+         * The docker registry image tag.
+         */
+        docker_registry_image_tag?: string;
+        /**
+         * The flag to indicate if the application is static.
+         */
+        is_static?: boolean;
+        /**
+         * The static image.
+         */
+        static_image?: 'nginx:alpine';
+        /**
+         * The install command.
+         */
+        install_command?: string;
+        /**
+         * The build command.
+         */
+        build_command?: string;
+        /**
+         * The start command.
+         */
+        start_command?: string;
+        /**
+         * The ports mappings.
+         */
+        ports_mappings?: string;
+        /**
+         * The base directory for all commands.
+         */
+        base_directory?: string;
+        /**
+         * The publish directory.
+         */
+        publish_directory?: string;
+        /**
+         * Health check enabled.
+         */
+        health_check_enabled?: boolean;
+        /**
+         * Health check path.
+         */
+        health_check_path?: string;
+        /**
+         * Health check port.
+         */
+        health_check_port?: string;
+        /**
+         * Health check host.
+         */
+        health_check_host?: string;
+        /**
+         * Health check method.
+         */
+        health_check_method?: string;
+        /**
+         * Health check return code.
+         */
+        health_check_return_code?: number;
+        /**
+         * Health check scheme.
+         */
+        health_check_scheme?: string;
+        /**
+         * Health check response text.
+         */
+        health_check_response_text?: string;
+        /**
+         * Health check interval in seconds.
+         */
+        health_check_interval?: number;
+        /**
+         * Health check timeout in seconds.
+         */
+        health_check_timeout?: number;
+        /**
+         * Health check retries count.
+         */
+        health_check_retries?: number;
+        /**
+         * Health check start period in seconds.
+         */
+        health_check_start_period?: number;
+        /**
+         * Memory limit.
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit.
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness.
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation.
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit.
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set.
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares.
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Custom labels.
+         */
+        custom_labels?: string;
+        /**
+         * Custom docker run options.
+         */
+        custom_docker_run_options?: string;
+        /**
+         * Post deployment command.
+         */
+        post_deployment_command?: string;
+        /**
+         * Post deployment command container.
+         */
+        post_deployment_command_container?: string;
+        /**
+         * Pre deployment command.
+         */
+        pre_deployment_command?: string;
+        /**
+         * Pre deployment command container.
+         */
+        pre_deployment_command_container?: string;
+        /**
+         * Manual webhook secret for Github.
+         */
+        manual_webhook_secret_github?: string;
+        /**
+         * Manual webhook secret for Gitlab.
+         */
+        manual_webhook_secret_gitlab?: string;
+        /**
+         * Manual webhook secret for Bitbucket.
+         */
+        manual_webhook_secret_bitbucket?: string;
+        /**
+         * Manual webhook secret for Gitea.
+         */
+        manual_webhook_secret_gitea?: string;
+        /**
+         * How to set redirect with Traefik / Caddy. www<->non-www.
+         */
+        redirect?: 'www' | 'non-www' | 'both';
+        /**
+         * The flag to indicate if the application should be deployed instantly.
+         */
+        instant_deploy?: boolean;
+        /**
+         * The Dockerfile content.
+         */
+        dockerfile?: string;
+        /**
+         * The Docker Compose location.
+         */
+        docker_compose_location?: string;
+        /**
+         * The Docker Compose raw content.
+         */
+        docker_compose_raw?: string;
+        /**
+         * The Docker Compose custom start command.
+         */
+        docker_compose_custom_start_command?: string;
+        /**
+         * The Docker Compose custom build command.
+         */
+        docker_compose_custom_build_command?: string;
+        /**
+         * The Docker Compose domains.
+         */
+        docker_compose_domains?: Array<unknown>;
+        /**
+         * The watch paths.
+         */
+        watch_paths?: string;
+        /**
+         * Use build server.
+         */
+        use_build_server?: boolean;
+        /**
+         * HTTP Basic Authentication enabled.
+         */
+        is_http_basic_auth_enabled?: boolean;
+        /**
+         * Username for HTTP Basic Authentication
+         */
+        http_basic_auth_username?: string;
+        /**
+         * Password for HTTP Basic Authentication
+         */
+        http_basic_auth_password?: string;
+        /**
+         * The flag to connect the service to the predefined Docker network.
+         */
+        connect_to_docker_network?: boolean;
+        /**
+         * Force domain usage even if conflicts are detected. Default is false.
+         */
+        force_domain_override?: boolean;
+        /**
+         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
+         */
+        autogenerate_domain?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/applications/private-github-app';
+};
+
+export type CreatePrivateGithubAppApplicationErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Domain conflicts detected.
+     */
+    409: {
+        message?: string;
+        warning?: string;
+        conflicts?: Array<{
+            domain?: string;
+            resource_name?: string;
+            resource_uuid?: string;
+            resource_type?: 'application' | 'service' | 'instance';
+            message?: string;
+        }>;
+    };
+};
+
+export type CreatePrivateGithubAppApplicationError = CreatePrivateGithubAppApplicationErrors[keyof CreatePrivateGithubAppApplicationErrors];
+
+export type CreatePrivateGithubAppApplicationResponses = {
+    /**
+     * Application created successfully.
+     */
+    201: {
+        uuid?: string;
+    };
+};
+
+export type CreatePrivateGithubAppApplicationResponse = CreatePrivateGithubAppApplicationResponses[keyof CreatePrivateGithubAppApplicationResponses];
+
+export type CreatePrivateDeployKeyApplicationData = {
+    /**
+     * Application object that needs to be created.
+     */
+    body: {
+        /**
+         * The project UUID.
+         */
+        project_uuid: string;
+        /**
+         * The server UUID.
+         */
+        server_uuid: string;
+        /**
+         * The environment name. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * The private key UUID.
+         */
+        private_key_uuid: string;
+        /**
+         * The git repository URL.
+         */
+        git_repository: string;
+        /**
+         * The git branch.
+         */
+        git_branch: string;
+        /**
+         * The ports to expose.
+         */
+        ports_exposes: string;
+        /**
+         * The destination UUID.
+         */
+        destination_uuid?: string;
+        /**
+         * The build pack type.
+         */
+        build_pack: 'nixpacks' | 'static' | 'dockerfile' | 'dockercompose';
+        /**
+         * The application name.
+         */
+        name?: string;
+        /**
+         * The application description.
+         */
+        description?: string;
+        /**
+         * The application domains.
+         */
+        domains?: string;
+        /**
+         * The git commit SHA.
+         */
+        git_commit_sha?: string;
+        /**
+         * The docker registry image name.
+         */
+        docker_registry_image_name?: string;
+        /**
+         * The docker registry image tag.
+         */
+        docker_registry_image_tag?: string;
+        /**
+         * The flag to indicate if the application is static.
+         */
+        is_static?: boolean;
+        /**
+         * The static image.
+         */
+        static_image?: 'nginx:alpine';
+        /**
+         * The install command.
+         */
+        install_command?: string;
+        /**
+         * The build command.
+         */
+        build_command?: string;
+        /**
+         * The start command.
+         */
+        start_command?: string;
+        /**
+         * The ports mappings.
+         */
+        ports_mappings?: string;
+        /**
+         * The base directory for all commands.
+         */
+        base_directory?: string;
+        /**
+         * The publish directory.
+         */
+        publish_directory?: string;
+        /**
+         * Health check enabled.
+         */
+        health_check_enabled?: boolean;
+        /**
+         * Health check path.
+         */
+        health_check_path?: string;
+        /**
+         * Health check port.
+         */
+        health_check_port?: string;
+        /**
+         * Health check host.
+         */
+        health_check_host?: string;
+        /**
+         * Health check method.
+         */
+        health_check_method?: string;
+        /**
+         * Health check return code.
+         */
+        health_check_return_code?: number;
+        /**
+         * Health check scheme.
+         */
+        health_check_scheme?: string;
+        /**
+         * Health check response text.
+         */
+        health_check_response_text?: string;
+        /**
+         * Health check interval in seconds.
+         */
+        health_check_interval?: number;
+        /**
+         * Health check timeout in seconds.
+         */
+        health_check_timeout?: number;
+        /**
+         * Health check retries count.
+         */
+        health_check_retries?: number;
+        /**
+         * Health check start period in seconds.
+         */
+        health_check_start_period?: number;
+        /**
+         * Memory limit.
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit.
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness.
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation.
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit.
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set.
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares.
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Custom labels.
+         */
+        custom_labels?: string;
+        /**
+         * Custom docker run options.
+         */
+        custom_docker_run_options?: string;
+        /**
+         * Post deployment command.
+         */
+        post_deployment_command?: string;
+        /**
+         * Post deployment command container.
+         */
+        post_deployment_command_container?: string;
+        /**
+         * Pre deployment command.
+         */
+        pre_deployment_command?: string;
+        /**
+         * Pre deployment command container.
+         */
+        pre_deployment_command_container?: string;
+        /**
+         * Manual webhook secret for Github.
+         */
+        manual_webhook_secret_github?: string;
+        /**
+         * Manual webhook secret for Gitlab.
+         */
+        manual_webhook_secret_gitlab?: string;
+        /**
+         * Manual webhook secret for Bitbucket.
+         */
+        manual_webhook_secret_bitbucket?: string;
+        /**
+         * Manual webhook secret for Gitea.
+         */
+        manual_webhook_secret_gitea?: string;
+        /**
+         * How to set redirect with Traefik / Caddy. www<->non-www.
+         */
+        redirect?: 'www' | 'non-www' | 'both';
+        /**
+         * The flag to indicate if the application should be deployed instantly.
+         */
+        instant_deploy?: boolean;
+        /**
+         * The Dockerfile content.
+         */
+        dockerfile?: string;
+        /**
+         * The Docker Compose location.
+         */
+        docker_compose_location?: string;
+        /**
+         * The Docker Compose raw content.
+         */
+        docker_compose_raw?: string;
+        /**
+         * The Docker Compose custom start command.
+         */
+        docker_compose_custom_start_command?: string;
+        /**
+         * The Docker Compose custom build command.
+         */
+        docker_compose_custom_build_command?: string;
+        /**
+         * The Docker Compose domains.
+         */
+        docker_compose_domains?: Array<unknown>;
+        /**
+         * The watch paths.
+         */
+        watch_paths?: string;
+        /**
+         * Use build server.
+         */
+        use_build_server?: boolean;
+        /**
+         * HTTP Basic Authentication enabled.
+         */
+        is_http_basic_auth_enabled?: boolean;
+        /**
+         * Username for HTTP Basic Authentication
+         */
+        http_basic_auth_username?: string;
+        /**
+         * Password for HTTP Basic Authentication
+         */
+        http_basic_auth_password?: string;
+        /**
+         * The flag to connect the service to the predefined Docker network.
+         */
+        connect_to_docker_network?: boolean;
+        /**
+         * Force domain usage even if conflicts are detected. Default is false.
+         */
+        force_domain_override?: boolean;
+        /**
+         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
+         */
+        autogenerate_domain?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/applications/private-deploy-key';
+};
+
+export type CreatePrivateDeployKeyApplicationErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Domain conflicts detected.
+     */
+    409: {
+        message?: string;
+        warning?: string;
+        conflicts?: Array<{
+            domain?: string;
+            resource_name?: string;
+            resource_uuid?: string;
+            resource_type?: 'application' | 'service' | 'instance';
+            message?: string;
+        }>;
+    };
+};
+
+export type CreatePrivateDeployKeyApplicationError = CreatePrivateDeployKeyApplicationErrors[keyof CreatePrivateDeployKeyApplicationErrors];
+
+export type CreatePrivateDeployKeyApplicationResponses = {
+    /**
+     * Application created successfully.
+     */
+    201: {
+        uuid?: string;
+    };
+};
+
+export type CreatePrivateDeployKeyApplicationResponse = CreatePrivateDeployKeyApplicationResponses[keyof CreatePrivateDeployKeyApplicationResponses];
+
+export type CreateDockerfileApplicationData = {
+    /**
+     * Application object that needs to be created.
+     */
+    body: {
+        /**
+         * The project UUID.
+         */
+        project_uuid: string;
+        /**
+         * The server UUID.
+         */
+        server_uuid: string;
+        /**
+         * The environment name. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * The Dockerfile content.
+         */
+        dockerfile: string;
+        /**
+         * The build pack type.
+         */
+        build_pack?: 'nixpacks' | 'static' | 'dockerfile' | 'dockercompose';
+        /**
+         * The ports to expose.
+         */
+        ports_exposes?: string;
+        /**
+         * The destination UUID.
+         */
+        destination_uuid?: string;
+        /**
+         * The application name.
+         */
+        name?: string;
+        /**
+         * The application description.
+         */
+        description?: string;
+        /**
+         * The application domains.
+         */
+        domains?: string;
+        /**
+         * The docker registry image name.
+         */
+        docker_registry_image_name?: string;
+        /**
+         * The docker registry image tag.
+         */
+        docker_registry_image_tag?: string;
+        /**
+         * The ports mappings.
+         */
+        ports_mappings?: string;
+        /**
+         * The base directory for all commands.
+         */
+        base_directory?: string;
+        /**
+         * Health check enabled.
+         */
+        health_check_enabled?: boolean;
+        /**
+         * Health check path.
+         */
+        health_check_path?: string;
+        /**
+         * Health check port.
+         */
+        health_check_port?: string;
+        /**
+         * Health check host.
+         */
+        health_check_host?: string;
+        /**
+         * Health check method.
+         */
+        health_check_method?: string;
+        /**
+         * Health check return code.
+         */
+        health_check_return_code?: number;
+        /**
+         * Health check scheme.
+         */
+        health_check_scheme?: string;
+        /**
+         * Health check response text.
+         */
+        health_check_response_text?: string;
+        /**
+         * Health check interval in seconds.
+         */
+        health_check_interval?: number;
+        /**
+         * Health check timeout in seconds.
+         */
+        health_check_timeout?: number;
+        /**
+         * Health check retries count.
+         */
+        health_check_retries?: number;
+        /**
+         * Health check start period in seconds.
+         */
+        health_check_start_period?: number;
+        /**
+         * Memory limit.
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit.
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness.
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation.
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit.
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set.
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares.
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Custom labels.
+         */
+        custom_labels?: string;
+        /**
+         * Custom docker run options.
+         */
+        custom_docker_run_options?: string;
+        /**
+         * Post deployment command.
+         */
+        post_deployment_command?: string;
+        /**
+         * Post deployment command container.
+         */
+        post_deployment_command_container?: string;
+        /**
+         * Pre deployment command.
+         */
+        pre_deployment_command?: string;
+        /**
+         * Pre deployment command container.
+         */
+        pre_deployment_command_container?: string;
+        /**
+         * Manual webhook secret for Github.
+         */
+        manual_webhook_secret_github?: string;
+        /**
+         * Manual webhook secret for Gitlab.
+         */
+        manual_webhook_secret_gitlab?: string;
+        /**
+         * Manual webhook secret for Bitbucket.
+         */
+        manual_webhook_secret_bitbucket?: string;
+        /**
+         * Manual webhook secret for Gitea.
+         */
+        manual_webhook_secret_gitea?: string;
+        /**
+         * How to set redirect with Traefik / Caddy. www<->non-www.
+         */
+        redirect?: 'www' | 'non-www' | 'both';
+        /**
+         * The flag to indicate if the application should be deployed instantly.
+         */
+        instant_deploy?: boolean;
+        /**
+         * Use build server.
+         */
+        use_build_server?: boolean;
+        /**
+         * HTTP Basic Authentication enabled.
+         */
+        is_http_basic_auth_enabled?: boolean;
+        /**
+         * Username for HTTP Basic Authentication
+         */
+        http_basic_auth_username?: string;
+        /**
+         * Password for HTTP Basic Authentication
+         */
+        http_basic_auth_password?: string;
+        /**
+         * The flag to connect the service to the predefined Docker network.
+         */
+        connect_to_docker_network?: boolean;
+        /**
+         * Force domain usage even if conflicts are detected. Default is false.
+         */
+        force_domain_override?: boolean;
+        /**
+         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
+         */
+        autogenerate_domain?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/applications/dockerfile';
+};
+
+export type CreateDockerfileApplicationErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Domain conflicts detected.
+     */
+    409: {
+        message?: string;
+        warning?: string;
+        conflicts?: Array<{
+            domain?: string;
+            resource_name?: string;
+            resource_uuid?: string;
+            resource_type?: 'application' | 'service' | 'instance';
+            message?: string;
+        }>;
+    };
+};
+
+export type CreateDockerfileApplicationError = CreateDockerfileApplicationErrors[keyof CreateDockerfileApplicationErrors];
+
+export type CreateDockerfileApplicationResponses = {
+    /**
+     * Application created successfully.
+     */
+    201: {
+        uuid?: string;
+    };
+};
+
+export type CreateDockerfileApplicationResponse = CreateDockerfileApplicationResponses[keyof CreateDockerfileApplicationResponses];
+
+export type CreateDockerimageApplicationData = {
+    /**
+     * Application object that needs to be created.
+     */
+    body: {
+        /**
+         * The project UUID.
+         */
+        project_uuid: string;
+        /**
+         * The server UUID.
+         */
+        server_uuid: string;
+        /**
+         * The environment name. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * The docker registry image name.
+         */
+        docker_registry_image_name: string;
+        /**
+         * The docker registry image tag.
+         */
+        docker_registry_image_tag?: string;
+        /**
+         * The ports to expose.
+         */
+        ports_exposes: string;
+        /**
+         * The destination UUID.
+         */
+        destination_uuid?: string;
+        /**
+         * The application name.
+         */
+        name?: string;
+        /**
+         * The application description.
+         */
+        description?: string;
+        /**
+         * The application domains.
+         */
+        domains?: string;
+        /**
+         * The ports mappings.
+         */
+        ports_mappings?: string;
+        /**
+         * Health check enabled.
+         */
+        health_check_enabled?: boolean;
+        /**
+         * Health check path.
+         */
+        health_check_path?: string;
+        /**
+         * Health check port.
+         */
+        health_check_port?: string;
+        /**
+         * Health check host.
+         */
+        health_check_host?: string;
+        /**
+         * Health check method.
+         */
+        health_check_method?: string;
+        /**
+         * Health check return code.
+         */
+        health_check_return_code?: number;
+        /**
+         * Health check scheme.
+         */
+        health_check_scheme?: string;
+        /**
+         * Health check response text.
+         */
+        health_check_response_text?: string;
+        /**
+         * Health check interval in seconds.
+         */
+        health_check_interval?: number;
+        /**
+         * Health check timeout in seconds.
+         */
+        health_check_timeout?: number;
+        /**
+         * Health check retries count.
+         */
+        health_check_retries?: number;
+        /**
+         * Health check start period in seconds.
+         */
+        health_check_start_period?: number;
+        /**
+         * Memory limit.
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit.
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness.
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation.
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit.
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set.
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares.
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Custom labels.
+         */
+        custom_labels?: string;
+        /**
+         * Custom docker run options.
+         */
+        custom_docker_run_options?: string;
+        /**
+         * Post deployment command.
+         */
+        post_deployment_command?: string;
+        /**
+         * Post deployment command container.
+         */
+        post_deployment_command_container?: string;
+        /**
+         * Pre deployment command.
+         */
+        pre_deployment_command?: string;
+        /**
+         * Pre deployment command container.
+         */
+        pre_deployment_command_container?: string;
+        /**
+         * Manual webhook secret for Github.
+         */
+        manual_webhook_secret_github?: string;
+        /**
+         * Manual webhook secret for Gitlab.
+         */
+        manual_webhook_secret_gitlab?: string;
+        /**
+         * Manual webhook secret for Bitbucket.
+         */
+        manual_webhook_secret_bitbucket?: string;
+        /**
+         * Manual webhook secret for Gitea.
+         */
+        manual_webhook_secret_gitea?: string;
+        /**
+         * How to set redirect with Traefik / Caddy. www<->non-www.
+         */
+        redirect?: 'www' | 'non-www' | 'both';
+        /**
+         * The flag to indicate if the application should be deployed instantly.
+         */
+        instant_deploy?: boolean;
+        /**
+         * Use build server.
+         */
+        use_build_server?: boolean;
+        /**
+         * HTTP Basic Authentication enabled.
+         */
+        is_http_basic_auth_enabled?: boolean;
+        /**
+         * Username for HTTP Basic Authentication
+         */
+        http_basic_auth_username?: string;
+        /**
+         * Password for HTTP Basic Authentication
+         */
+        http_basic_auth_password?: string;
+        /**
+         * The flag to connect the service to the predefined Docker network.
+         */
+        connect_to_docker_network?: boolean;
+        /**
+         * Force domain usage even if conflicts are detected. Default is false.
+         */
+        force_domain_override?: boolean;
+        /**
+         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
+         */
+        autogenerate_domain?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/applications/dockerimage';
+};
+
+export type CreateDockerimageApplicationErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Domain conflicts detected.
+     */
+    409: {
+        message?: string;
+        warning?: string;
+        conflicts?: Array<{
+            domain?: string;
+            resource_name?: string;
+            resource_uuid?: string;
+            resource_type?: 'application' | 'service' | 'instance';
+            message?: string;
+        }>;
+    };
+};
+
+export type CreateDockerimageApplicationError = CreateDockerimageApplicationErrors[keyof CreateDockerimageApplicationErrors];
+
+export type CreateDockerimageApplicationResponses = {
+    /**
+     * Application created successfully.
+     */
+    201: {
+        uuid?: string;
+    };
+};
+
+export type CreateDockerimageApplicationResponse = CreateDockerimageApplicationResponses[keyof CreateDockerimageApplicationResponses];
+
+export type CreateDockercomposeApplicationData = {
+    /**
+     * Application object that needs to be created.
+     */
+    body: {
+        /**
+         * The project UUID.
+         */
+        project_uuid: string;
+        /**
+         * The server UUID.
+         */
+        server_uuid: string;
+        /**
+         * The environment name. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * The Docker Compose raw content.
+         */
+        docker_compose_raw: string;
+        /**
+         * The destination UUID if the server has more than one destinations.
+         */
+        destination_uuid?: string;
+        /**
+         * The application name.
+         */
+        name?: string;
+        /**
+         * The application description.
+         */
+        description?: string;
+        /**
+         * The flag to indicate if the application should be deployed instantly.
+         */
+        instant_deploy?: boolean;
+        /**
+         * Use build server.
+         */
+        use_build_server?: boolean;
+        /**
+         * The flag to connect the service to the predefined Docker network.
+         */
+        connect_to_docker_network?: boolean;
+        /**
+         * Force domain usage even if conflicts are detected. Default is false.
+         */
+        force_domain_override?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/applications/dockercompose';
+};
+
+export type CreateDockercomposeApplicationErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Domain conflicts detected.
+     */
+    409: {
+        message?: string;
+        warning?: string;
+        conflicts?: Array<{
+            domain?: string;
+            resource_name?: string;
+            resource_uuid?: string;
+            resource_type?: 'application' | 'service' | 'instance';
+            message?: string;
+        }>;
+    };
+};
+
+export type CreateDockercomposeApplicationError = CreateDockercomposeApplicationErrors[keyof CreateDockercomposeApplicationErrors];
+
+export type CreateDockercomposeApplicationResponses = {
+    /**
+     * Application created successfully.
+     */
+    201: {
+        uuid?: string;
+    };
+};
+
+export type CreateDockercomposeApplicationResponse = CreateDockercomposeApplicationResponses[keyof CreateDockercomposeApplicationResponses];
+
+export type DeleteApplicationByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: {
+        /**
+         * Delete configurations.
+         */
+        delete_configurations?: boolean;
+        /**
+         * Delete volumes.
+         */
+        delete_volumes?: boolean;
+        /**
+         * Run docker cleanup.
+         */
+        docker_cleanup?: boolean;
+        /**
+         * Delete connected networks.
+         */
+        delete_connected_networks?: boolean;
+    };
+    url: '/applications/{uuid}';
+};
+
+export type DeleteApplicationByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type DeleteApplicationByUuidError = DeleteApplicationByUuidErrors[keyof DeleteApplicationByUuidErrors];
+
+export type DeleteApplicationByUuidResponses = {
+    /**
+     * Application deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteApplicationByUuidResponse = DeleteApplicationByUuidResponses[keyof DeleteApplicationByUuidResponses];
+
 export type GetApplicationByUuidData = {
     body?: never;
     path: {
@@ -462,6 +2373,322 @@ export type GetApplicationByUuidResponses = {
 };
 
 export type GetApplicationByUuidResponse = GetApplicationByUuidResponses[keyof GetApplicationByUuidResponses];
+
+export type UpdateApplicationByUuidData = {
+    /**
+     * Application updated.
+     */
+    body: {
+        /**
+         * The project UUID.
+         */
+        project_uuid?: string;
+        /**
+         * The server UUID.
+         */
+        server_uuid?: string;
+        /**
+         * The environment name.
+         */
+        environment_name?: string;
+        /**
+         * The Github App UUID.
+         */
+        github_app_uuid?: string;
+        /**
+         * The git repository URL.
+         */
+        git_repository?: string;
+        /**
+         * The git branch.
+         */
+        git_branch?: string;
+        /**
+         * The ports to expose.
+         */
+        ports_exposes?: string;
+        /**
+         * The destination UUID.
+         */
+        destination_uuid?: string;
+        /**
+         * The build pack type.
+         */
+        build_pack?: 'nixpacks' | 'static' | 'dockerfile' | 'dockercompose';
+        /**
+         * The application name.
+         */
+        name?: string;
+        /**
+         * The application description.
+         */
+        description?: string;
+        /**
+         * The application domains.
+         */
+        domains?: string;
+        /**
+         * The git commit SHA.
+         */
+        git_commit_sha?: string;
+        /**
+         * The docker registry image name.
+         */
+        docker_registry_image_name?: string;
+        /**
+         * The docker registry image tag.
+         */
+        docker_registry_image_tag?: string;
+        /**
+         * The flag to indicate if the application is static.
+         */
+        is_static?: boolean;
+        /**
+         * The install command.
+         */
+        install_command?: string;
+        /**
+         * The build command.
+         */
+        build_command?: string;
+        /**
+         * The start command.
+         */
+        start_command?: string;
+        /**
+         * The ports mappings.
+         */
+        ports_mappings?: string;
+        /**
+         * The base directory for all commands.
+         */
+        base_directory?: string;
+        /**
+         * The publish directory.
+         */
+        publish_directory?: string;
+        /**
+         * Health check enabled.
+         */
+        health_check_enabled?: boolean;
+        /**
+         * Health check path.
+         */
+        health_check_path?: string;
+        /**
+         * Health check port.
+         */
+        health_check_port?: string;
+        /**
+         * Health check host.
+         */
+        health_check_host?: string;
+        /**
+         * Health check method.
+         */
+        health_check_method?: string;
+        /**
+         * Health check return code.
+         */
+        health_check_return_code?: number;
+        /**
+         * Health check scheme.
+         */
+        health_check_scheme?: string;
+        /**
+         * Health check response text.
+         */
+        health_check_response_text?: string;
+        /**
+         * Health check interval in seconds.
+         */
+        health_check_interval?: number;
+        /**
+         * Health check timeout in seconds.
+         */
+        health_check_timeout?: number;
+        /**
+         * Health check retries count.
+         */
+        health_check_retries?: number;
+        /**
+         * Health check start period in seconds.
+         */
+        health_check_start_period?: number;
+        /**
+         * Memory limit.
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit.
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness.
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation.
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit.
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set.
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares.
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Custom labels.
+         */
+        custom_labels?: string;
+        /**
+         * Custom docker run options.
+         */
+        custom_docker_run_options?: string;
+        /**
+         * Post deployment command.
+         */
+        post_deployment_command?: string;
+        /**
+         * Post deployment command container.
+         */
+        post_deployment_command_container?: string;
+        /**
+         * Pre deployment command.
+         */
+        pre_deployment_command?: string;
+        /**
+         * Pre deployment command container.
+         */
+        pre_deployment_command_container?: string;
+        /**
+         * Manual webhook secret for Github.
+         */
+        manual_webhook_secret_github?: string;
+        /**
+         * Manual webhook secret for Gitlab.
+         */
+        manual_webhook_secret_gitlab?: string;
+        /**
+         * Manual webhook secret for Bitbucket.
+         */
+        manual_webhook_secret_bitbucket?: string;
+        /**
+         * Manual webhook secret for Gitea.
+         */
+        manual_webhook_secret_gitea?: string;
+        /**
+         * How to set redirect with Traefik / Caddy. www<->non-www.
+         */
+        redirect?: 'www' | 'non-www' | 'both';
+        /**
+         * The flag to indicate if the application should be deployed instantly.
+         */
+        instant_deploy?: boolean;
+        /**
+         * The Dockerfile content.
+         */
+        dockerfile?: string;
+        /**
+         * The Docker Compose location.
+         */
+        docker_compose_location?: string;
+        /**
+         * The Docker Compose raw content.
+         */
+        docker_compose_raw?: string;
+        /**
+         * The Docker Compose custom start command.
+         */
+        docker_compose_custom_start_command?: string;
+        /**
+         * The Docker Compose custom build command.
+         */
+        docker_compose_custom_build_command?: string;
+        /**
+         * The Docker Compose domains.
+         */
+        docker_compose_domains?: Array<unknown>;
+        /**
+         * The watch paths.
+         */
+        watch_paths?: string;
+        /**
+         * Use build server.
+         */
+        use_build_server?: boolean;
+        /**
+         * The flag to connect the service to the predefined Docker network.
+         */
+        connect_to_docker_network?: boolean;
+        /**
+         * Force domain usage even if conflicts are detected. Default is false.
+         */
+        force_domain_override?: boolean;
+    };
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}';
+};
+
+export type UpdateApplicationByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Domain conflicts detected.
+     */
+    409: {
+        message?: string;
+        warning?: string;
+        conflicts?: Array<{
+            domain?: string;
+            resource_name?: string;
+            resource_uuid?: string;
+            resource_type?: 'application' | 'service' | 'instance';
+            message?: string;
+        }>;
+    };
+};
+
+export type UpdateApplicationByUuidError = UpdateApplicationByUuidErrors[keyof UpdateApplicationByUuidErrors];
+
+export type UpdateApplicationByUuidResponses = {
+    /**
+     * Application updated.
+     */
+    200: {
+        uuid?: string;
+    };
+};
+
+export type UpdateApplicationByUuidResponse = UpdateApplicationByUuidResponses[keyof UpdateApplicationByUuidResponses];
 
 export type GetApplicationLogsByUuidData = {
     body?: never;
@@ -705,6 +2932,214 @@ export type CreateEnvByApplicationUuidResponses = {
 };
 
 export type CreateEnvByApplicationUuidResponse = CreateEnvByApplicationUuidResponses[keyof CreateEnvByApplicationUuidResponses];
+
+export type DeleteEnvByApplicationUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+        /**
+         * UUID of the environment variable.
+         */
+        env_uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/envs/{env_uuid}';
+};
+
+export type DeleteEnvByApplicationUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type DeleteEnvByApplicationUuidError = DeleteEnvByApplicationUuidErrors[keyof DeleteEnvByApplicationUuidErrors];
+
+export type DeleteEnvByApplicationUuidResponses = {
+    /**
+     * Environment variable deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteEnvByApplicationUuidResponse = DeleteEnvByApplicationUuidResponses[keyof DeleteEnvByApplicationUuidResponses];
+
+export type StartApplicationByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: {
+        /**
+         * Force rebuild.
+         */
+        force?: boolean;
+        /**
+         * Instant deploy (skip queuing).
+         */
+        instant_deploy?: boolean;
+    };
+    url: '/applications/{uuid}/start';
+};
+
+export type StartApplicationByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type StartApplicationByUuidError = StartApplicationByUuidErrors[keyof StartApplicationByUuidErrors];
+
+export type StartApplicationByUuidResponses = {
+    /**
+     * Start application.
+     */
+    200: {
+        /**
+         * Message.
+         */
+        message?: string;
+        /**
+         * UUID of the deployment.
+         */
+        deployment_uuid?: string;
+    };
+};
+
+export type StartApplicationByUuidResponse = StartApplicationByUuidResponses[keyof StartApplicationByUuidResponses];
+
+export type StopApplicationByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/stop';
+};
+
+export type StopApplicationByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type StopApplicationByUuidError = StopApplicationByUuidErrors[keyof StopApplicationByUuidErrors];
+
+export type StopApplicationByUuidResponses = {
+    /**
+     * Stop application.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type StopApplicationByUuidResponse = StopApplicationByUuidResponses[keyof StopApplicationByUuidResponses];
+
+export type RestartApplicationByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/restart';
+};
+
+export type RestartApplicationByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type RestartApplicationByUuidError = RestartApplicationByUuidErrors[keyof RestartApplicationByUuidErrors];
+
+export type RestartApplicationByUuidResponses = {
+    /**
+     * Restart application.
+     */
+    200: {
+        message?: string;
+        /**
+         * UUID of the deployment.
+         */
+        deployment_uuid?: string;
+    };
+};
+
+export type RestartApplicationByUuidResponse = RestartApplicationByUuidResponses[keyof RestartApplicationByUuidResponses];
 
 export type ListDatabasesData = {
     body?: never;
@@ -1017,6 +3452,56 @@ export type ListDeploymentsByAppUuidResponses = {
 
 export type ListDeploymentsByAppUuidResponse = ListDeploymentsByAppUuidResponses[keyof ListDeploymentsByAppUuidResponses];
 
+export type ListGithubAppsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/github-apps';
+};
+
+export type ListGithubAppsErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+};
+
+export type ListGithubAppsError = ListGithubAppsErrors[keyof ListGithubAppsErrors];
+
+export type ListGithubAppsResponses = {
+    /**
+     * List of GitHub apps.
+     */
+    200: Array<{
+        id?: number;
+        uuid?: string;
+        name?: string;
+        organization?: string;
+        api_url?: string;
+        html_url?: string;
+        custom_user?: string;
+        custom_port?: number;
+        app_id?: number;
+        installation_id?: number;
+        client_id?: string;
+        private_key_id?: number;
+        is_system_wide?: boolean;
+        is_public?: boolean;
+        team_id?: number;
+        type?: string;
+    }>;
+};
+
+export type ListGithubAppsResponse = ListGithubAppsResponses[keyof ListGithubAppsResponses];
+
 export type VersionData = {
     body?: never;
     path?: never;
@@ -1050,6 +3535,389 @@ export type VersionResponses = {
 
 export type VersionResponse = VersionResponses[keyof VersionResponses];
 
+export type ListProjectsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/projects';
+};
+
+export type ListProjectsErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+};
+
+export type ListProjectsError = ListProjectsErrors[keyof ListProjectsErrors];
+
+export type ListProjectsResponses = {
+    /**
+     * Get all projects.
+     */
+    200: Array<Project>;
+};
+
+export type ListProjectsResponse = ListProjectsResponses[keyof ListProjectsResponses];
+
+export type CreateProjectData = {
+    /**
+     * Project created.
+     */
+    body: {
+        /**
+         * The name of the project.
+         */
+        name?: string;
+        /**
+         * The description of the project.
+         */
+        description?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/projects';
+};
+
+export type CreateProjectErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateProjectError = CreateProjectErrors[keyof CreateProjectErrors];
+
+export type CreateProjectResponses = {
+    /**
+     * Project created.
+     */
+    201: {
+        /**
+         * The UUID of the project.
+         */
+        uuid?: string;
+    };
+};
+
+export type CreateProjectResponse = CreateProjectResponses[keyof CreateProjectResponses];
+
+export type DeleteProjectByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/projects/{uuid}';
+};
+
+export type DeleteProjectByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type DeleteProjectByUuidError = DeleteProjectByUuidErrors[keyof DeleteProjectByUuidErrors];
+
+export type DeleteProjectByUuidResponses = {
+    /**
+     * Project deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteProjectByUuidResponse = DeleteProjectByUuidResponses[keyof DeleteProjectByUuidResponses];
+
+export type GetProjectByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * Project UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/projects/{uuid}';
+};
+
+export type GetProjectByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Project not found.
+     */
+    404: unknown;
+};
+
+export type GetProjectByUuidError = GetProjectByUuidErrors[keyof GetProjectByUuidErrors];
+
+export type GetProjectByUuidResponses = {
+    /**
+     * Project details
+     */
+    200: Project;
+};
+
+export type GetProjectByUuidResponse = GetProjectByUuidResponses[keyof GetProjectByUuidResponses];
+
+export type UpdateProjectByUuidData = {
+    /**
+     * Project updated.
+     */
+    body: {
+        /**
+         * The name of the project.
+         */
+        name?: string;
+        /**
+         * The description of the project.
+         */
+        description?: string;
+    };
+    path: {
+        /**
+         * UUID of the project.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/projects/{uuid}';
+};
+
+export type UpdateProjectByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateProjectByUuidError = UpdateProjectByUuidErrors[keyof UpdateProjectByUuidErrors];
+
+export type UpdateProjectByUuidResponses = {
+    /**
+     * Project updated.
+     */
+    201: {
+        uuid?: string;
+        name?: string;
+        description?: string;
+    };
+};
+
+export type UpdateProjectByUuidResponse = UpdateProjectByUuidResponses[keyof UpdateProjectByUuidResponses];
+
+export type GetEnvironmentsData = {
+    body?: never;
+    path: {
+        /**
+         * Project UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/projects/{uuid}/environments';
+};
+
+export type GetEnvironmentsErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Project not found.
+     */
+    404: unknown;
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type GetEnvironmentsError = GetEnvironmentsErrors[keyof GetEnvironmentsErrors];
+
+export type GetEnvironmentsResponses = {
+    /**
+     * List of environments
+     */
+    200: Array<Environment>;
+};
+
+export type GetEnvironmentsResponse = GetEnvironmentsResponses[keyof GetEnvironmentsResponses];
+
+export type CreateEnvironmentData = {
+    /**
+     * Environment created.
+     */
+    body: {
+        /**
+         * The name of the environment.
+         */
+        name?: string;
+    };
+    path: {
+        /**
+         * Project UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/projects/{uuid}/environments';
+};
+
+export type CreateEnvironmentErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Project not found.
+     */
+    404: unknown;
+    /**
+     * Environment with this name already exists.
+     */
+    409: unknown;
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateEnvironmentError = CreateEnvironmentErrors[keyof CreateEnvironmentErrors];
+
+export type CreateEnvironmentResponses = {
+    /**
+     * Environment created.
+     */
+    201: {
+        /**
+         * The UUID of the environment.
+         */
+        uuid?: string;
+    };
+};
+
+export type CreateEnvironmentResponse = CreateEnvironmentResponses[keyof CreateEnvironmentResponses];
+
 export type ListResourcesData = {
     body?: never;
     path?: never;
@@ -1082,3 +3950,434 @@ export type ListResourcesResponses = {
 };
 
 export type ListResourcesResponse = ListResourcesResponses[keyof ListResourcesResponses];
+
+export type ListPrivateKeysData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/security/keys';
+};
+
+export type ListPrivateKeysErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+};
+
+export type ListPrivateKeysError = ListPrivateKeysErrors[keyof ListPrivateKeysErrors];
+
+export type ListPrivateKeysResponses = {
+    /**
+     * Get all private keys.
+     */
+    200: Array<PrivateKey>;
+};
+
+export type ListPrivateKeysResponse = ListPrivateKeysResponses[keyof ListPrivateKeysResponses];
+
+export type CreatePrivateKeyData = {
+    body: {
+        name?: string;
+        description?: string;
+        private_key: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/security/keys';
+};
+
+export type CreatePrivateKeyErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreatePrivateKeyError = CreatePrivateKeyErrors[keyof CreatePrivateKeyErrors];
+
+export type CreatePrivateKeyResponses = {
+    /**
+     * The created private key's UUID.
+     */
+    201: {
+        uuid?: string;
+    };
+};
+
+export type CreatePrivateKeyResponse = CreatePrivateKeyResponses[keyof CreatePrivateKeyResponses];
+
+export type ListServersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/servers';
+};
+
+export type ListServersErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+};
+
+export type ListServersError = ListServersErrors[keyof ListServersErrors];
+
+export type ListServersResponses = {
+    /**
+     * Get all servers.
+     */
+    200: Array<Server>;
+};
+
+export type ListServersResponse = ListServersResponses[keyof ListServersResponses];
+
+export type CreateServerData = {
+    /**
+     * Server created.
+     */
+    body: {
+        /**
+         * The name of the server.
+         */
+        name?: string;
+        /**
+         * The description of the server.
+         */
+        description?: string;
+        /**
+         * The IP of the server.
+         */
+        ip?: string;
+        /**
+         * The port of the server.
+         */
+        port?: number;
+        /**
+         * The user of the server.
+         */
+        user?: string;
+        /**
+         * The UUID of the private key.
+         */
+        private_key_uuid?: string;
+        /**
+         * Is build server.
+         */
+        is_build_server?: boolean;
+        /**
+         * Instant validate.
+         */
+        instant_validate?: boolean;
+        /**
+         * The proxy type.
+         */
+        proxy_type?: 'traefik' | 'caddy' | 'none';
+    };
+    path?: never;
+    query?: never;
+    url: '/servers';
+};
+
+export type CreateServerErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateServerError = CreateServerErrors[keyof CreateServerErrors];
+
+export type CreateServerResponses = {
+    /**
+     * Server created.
+     */
+    201: {
+        /**
+         * The UUID of the server.
+         */
+        uuid?: string;
+    };
+};
+
+export type CreateServerResponse = CreateServerResponses[keyof CreateServerResponses];
+
+export type GetServerByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * Server's UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/servers/{uuid}';
+};
+
+export type GetServerByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type GetServerByUuidError = GetServerByUuidErrors[keyof GetServerByUuidErrors];
+
+export type GetServerByUuidResponses = {
+    /**
+     * Get server by UUID
+     */
+    200: Server;
+};
+
+export type GetServerByUuidResponse = GetServerByUuidResponses[keyof GetServerByUuidResponses];
+
+export type ValidateServerByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * Server UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/servers/{uuid}/validate';
+};
+
+export type ValidateServerByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type ValidateServerByUuidError = ValidateServerByUuidErrors[keyof ValidateServerByUuidErrors];
+
+export type ValidateServerByUuidResponses = {
+    /**
+     * Server validation started.
+     */
+    201: {
+        message?: string;
+    };
+};
+
+export type ValidateServerByUuidResponse = ValidateServerByUuidResponses[keyof ValidateServerByUuidResponses];
+
+export type ListServicesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/services';
+};
+
+export type ListServicesErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+};
+
+export type ListServicesError = ListServicesErrors[keyof ListServicesErrors];
+
+export type ListServicesResponses = {
+    /**
+     * Get all services
+     */
+    200: Array<Service>;
+};
+
+export type ListServicesResponse = ListServicesResponses[keyof ListServicesResponses];
+
+export type CreateServiceData = {
+    body: {
+        /**
+         * The one-click service type
+         */
+        type?: 'activepieces' | 'appsmith' | 'appwrite' | 'authentik' | 'babybuddy' | 'budge' | 'changedetection' | 'chatwoot' | 'classicpress-with-mariadb' | 'classicpress-with-mysql' | 'classicpress-without-database' | 'cloudflared' | 'code-server' | 'dashboard' | 'directus' | 'directus-with-postgresql' | 'docker-registry' | 'docuseal' | 'docuseal-with-postgres' | 'dokuwiki' | 'duplicati' | 'emby' | 'embystat' | 'fider' | 'filebrowser' | 'firefly' | 'formbricks' | 'ghost' | 'gitea' | 'gitea-with-mariadb' | 'gitea-with-mysql' | 'gitea-with-postgresql' | 'glance' | 'glances' | 'glitchtip' | 'grafana' | 'grafana-with-postgresql' | 'grocy' | 'heimdall' | 'homepage' | 'jellyfin' | 'kuzzle' | 'listmonk' | 'logto' | 'mediawiki' | 'meilisearch' | 'metabase' | 'metube' | 'minio' | 'moodle' | 'n8n' | 'n8n-with-postgresql' | 'next-image-transformation' | 'nextcloud' | 'nocodb' | 'odoo' | 'openblocks' | 'pairdrop' | 'penpot' | 'phpmyadmin' | 'pocketbase' | 'posthog' | 'reactive-resume' | 'rocketchat' | 'shlink' | 'slash' | 'snapdrop' | 'statusnook' | 'stirling-pdf' | 'supabase' | 'syncthing' | 'tolgee' | 'trigger' | 'trigger-with-external-database' | 'twenty' | 'umami' | 'unleash-with-postgresql' | 'unleash-without-database' | 'uptime-kuma' | 'vaultwarden' | 'vikunja' | 'weblate' | 'whoogle' | 'wordpress-with-mariadb' | 'wordpress-with-mysql' | 'wordpress-without-database';
+        /**
+         * Name of the service.
+         */
+        name?: string;
+        /**
+         * Description of the service.
+         */
+        description?: string;
+        /**
+         * Project UUID.
+         */
+        project_uuid: string;
+        /**
+         * Environment name. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * Environment UUID. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * Server UUID.
+         */
+        server_uuid: string;
+        /**
+         * Destination UUID. Required if server has multiple destinations.
+         */
+        destination_uuid?: string;
+        /**
+         * Start the service immediately after creation.
+         */
+        instant_deploy?: boolean;
+        /**
+         * The Docker Compose raw content.
+         */
+        docker_compose_raw?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/services';
+};
+
+export type CreateServiceErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateServiceError = CreateServiceErrors[keyof CreateServiceErrors];
+
+export type CreateServiceResponses = {
+    /**
+     * Service created successfully.
+     */
+    201: {
+        /**
+         * Service UUID.
+         */
+        uuid?: string;
+        /**
+         * Service domains.
+         */
+        domains?: Array<string>;
+    };
+};
+
+export type CreateServiceResponse = CreateServiceResponses[keyof CreateServiceResponses];

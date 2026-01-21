@@ -2,8 +2,8 @@
 
 import { client } from './client.gen.js';
 import type { Client, Options as Options2, TDataShape } from './client/index.js';
-import type { CancelDeploymentByUuidData, CancelDeploymentByUuidErrors, CancelDeploymentByUuidResponses, CreateEnvByApplicationUuidData, CreateEnvByApplicationUuidErrors, CreateEnvByApplicationUuidResponses, DeployByTagOrUuidData, DeployByTagOrUuidErrors, DeployByTagOrUuidResponses, GetApplicationByUuidData, GetApplicationByUuidErrors, GetApplicationByUuidResponses, GetApplicationLogsByUuidData, GetApplicationLogsByUuidErrors, GetApplicationLogsByUuidResponses, GetDatabaseByUuidData, GetDatabaseByUuidErrors, GetDatabaseByUuidResponses, GetDeploymentByUuidData, GetDeploymentByUuidErrors, GetDeploymentByUuidResponses, ListApplicationsData, ListApplicationsErrors, ListApplicationsResponses, ListDatabasesData, ListDatabasesErrors, ListDatabasesResponses, ListDeploymentsByAppUuidData, ListDeploymentsByAppUuidErrors, ListDeploymentsByAppUuidResponses, ListDeploymentsData, ListDeploymentsErrors, ListDeploymentsResponses, ListEnvsByApplicationUuidData, ListEnvsByApplicationUuidErrors, ListEnvsByApplicationUuidResponses, ListResourcesData, ListResourcesErrors, ListResourcesResponses, UpdateEnvByApplicationUuidData, UpdateEnvByApplicationUuidErrors, UpdateEnvByApplicationUuidResponses, VersionData, VersionErrors, VersionResponses } from './types.gen.js';
-import { zCancelDeploymentByUuidData, zCreateEnvByApplicationUuidData, zDeployByTagOrUuidData, zGetApplicationByUuidData, zGetApplicationLogsByUuidData, zGetDatabaseByUuidData, zGetDeploymentByUuidData, zListApplicationsData, zListDatabasesData, zListDeploymentsByAppUuidData, zListDeploymentsData, zListEnvsByApplicationUuidData, zListResourcesData, zUpdateEnvByApplicationUuidData, zVersionData } from './zod.gen.js';
+import type { CancelDeploymentByUuidData, CancelDeploymentByUuidErrors, CancelDeploymentByUuidResponses, CreateDockercomposeApplicationData, CreateDockercomposeApplicationErrors, CreateDockercomposeApplicationResponses, CreateDockerfileApplicationData, CreateDockerfileApplicationErrors, CreateDockerfileApplicationResponses, CreateDockerimageApplicationData, CreateDockerimageApplicationErrors, CreateDockerimageApplicationResponses, CreateEnvByApplicationUuidData, CreateEnvByApplicationUuidErrors, CreateEnvByApplicationUuidResponses, CreateEnvironmentData, CreateEnvironmentErrors, CreateEnvironmentResponses, CreatePrivateDeployKeyApplicationData, CreatePrivateDeployKeyApplicationErrors, CreatePrivateDeployKeyApplicationResponses, CreatePrivateGithubAppApplicationData, CreatePrivateGithubAppApplicationErrors, CreatePrivateGithubAppApplicationResponses, CreatePrivateKeyData, CreatePrivateKeyErrors, CreatePrivateKeyResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreatePublicApplicationData, CreatePublicApplicationErrors, CreatePublicApplicationResponses, CreateServerData, CreateServerErrors, CreateServerResponses, CreateServiceData, CreateServiceErrors, CreateServiceResponses, DeleteApplicationByUuidData, DeleteApplicationByUuidErrors, DeleteApplicationByUuidResponses, DeleteEnvByApplicationUuidData, DeleteEnvByApplicationUuidErrors, DeleteEnvByApplicationUuidResponses, DeleteProjectByUuidData, DeleteProjectByUuidErrors, DeleteProjectByUuidResponses, DeployByTagOrUuidData, DeployByTagOrUuidErrors, DeployByTagOrUuidResponses, GetApplicationByUuidData, GetApplicationByUuidErrors, GetApplicationByUuidResponses, GetApplicationLogsByUuidData, GetApplicationLogsByUuidErrors, GetApplicationLogsByUuidResponses, GetDatabaseByUuidData, GetDatabaseByUuidErrors, GetDatabaseByUuidResponses, GetDeploymentByUuidData, GetDeploymentByUuidErrors, GetDeploymentByUuidResponses, GetEnvironmentsData, GetEnvironmentsErrors, GetEnvironmentsResponses, GetProjectByUuidData, GetProjectByUuidErrors, GetProjectByUuidResponses, GetServerByUuidData, GetServerByUuidErrors, GetServerByUuidResponses, ListApplicationsData, ListApplicationsErrors, ListApplicationsResponses, ListDatabasesData, ListDatabasesErrors, ListDatabasesResponses, ListDeploymentsByAppUuidData, ListDeploymentsByAppUuidErrors, ListDeploymentsByAppUuidResponses, ListDeploymentsData, ListDeploymentsErrors, ListDeploymentsResponses, ListEnvsByApplicationUuidData, ListEnvsByApplicationUuidErrors, ListEnvsByApplicationUuidResponses, ListGithubAppsData, ListGithubAppsErrors, ListGithubAppsResponses, ListPrivateKeysData, ListPrivateKeysErrors, ListPrivateKeysResponses, ListProjectsData, ListProjectsErrors, ListProjectsResponses, ListResourcesData, ListResourcesErrors, ListResourcesResponses, ListServersData, ListServersErrors, ListServersResponses, ListServicesData, ListServicesErrors, ListServicesResponses, RestartApplicationByUuidData, RestartApplicationByUuidErrors, RestartApplicationByUuidResponses, StartApplicationByUuidData, StartApplicationByUuidErrors, StartApplicationByUuidResponses, StopApplicationByUuidData, StopApplicationByUuidErrors, StopApplicationByUuidResponses, UpdateApplicationByUuidData, UpdateApplicationByUuidErrors, UpdateApplicationByUuidResponses, UpdateEnvByApplicationUuidData, UpdateEnvByApplicationUuidErrors, UpdateEnvByApplicationUuidResponses, UpdateProjectByUuidData, UpdateProjectByUuidErrors, UpdateProjectByUuidResponses, ValidateServerByUuidData, ValidateServerByUuidErrors, ValidateServerByUuidResponses, VersionData, VersionErrors, VersionResponses } from './types.gen.js';
+import { zCancelDeploymentByUuidData, zCreateDockercomposeApplicationData, zCreateDockerfileApplicationData, zCreateDockerimageApplicationData, zCreateEnvByApplicationUuidData, zCreateEnvironmentData, zCreatePrivateDeployKeyApplicationData, zCreatePrivateGithubAppApplicationData, zCreatePrivateKeyData, zCreateProjectData, zCreatePublicApplicationData, zCreateServerData, zCreateServiceData, zDeleteApplicationByUuidData, zDeleteEnvByApplicationUuidData, zDeleteProjectByUuidData, zDeployByTagOrUuidData, zGetApplicationByUuidData, zGetApplicationLogsByUuidData, zGetDatabaseByUuidData, zGetDeploymentByUuidData, zGetEnvironmentsData, zGetProjectByUuidData, zGetServerByUuidData, zListApplicationsData, zListDatabasesData, zListDeploymentsByAppUuidData, zListDeploymentsData, zListEnvsByApplicationUuidData, zListGithubAppsData, zListPrivateKeysData, zListProjectsData, zListResourcesData, zListServersData, zListServicesData, zRestartApplicationByUuidData, zStartApplicationByUuidData, zStopApplicationByUuidData, zUpdateApplicationByUuidData, zUpdateEnvByApplicationUuidData, zUpdateProjectByUuidData, zValidateServerByUuidData, zVersionData } from './zod.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -32,6 +32,114 @@ export const listApplications = <ThrowOnError extends boolean = false>(options?:
 });
 
 /**
+ * Create (Public)
+ *
+ * Create new application based on a public git repository.
+ */
+export const createPublicApplication = <ThrowOnError extends boolean = false>(options: Options<CreatePublicApplicationData, ThrowOnError>) => (options.client ?? client).post<CreatePublicApplicationResponses, CreatePublicApplicationErrors, ThrowOnError>({
+    requestValidator: async (data) => await zCreatePublicApplicationData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/public',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create (Private - GH App)
+ *
+ * Create new application based on a private repository through a Github App.
+ */
+export const createPrivateGithubAppApplication = <ThrowOnError extends boolean = false>(options: Options<CreatePrivateGithubAppApplicationData, ThrowOnError>) => (options.client ?? client).post<CreatePrivateGithubAppApplicationResponses, CreatePrivateGithubAppApplicationErrors, ThrowOnError>({
+    requestValidator: async (data) => await zCreatePrivateGithubAppApplicationData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/private-github-app',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create (Private - Deploy Key)
+ *
+ * Create new application based on a private repository through a Deploy Key.
+ */
+export const createPrivateDeployKeyApplication = <ThrowOnError extends boolean = false>(options: Options<CreatePrivateDeployKeyApplicationData, ThrowOnError>) => (options.client ?? client).post<CreatePrivateDeployKeyApplicationResponses, CreatePrivateDeployKeyApplicationErrors, ThrowOnError>({
+    requestValidator: async (data) => await zCreatePrivateDeployKeyApplicationData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/private-deploy-key',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create (Dockerfile)
+ *
+ * Create new application based on a simple Dockerfile.
+ */
+export const createDockerfileApplication = <ThrowOnError extends boolean = false>(options: Options<CreateDockerfileApplicationData, ThrowOnError>) => (options.client ?? client).post<CreateDockerfileApplicationResponses, CreateDockerfileApplicationErrors, ThrowOnError>({
+    requestValidator: async (data) => await zCreateDockerfileApplicationData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/dockerfile',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create (Docker Image)
+ *
+ * Create new application based on a prebuilt docker image
+ */
+export const createDockerimageApplication = <ThrowOnError extends boolean = false>(options: Options<CreateDockerimageApplicationData, ThrowOnError>) => (options.client ?? client).post<CreateDockerimageApplicationResponses, CreateDockerimageApplicationErrors, ThrowOnError>({
+    requestValidator: async (data) => await zCreateDockerimageApplicationData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/dockerimage',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create (Docker Compose)
+ *
+ * Create new application based on a docker-compose file.
+ */
+export const createDockercomposeApplication = <ThrowOnError extends boolean = false>(options: Options<CreateDockercomposeApplicationData, ThrowOnError>) => (options.client ?? client).post<CreateDockercomposeApplicationResponses, CreateDockercomposeApplicationErrors, ThrowOnError>({
+    requestValidator: async (data) => await zCreateDockercomposeApplicationData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/dockercompose',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete
+ *
+ * Delete application by UUID.
+ */
+export const deleteApplicationByUuid = <ThrowOnError extends boolean = false>(options: Options<DeleteApplicationByUuidData, ThrowOnError>) => (options.client ?? client).delete<DeleteApplicationByUuidResponses, DeleteApplicationByUuidErrors, ThrowOnError>({
+    requestValidator: async (data) => await zDeleteApplicationByUuidData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/{uuid}',
+    ...options
+});
+
+/**
  * Get
  *
  * Get application by UUID.
@@ -41,6 +149,22 @@ export const getApplicationByUuid = <ThrowOnError extends boolean = false>(optio
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/applications/{uuid}',
     ...options
+});
+
+/**
+ * Update
+ *
+ * Update application by UUID.
+ */
+export const updateApplicationByUuid = <ThrowOnError extends boolean = false>(options: Options<UpdateApplicationByUuidData, ThrowOnError>) => (options.client ?? client).patch<UpdateApplicationByUuidResponses, UpdateApplicationByUuidErrors, ThrowOnError>({
+    requestValidator: async (data) => await zUpdateApplicationByUuidData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/{uuid}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**
@@ -97,6 +221,54 @@ export const createEnvByApplicationUuid = <ThrowOnError extends boolean = false>
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Delete Env
+ *
+ * Delete env by UUID.
+ */
+export const deleteEnvByApplicationUuid = <ThrowOnError extends boolean = false>(options: Options<DeleteEnvByApplicationUuidData, ThrowOnError>) => (options.client ?? client).delete<DeleteEnvByApplicationUuidResponses, DeleteEnvByApplicationUuidErrors, ThrowOnError>({
+    requestValidator: async (data) => await zDeleteEnvByApplicationUuidData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/{uuid}/envs/{env_uuid}',
+    ...options
+});
+
+/**
+ * Start
+ *
+ * Start application. `Post` request is also accepted.
+ */
+export const startApplicationByUuid = <ThrowOnError extends boolean = false>(options: Options<StartApplicationByUuidData, ThrowOnError>) => (options.client ?? client).get<StartApplicationByUuidResponses, StartApplicationByUuidErrors, ThrowOnError>({
+    requestValidator: async (data) => await zStartApplicationByUuidData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/{uuid}/start',
+    ...options
+});
+
+/**
+ * Stop
+ *
+ * Stop application. `Post` request is also accepted.
+ */
+export const stopApplicationByUuid = <ThrowOnError extends boolean = false>(options: Options<StopApplicationByUuidData, ThrowOnError>) => (options.client ?? client).get<StopApplicationByUuidResponses, StopApplicationByUuidErrors, ThrowOnError>({
+    requestValidator: async (data) => await zStopApplicationByUuidData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/{uuid}/stop',
+    ...options
+});
+
+/**
+ * Restart
+ *
+ * Restart application. `Post` request is also accepted.
+ */
+export const restartApplicationByUuid = <ThrowOnError extends boolean = false>(options: Options<RestartApplicationByUuidData, ThrowOnError>) => (options.client ?? client).get<RestartApplicationByUuidResponses, RestartApplicationByUuidErrors, ThrowOnError>({
+    requestValidator: async (data) => await zRestartApplicationByUuidData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/{uuid}/restart',
+    ...options
 });
 
 /**
@@ -184,6 +356,18 @@ export const listDeploymentsByAppUuid = <ThrowOnError extends boolean = false>(o
 });
 
 /**
+ * List
+ *
+ * List all GitHub apps.
+ */
+export const listGithubApps = <ThrowOnError extends boolean = false>(options?: Options<ListGithubAppsData, ThrowOnError>) => (options?.client ?? client).get<ListGithubAppsResponses, ListGithubAppsErrors, ThrowOnError>({
+    requestValidator: async (data) => await zListGithubAppsData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/github-apps',
+    ...options
+});
+
+/**
  * Version
  *
  * Get Coolify version.
@@ -198,6 +382,102 @@ export const version = <ThrowOnError extends boolean = false>(options?: Options<
 /**
  * List
  *
+ * List projects.
+ */
+export const listProjects = <ThrowOnError extends boolean = false>(options?: Options<ListProjectsData, ThrowOnError>) => (options?.client ?? client).get<ListProjectsResponses, ListProjectsErrors, ThrowOnError>({
+    requestValidator: async (data) => await zListProjectsData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/projects',
+    ...options
+});
+
+/**
+ * Create
+ *
+ * Create Project.
+ */
+export const createProject = <ThrowOnError extends boolean = false>(options: Options<CreateProjectData, ThrowOnError>) => (options.client ?? client).post<CreateProjectResponses, CreateProjectErrors, ThrowOnError>({
+    requestValidator: async (data) => await zCreateProjectData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/projects',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete
+ *
+ * Delete project by UUID.
+ */
+export const deleteProjectByUuid = <ThrowOnError extends boolean = false>(options: Options<DeleteProjectByUuidData, ThrowOnError>) => (options.client ?? client).delete<DeleteProjectByUuidResponses, DeleteProjectByUuidErrors, ThrowOnError>({
+    requestValidator: async (data) => await zDeleteProjectByUuidData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/projects/{uuid}',
+    ...options
+});
+
+/**
+ * Get
+ *
+ * Get project by UUID.
+ */
+export const getProjectByUuid = <ThrowOnError extends boolean = false>(options: Options<GetProjectByUuidData, ThrowOnError>) => (options.client ?? client).get<GetProjectByUuidResponses, GetProjectByUuidErrors, ThrowOnError>({
+    requestValidator: async (data) => await zGetProjectByUuidData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/projects/{uuid}',
+    ...options
+});
+
+/**
+ * Update
+ *
+ * Update Project.
+ */
+export const updateProjectByUuid = <ThrowOnError extends boolean = false>(options: Options<UpdateProjectByUuidData, ThrowOnError>) => (options.client ?? client).patch<UpdateProjectByUuidResponses, UpdateProjectByUuidErrors, ThrowOnError>({
+    requestValidator: async (data) => await zUpdateProjectByUuidData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/projects/{uuid}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List Environments
+ *
+ * List all environments in a project.
+ */
+export const getEnvironments = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentsData, ThrowOnError>) => (options.client ?? client).get<GetEnvironmentsResponses, GetEnvironmentsErrors, ThrowOnError>({
+    requestValidator: async (data) => await zGetEnvironmentsData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/projects/{uuid}/environments',
+    ...options
+});
+
+/**
+ * Create Environment
+ *
+ * Create environment in project.
+ */
+export const createEnvironment = <ThrowOnError extends boolean = false>(options: Options<CreateEnvironmentData, ThrowOnError>) => (options.client ?? client).post<CreateEnvironmentResponses, CreateEnvironmentErrors, ThrowOnError>({
+    requestValidator: async (data) => await zCreateEnvironmentData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/projects/{uuid}/environments',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List
+ *
  * Get all resources.
  */
 export const listResources = <ThrowOnError extends boolean = false>(options?: Options<ListResourcesData, ThrowOnError>) => (options?.client ?? client).get<ListResourcesResponses, ListResourcesErrors, ThrowOnError>({
@@ -205,4 +485,112 @@ export const listResources = <ThrowOnError extends boolean = false>(options?: Op
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/resources',
     ...options
+});
+
+/**
+ * List
+ *
+ * List all private keys.
+ */
+export const listPrivateKeys = <ThrowOnError extends boolean = false>(options?: Options<ListPrivateKeysData, ThrowOnError>) => (options?.client ?? client).get<ListPrivateKeysResponses, ListPrivateKeysErrors, ThrowOnError>({
+    requestValidator: async (data) => await zListPrivateKeysData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/security/keys',
+    ...options
+});
+
+/**
+ * Create
+ *
+ * Create a new private key.
+ */
+export const createPrivateKey = <ThrowOnError extends boolean = false>(options: Options<CreatePrivateKeyData, ThrowOnError>) => (options.client ?? client).post<CreatePrivateKeyResponses, CreatePrivateKeyErrors, ThrowOnError>({
+    requestValidator: async (data) => await zCreatePrivateKeyData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/security/keys',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List
+ *
+ * List all servers.
+ */
+export const listServers = <ThrowOnError extends boolean = false>(options?: Options<ListServersData, ThrowOnError>) => (options?.client ?? client).get<ListServersResponses, ListServersErrors, ThrowOnError>({
+    requestValidator: async (data) => await zListServersData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/servers',
+    ...options
+});
+
+/**
+ * Create
+ *
+ * Create Server.
+ */
+export const createServer = <ThrowOnError extends boolean = false>(options: Options<CreateServerData, ThrowOnError>) => (options.client ?? client).post<CreateServerResponses, CreateServerErrors, ThrowOnError>({
+    requestValidator: async (data) => await zCreateServerData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/servers',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get
+ *
+ * Get server by UUID.
+ */
+export const getServerByUuid = <ThrowOnError extends boolean = false>(options: Options<GetServerByUuidData, ThrowOnError>) => (options.client ?? client).get<GetServerByUuidResponses, GetServerByUuidErrors, ThrowOnError>({
+    requestValidator: async (data) => await zGetServerByUuidData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/servers/{uuid}',
+    ...options
+});
+
+/**
+ * Validate
+ *
+ * Validate server by UUID.
+ */
+export const validateServerByUuid = <ThrowOnError extends boolean = false>(options: Options<ValidateServerByUuidData, ThrowOnError>) => (options.client ?? client).get<ValidateServerByUuidResponses, ValidateServerByUuidErrors, ThrowOnError>({
+    requestValidator: async (data) => await zValidateServerByUuidData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/servers/{uuid}/validate',
+    ...options
+});
+
+/**
+ * List
+ *
+ * List all services.
+ */
+export const listServices = <ThrowOnError extends boolean = false>(options?: Options<ListServicesData, ThrowOnError>) => (options?.client ?? client).get<ListServicesResponses, ListServicesErrors, ThrowOnError>({
+    requestValidator: async (data) => await zListServicesData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/services',
+    ...options
+});
+
+/**
+ * Create service
+ *
+ * Create a one-click / custom service
+ */
+export const createService = <ThrowOnError extends boolean = false>(options: Options<CreateServiceData, ThrowOnError>) => (options.client ?? client).post<CreateServiceResponses, CreateServiceErrors, ThrowOnError>({
+    requestValidator: async (data) => await zCreateServiceData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/services',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });

@@ -72,20 +72,56 @@ async function fetchAndFixSpec(): Promise<OpenAPISpec> {
 	return spec;
 }
 
-// Only include operations we actually use (15 of 107)
+// Only include operations we actually use (48 of 107)
 const USED_OPERATIONS = [
 	// Resources
 	'GET /resources',
-	// Applications
+	// Projects
+	'GET /projects',
+	'POST /projects',
+	'GET /projects/{uuid}',
+	'PATCH /projects/{uuid}',
+	'DELETE /projects/{uuid}',
+	// Environments
+	'GET /projects/{uuid}/environments',
+	'POST /projects/{uuid}/environments',
+	// Servers
+	'GET /servers',
+	'POST /servers',
+	'GET /servers/{uuid}',
+	'GET /servers/{uuid}/validate',
+	// Private Keys (Security)
+	'GET /security/keys',
+	'POST /security/keys',
+	// GitHub Apps
+	'GET /github-apps',
+	// Applications - read
 	'GET /applications',
 	'GET /applications/{uuid}',
 	'GET /applications/{uuid}/envs',
 	'POST /applications/{uuid}/envs',
 	'PATCH /applications/{uuid}/envs',
+	'DELETE /applications/{uuid}/envs/{env_uuid}',
 	'GET /applications/{uuid}/logs',
+	// Applications - create
+	'POST /applications/public',
+	'POST /applications/private-github-app',
+	'POST /applications/private-deploy-key',
+	'POST /applications/dockerfile',
+	'POST /applications/dockerimage',
+	'POST /applications/dockercompose',
+	// Applications - manage
+	'PATCH /applications/{uuid}',
+	'DELETE /applications/{uuid}',
+	'GET /applications/{uuid}/start',
+	'GET /applications/{uuid}/stop',
+	'GET /applications/{uuid}/restart',
 	// Databases
 	'GET /databases',
 	'GET /databases/{uuid}',
+	// Services
+	'GET /services',
+	'POST /services',
 	// Deployments
 	'GET /deployments',
 	'GET /deployments/{uuid}',

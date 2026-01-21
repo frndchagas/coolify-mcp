@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z as zod } from "zod";
-import { COOLIFY_ALLOW_UNSAFE_LOGS, COOLIFY_ALLOW_WRITE } from "../config.js";
+import { COOLIFY_ALLOW_WRITE } from "../config.js";
 import * as sdk from "../generated/sdk.gen.js";
 import * as z from "../generated/zod.gen.js";
 
@@ -81,9 +81,6 @@ const DATABASE_TYPE_KEYS = ["type", "database_type", "kind"];
 const SENSITIVE_KEY_PATTERN =
   /(pass(word)?|secret|token|api[_-]?key|private[_-]?key|access[_-]?key|credential|connection|string|dsn)/i;
 const URL_KEY_PATTERN = /(url|uri|dsn)/i;
-const LOG_FIELD_PATTERN = /(log|logs|stdout|stderr|output|command|cmd|args)/i;
-const LOG_MODE_VALUES = ["safe", "strict", "raw"] as const;
-type LogMode = (typeof LOG_MODE_VALUES)[number];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -214,213 +211,6 @@ function redactSecrets(value: unknown): unknown {
   return result;
 }
 
-const LOG_REDACTIONS: Array<{ pattern: RegExp; replacement: string }> = [
-  {
-    pattern:
-      /(\b[A-Z0-9_]*?(?:PASSWORD|PASS|SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY)[A-Z0-9_]*\b\s*=\s*)(["']?)([^"'\s]+)\2/gi,
-    replacement: `$1$2${SECRET_MASK}$2`,
-  },
-  {
-    pattern:
-      /(\b(?:password|pass|secret|token|api[_-]?key|access[_-]?key|private[_-]?key)\b\s*:\s*)([^,\s]+)/gi,
-    replacement: `$1${SECRET_MASK}`,
-  },
-  {
-    pattern:
-      /(\"(?:password|pass|secret|token|api[_-]?key|access[_-]?key|private[_-]?key)\"\\s*:\\s*\")([^\"]*)(\")/gi,
-    replacement: `$1${SECRET_MASK}$3`,
-  },
-  {
-    pattern: /(Authorization:\s*Bearer\s+)([^\s]+)/gi,
-    replacement: `$1${SECRET_MASK}`,
-  },
-  {
-    pattern:
-      /(--?(?:token|password|secret|api[-_]?key|access[-_]?key|private[-_]?key)\s*=?)([^\s]+)/gi,
-    replacement: `$1${SECRET_MASK}`,
-  },
-  {
-    pattern:
-      /([?&](?:token|access_token|api[_-]?key|apikey|secret|password|key)=)([^&\s]+)/gi,
-    replacement: `$1${SECRET_MASK}`,
-  },
-  {
-    pattern:
-      /(\"[^\"]*(?:password|pass|secret|token|api[_-]?key|access[_-]?key|private[_-]?key|_key|_secret)[^\"]*\"\\s*:\\s*\")([^\"]*)(\")/gi,
-    replacement: `$1${SECRET_MASK}$3`,
-  },
-  {
-    pattern:
-      /(\b[^\s:]+(?:password|pass|secret|token|api[_-]?key|access[_-]?key|private[_-]?key|_key|_secret)\b\s*:\s*)([^,\s]+)/gi,
-    replacement: `$1${SECRET_MASK}`,
-  },
-  {
-    pattern: /\b(?:gh[pousr]_[A-Za-z0-9]{10,}|github_pat_[A-Za-z0-9_]{10,})\b/g,
-    replacement: SECRET_MASK,
-  },
-  {
-    pattern: /((?:[a-z]+):\/\/)([^/\s:@]+):([^@/\s]+)@/gi,
-    replacement: `$1${SECRET_MASK}:${SECRET_MASK}@`,
-  },
-  {
-    pattern: /((?:[a-z]+):\/\/)([^/\s:@]+)@/gi,
-    replacement: `$1${SECRET_MASK}@`,
-  },
-  {
-    pattern: /(x-access-token:)([^@/\s]+)/gi,
-    replacement: `$1${SECRET_MASK}`,
-  },
-];
-
-const ENV_ASSIGNMENT_RE =
-  /(^|[\s;&|()])(export\s+)?([A-Za-z_][A-Za-z0-9_]{1,})\s*=\s*(\"[^\"]*\"|'[^']*'|[^\s]+)/g;
-const ENV_ASSIGNMENT_TEST_RE =
-  /(^|[\s;&|()])(export\s+)?[A-Za-z_][A-Za-z0-9_]{1,}\s*=\s*(\"[^\"]*\"|'[^']*'|[^\s]+)/;
-const DOCKER_ENV_ASSIGNMENT_RE =
-  /(^|[\s;&|()])ENV\s+([A-Za-z_][A-Za-z0-9_]{1,})\s*=\s*(\"[^\"]*\"|'[^']*'|[^\s]+)/gi;
-const DOCKER_ENV_SPACE_RE =
-  /(^|[\s;&|()])ENV\s+([A-Za-z_][A-Za-z0-9_]{1,})\s+([^\s]+)/gi;
-const ARG_ASSIGNMENT_RE =
-  /(^|[\s;&|()])ARG\s+([A-Za-z_][A-Za-z0-9_]{1,})\s*=\s*(\"[^\"]*\"|'[^']*'|[^\s]+)/gi;
-const ARG_SPACE_RE =
-  /(^|[\s;&|()])ARG\s+([A-Za-z_][A-Za-z0-9_]{1,})\s+([^\s]+)/gi;
-const DOCKER_ENV_TEST_RE =
-  /(^|[\s;&|()])ENV\s+[A-Za-z_][A-Za-z0-9_]{1,}\s*(=|\s+)/i;
-const ARG_TEST_RE =
-  /(^|[\s;&|()])ARG\s+[A-Za-z_][A-Za-z0-9_]{1,}\s*(=|\s+)/i;
-const BUILD_ARG_RE = /(--build-arg\s+[A-Z0-9_]{2,}\s*=\s*)([^\s]+)/gi;
-const BUILD_ARG_TEST_RE = /--build-arg\s+[A-Z0-9_]{2,}\s*=\s*[^\s]+/i;
-const URL_TOKEN_TEST_RE =
-  /[?&](?:token|access_token|api[_-]?key|apikey|secret|password|key)=/i;
-const AUTH_HEADER_TEST_RE = /(authorization:\s*bearer|x-access-token)/i;
-const JWT_RE =
-  /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/;
-const LONG_HEX_RE = /\b[a-f0-9]{32,}\b/i;
-const LONG_BASE64_RE = /\b[A-Za-z0-9+\/]{30,}={0,2}\b/;
-const LONG_BASE64URL_RE = /\b[A-Za-z0-9_-]{30,}\b/;
-
-function redactLogLine(line: string): string {
-  let output = LOG_REDACTIONS.reduce(
-    (value, rule) => value.replace(rule.pattern, rule.replacement),
-    line
-  );
-  output = output.replace(
-    ENV_ASSIGNMENT_RE,
-    (_match, prefix, exportKeyword, key, value) => {
-      const lead = `${prefix ?? ""}${exportKeyword ?? ""}${key}=`.trimStart();
-      if (typeof value === "string") {
-        if (value.startsWith('"') && value.endsWith('"')) {
-          return `${prefix ?? ""}${exportKeyword ?? ""}${key}="${SECRET_MASK}"`;
-        }
-        if (value.startsWith("'") && value.endsWith("'")) {
-          return `${prefix ?? ""}${exportKeyword ?? ""}${key}='${SECRET_MASK}'`;
-        }
-      }
-      return `${prefix ?? ""}${exportKeyword ?? ""}${key}=${SECRET_MASK}`;
-    }
-  );
-  output = output.replace(
-    DOCKER_ENV_ASSIGNMENT_RE,
-    (_match, prefix, key, value) =>
-      `${prefix ?? ""}ENV ${key}=${SECRET_MASK}`
-  );
-  output = output.replace(
-    DOCKER_ENV_SPACE_RE,
-    (_match, prefix, key) => `${prefix ?? ""}ENV ${key} ${SECRET_MASK}`
-  );
-  output = output.replace(
-    ARG_ASSIGNMENT_RE,
-    (_match, prefix, key) => `${prefix ?? ""}ARG ${key}=${SECRET_MASK}`
-  );
-  output = output.replace(
-    ARG_SPACE_RE,
-    (_match, prefix, key) => `${prefix ?? ""}ARG ${key} ${SECRET_MASK}`
-  );
-  output = output.replace(BUILD_ARG_RE, `$1${SECRET_MASK}`);
-  return output;
-}
-
-function resolveLogMode(mode?: string): LogMode {
-  if (mode === "strict" || mode === "raw" || mode === "safe") return mode;
-  return "safe";
-}
-
-function assertRawLogsAllowed(mode: LogMode) {
-  if (mode === "raw" && !COOLIFY_ALLOW_UNSAFE_LOGS) {
-    throw new Error(
-      "Raw logs are disabled. Set COOLIFY_ALLOW_UNSAFE_LOGS=true to allow."
-    );
-  }
-}
-
-function isSensitiveLogLine(line: string, mode: LogMode): boolean {
-  const basic =
-    ENV_ASSIGNMENT_TEST_RE.test(line) ||
-    DOCKER_ENV_TEST_RE.test(line) ||
-    ARG_TEST_RE.test(line) ||
-    BUILD_ARG_TEST_RE.test(line) ||
-    URL_TOKEN_TEST_RE.test(line) ||
-    AUTH_HEADER_TEST_RE.test(line) ||
-    (SENSITIVE_KEY_PATTERN.test(line) && /[:=]/.test(line)) ||
-    JWT_RE.test(line);
-  if (mode === "safe") return basic;
-  return (
-    basic ||
-    LONG_HEX_RE.test(line) ||
-    LONG_BASE64_RE.test(line) ||
-    LONG_BASE64URL_RE.test(line)
-  );
-}
-
-function redactLogString(input: string, mode: LogMode): string {
-  if (mode === "raw") return input;
-  return input
-    .split(/\r?\n/)
-    .map((line) => {
-      if (isSensitiveLogLine(line, mode)) {
-        return "[REDACTED LINE]";
-      }
-      return redactLogLine(line);
-    })
-    .join("\n");
-}
-
-function stripLogFields(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map((item) => stripLogFields(item));
-  if (!isRecord(value)) return value;
-  const result: Record<string, unknown> = {};
-  for (const [key, fieldValue] of Object.entries(value)) {
-    if (LOG_FIELD_PATTERN.test(key)) continue;
-    result[key] = stripLogFields(fieldValue);
-  }
-  return result;
-}
-
-function redactLogFields(value: unknown, mode: LogMode): unknown {
-  if (Array.isArray(value))
-    return value.map((item) => redactLogFields(item, mode));
-  if (!isRecord(value)) return value;
-  const result: Record<string, unknown> = {};
-  for (const [key, fieldValue] of Object.entries(value)) {
-    if (LOG_FIELD_PATTERN.test(key)) {
-      if (typeof fieldValue === "string") {
-        result[key] = redactLogString(fieldValue, mode);
-        continue;
-      }
-      if (Array.isArray(fieldValue)) {
-        result[key] = fieldValue.map((entry) =>
-          typeof entry === "string"
-            ? redactLogString(entry, mode)
-            : redactLogFields(entry, mode)
-        );
-        continue;
-      }
-    }
-    result[key] = redactLogFields(fieldValue, mode);
-  }
-  return result;
-}
-
 function summarizeApplication(item: unknown): unknown {
   if (!isRecord(item)) return item;
   const summary = pickFields(item, ["id", "uuid", "name", "status", "fqdn"]);
@@ -473,6 +263,303 @@ export function registerCoolifyTools(server: McpServer) {
         : filtered;
       const page = paginate(summarized, limit, offset);
       return listWithMeta("Resources fetched.", page.items, {
+        total: page.total,
+        offset: page.offset,
+        limit: page.limit,
+        hasMore: page.hasMore,
+      });
+    }
+  );
+
+  // ============================================
+  // Projects, Servers & Environments
+  // ============================================
+
+  server.registerTool(
+    "listProjects",
+    {
+      title: "List projects",
+      description: "List all Coolify projects. Returns project UUID, name, description, and environments.",
+      inputSchema: zod.object({
+        limit: zod.number().int().min(1).optional(),
+        offset: zod.number().int().min(0).optional(),
+      }),
+    },
+    async ({ limit, offset }) => {
+      const data = await unwrap(sdk.listProjects(), "listProjects");
+      const items = Array.isArray(data) ? data : [];
+      const page = paginate(items, limit, offset);
+      return listWithMeta("Projects fetched.", page.items, {
+        total: page.total,
+        offset: page.offset,
+        limit: page.limit,
+        hasMore: page.hasMore,
+      });
+    }
+  );
+
+  server.registerTool(
+    "createProject",
+    {
+      title: "Create project",
+      description: "Create a new Coolify project. Returns the project UUID.",
+      inputSchema: z.zCreateProjectData.shape.body.shape,
+    },
+    async (body) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createProject({ body }),
+        "createProject"
+      );
+      const uuid = isRecord(data) ? data.uuid : undefined;
+      return ok(
+        uuid ? `Project created with UUID: ${uuid}` : "Project created.",
+        data
+      );
+    }
+  );
+
+  server.registerTool(
+    "listServers",
+    {
+      title: "List servers",
+      description: "List all Coolify servers. Returns server UUID, name, IP, user, port, and proxy type.",
+      inputSchema: zod.object({
+        limit: zod.number().int().min(1).optional(),
+        offset: zod.number().int().min(0).optional(),
+        summary: zod.boolean().optional(),
+      }),
+    },
+    async ({ limit, offset, summary }) => {
+      const data = await unwrap(sdk.listServers(), "listServers");
+      const items = Array.isArray(data) ? data : [];
+      const useSummary = summary ?? true;
+      const summarized = useSummary
+        ? items.map((item) => {
+            if (!isRecord(item)) return item;
+            return pickFields(item, ["id", "uuid", "name", "ip", "user", "port", "proxy_type"]);
+          })
+        : items;
+      const page = paginate(summarized, limit, offset);
+      return listWithMeta("Servers fetched.", page.items, {
+        total: page.total,
+        offset: page.offset,
+        limit: page.limit,
+        hasMore: page.hasMore,
+      });
+    }
+  );
+
+  server.registerTool(
+    "getServer",
+    {
+      title: "Get server",
+      description: "Get server details by UUID.",
+      inputSchema: z.zGetServerByUuidData.shape.path.shape,
+    },
+    async ({ uuid }) => {
+      const data = await unwrap(
+        sdk.getServerByUuid({ path: { uuid } }),
+        "getServer"
+      );
+      return ok(`Server ${uuid} fetched.`, data);
+    }
+  );
+
+  server.registerTool(
+    "listEnvironments",
+    {
+      title: "List environments",
+      description: "List all environments for a project. Requires the project UUID.",
+      inputSchema: z.zGetEnvironmentsData.shape.path.shape,
+    },
+    async ({ uuid }) => {
+      const data = await unwrap(
+        sdk.getEnvironments({ path: { uuid } }),
+        "listEnvironments"
+      );
+      const items = Array.isArray(data) ? data : [];
+      return listWithMeta(`Environments for project ${uuid} fetched.`, items, {
+        total: items.length,
+      });
+    }
+  );
+
+  server.registerTool(
+    "createEnvironment",
+    {
+      title: "Create environment",
+      description: "Create a new environment in a project. Requires the project UUID.",
+      inputSchema: {
+        ...z.zCreateEnvironmentData.shape.path.shape,
+        ...z.zCreateEnvironmentData.shape.body.shape,
+      },
+    },
+    async ({ uuid, ...body }) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createEnvironment({ path: { uuid }, body }),
+        "createEnvironment"
+      );
+      const envUuid = isRecord(data) ? data.uuid : undefined;
+      return ok(
+        envUuid
+          ? `Environment created with UUID: ${envUuid}`
+          : "Environment created.",
+        data
+      );
+    }
+  );
+
+  server.registerTool(
+    "updateProject",
+    {
+      title: "Update project",
+      description: "Update a project's name or description.",
+      inputSchema: {
+        ...z.zUpdateProjectByUuidData.shape.path.shape,
+        ...z.zUpdateProjectByUuidData.shape.body.shape,
+      },
+    },
+    async ({ uuid, ...body }) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.updateProjectByUuid({ path: { uuid }, body }),
+        "updateProject"
+      );
+      return ok(`Project ${uuid} updated.`, data);
+    }
+  );
+
+  server.registerTool(
+    "deleteProject",
+    {
+      title: "Delete project",
+      description: "Delete a project by UUID. This will delete all environments and resources in the project.",
+      inputSchema: z.zDeleteProjectByUuidData.shape.path.shape,
+    },
+    async ({ uuid }) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.deleteProjectByUuid({ path: { uuid } }),
+        "deleteProject"
+      );
+      return ok(`Project ${uuid} deleted.`, data);
+    }
+  );
+
+  server.registerTool(
+    "createServer",
+    {
+      title: "Create server",
+      description: "Create a new server. Requires a private key UUID for SSH access.",
+      inputSchema: z.zCreateServerData.shape.body.shape,
+    },
+    async (body) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createServer({ body }),
+        "createServer"
+      );
+      const uuid = isRecord(data) ? data.uuid : undefined;
+      return ok(
+        uuid ? `Server created with UUID: ${uuid}` : "Server created.",
+        data
+      );
+    }
+  );
+
+  server.registerTool(
+    "validateServer",
+    {
+      title: "Validate server",
+      description: "Validate server connection and configuration by UUID.",
+      inputSchema: z.zValidateServerByUuidData.shape.path.shape,
+    },
+    async ({ uuid }) => {
+      const data = await unwrap(
+        sdk.validateServerByUuid({ path: { uuid } }),
+        "validateServer"
+      );
+      return ok(`Server ${uuid} validation started.`, data);
+    }
+  );
+
+  // ============================================
+  // Private Keys (Security)
+  // ============================================
+
+  server.registerTool(
+    "listPrivateKeys",
+    {
+      title: "List private keys",
+      description: "List all SSH private keys. Keys are used for server authentication and deploy keys.",
+      inputSchema: zod.object({
+        limit: zod.number().int().min(1).optional(),
+        offset: zod.number().int().min(0).optional(),
+      }),
+    },
+    async ({ limit, offset }) => {
+      const data = await unwrap(sdk.listPrivateKeys(), "listPrivateKeys");
+      const items = Array.isArray(data) ? data : [];
+      const summarized = items.map((item) => {
+        if (!isRecord(item)) return item;
+        return pickFields(item, ["id", "uuid", "name", "description", "is_git_related"]);
+      });
+      const page = paginate(summarized, limit, offset);
+      return listWithMeta("Private keys fetched.", page.items, {
+        total: page.total,
+        offset: page.offset,
+        limit: page.limit,
+        hasMore: page.hasMore,
+      });
+    }
+  );
+
+  server.registerTool(
+    "createPrivateKey",
+    {
+      title: "Create private key",
+      description: "Create a new SSH private key. The private_key field should contain the full PEM-encoded key.",
+      inputSchema: z.zCreatePrivateKeyData.shape.body.shape,
+    },
+    async (body) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createPrivateKey({ body }),
+        "createPrivateKey"
+      );
+      const uuid = isRecord(data) ? data.uuid : undefined;
+      return ok(
+        uuid ? `Private key created with UUID: ${uuid}` : "Private key created.",
+        data
+      );
+    }
+  );
+
+  // ============================================
+  // GitHub Apps
+  // ============================================
+
+  server.registerTool(
+    "listGithubApps",
+    {
+      title: "List GitHub Apps",
+      description: "List all configured GitHub Apps. Used for private repository access.",
+      inputSchema: zod.object({
+        limit: zod.number().int().min(1).optional(),
+        offset: zod.number().int().min(0).optional(),
+      }),
+    },
+    async ({ limit, offset }) => {
+      const data = await unwrap(sdk.listGithubApps(), "listGithubApps");
+      const items = Array.isArray(data) ? data : [];
+      const summarized = items.map((item) => {
+        if (!isRecord(item)) return item;
+        return pickFields(item, ["id", "uuid", "name", "organization", "app_id", "installation_id", "is_public"]);
+      });
+      const page = paginate(summarized, limit, offset);
+      return listWithMeta("GitHub Apps fetched.", page.items, {
         total: page.total,
         offset: page.offset,
         limit: page.limit,
@@ -563,34 +650,20 @@ export function registerCoolifyTools(server: McpServer) {
       inputSchema: zod.object({
         limit: zod.number().int().min(1).optional(),
         offset: zod.number().int().min(0).optional(),
-        includeLogs: zod.boolean().optional(),
-        logMode: zod.enum(LOG_MODE_VALUES).optional(),
       }),
     },
-    async ({ limit, offset, includeLogs, logMode }) => {
-      const resolvedLogMode = resolveLogMode(logMode);
-      assertRawLogsAllowed(resolvedLogMode);
+    async ({ limit, offset }) => {
       const data = await unwrap(sdk.listDeployments(), "listDeployments");
       const items = normalizeItems(data);
       if (!items) {
-        const parsed = parseMaybeJson(data);
-        const sanitized = includeLogs
-          ? redactLogFields(parsed, resolvedLogMode)
-          : stripLogFields(parsed);
-        const redacted = redactSecrets(sanitized);
-        return list("Running deployments fetched.", redacted);
+        return list("Running deployments fetched.", parseMaybeJson(data));
       }
-      const sanitized = includeLogs
-        ? items.map((item) => redactLogFields(item, resolvedLogMode))
-        : items.map((item) => stripLogFields(item));
-      const redacted = redactSecrets(sanitized);
-      const page = paginate(redacted as typeof sanitized, limit, offset);
+      const page = paginate(items, limit, offset);
       return listWithMeta("Running deployments fetched.", page.items, {
         total: page.total,
         offset: page.offset,
         limit: page.limit,
         hasMore: page.hasMore,
-        logsStripped: !includeLogs,
       });
     }
   );
@@ -639,35 +712,15 @@ export function registerCoolifyTools(server: McpServer) {
       inputSchema: {
         ...z.zListDeploymentsByAppUuidData.shape.path.shape,
         ...z.zListDeploymentsByAppUuidData.shape.query.unwrap().shape,
-        includeLogs: zod.boolean().optional(),
-        logMode: zod.enum(LOG_MODE_VALUES).optional(),
       },
     },
-    async ({ uuid, includeLogs, logMode, ...query }) => {
-      const resolvedLogMode = resolveLogMode(logMode);
-      assertRawLogsAllowed(resolvedLogMode);
+    async ({ uuid, ...query }) => {
       const data = await unwrap(
         sdk.listDeploymentsByAppUuid({ path: { uuid }, query }),
         "listAppDeployments"
       );
-      const parsed = parseMaybeJson(data);
-      const items = normalizeItems(data) ?? parsed;
-      if (!Array.isArray(items)) {
-        const sanitized = includeLogs
-          ? redactLogFields(items, resolvedLogMode)
-          : stripLogFields(items);
-        const redacted = redactSecrets(sanitized);
-        return listWithMeta(`Deployments for ${uuid} fetched.`, redacted, {
-          logsStripped: !includeLogs,
-        });
-      }
-      const sanitized = includeLogs
-        ? items.map((item) => redactLogFields(item, resolvedLogMode))
-        : items.map((item) => stripLogFields(item));
-      const redacted = redactSecrets(sanitized);
-      return listWithMeta(`Deployments for ${uuid} fetched.`, redacted, {
-        logsStripped: !includeLogs,
-      });
+      const items = normalizeItems(data) ?? parseMaybeJson(data);
+      return listWithMeta(`Deployments for ${uuid} fetched.`, items, {});
     }
   );
 
@@ -733,23 +786,14 @@ export function registerCoolifyTools(server: McpServer) {
     {
       title: "Get deployment",
       description: "Get deployment status and logs by UUID.",
-      inputSchema: z.zGetDeploymentByUuidData.shape.path.extend({
-        includeLogs: zod.boolean().optional(),
-        logMode: zod.enum(LOG_MODE_VALUES).optional(),
-      }),
+      inputSchema: z.zGetDeploymentByUuidData.shape.path.shape,
     },
-    async ({ uuid, includeLogs, logMode }) => {
-      const resolvedLogMode = resolveLogMode(logMode);
-      assertRawLogsAllowed(resolvedLogMode);
+    async ({ uuid }) => {
       const data = await unwrap(
         sdk.getDeploymentByUuid({ path: { uuid } }),
         "getDeployment"
       );
-      const sanitized = includeLogs
-        ? redactLogFields(data, resolvedLogMode)
-        : stripLogFields(data);
-      const redacted = redactSecrets(sanitized);
-      return ok(`Deployment ${uuid} fetched.`, redacted);
+      return ok(`Deployment ${uuid} fetched.`, data);
     }
   );
 
@@ -761,28 +805,13 @@ export function registerCoolifyTools(server: McpServer) {
       inputSchema: {
         ...z.zGetApplicationLogsByUuidData.shape.path.shape,
         ...z.zGetApplicationLogsByUuidData.shape.query.unwrap().shape,
-        logMode: zod.enum(LOG_MODE_VALUES).optional(),
       },
     },
-    async ({ uuid, logMode, ...query }) => {
-      const resolvedLogMode = resolveLogMode(logMode);
-      assertRawLogsAllowed(resolvedLogMode);
+    async ({ uuid, ...query }) => {
       const data = await unwrap(
         sdk.getApplicationLogsByUuid({ path: { uuid }, query }),
         "getLogs"
       );
-      if (data && typeof data === "object" && "logs" in data) {
-        const logsValue = (data as { logs?: unknown }).logs;
-        if (typeof logsValue === "string") {
-          return ok("Logs fetched.", {
-            ...data,
-            logs:
-              resolvedLogMode === "raw"
-                ? logsValue
-                : redactLogString(logsValue, resolvedLogMode),
-          });
-        }
-      }
       return ok("Logs fetched.", data);
     }
   );
@@ -907,6 +936,23 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
+    "deleteEnv",
+    {
+      title: "Delete env var",
+      description: "Delete an environment variable from an application by env UUID.",
+      inputSchema: z.zDeleteEnvByApplicationUuidData.shape.path.shape,
+    },
+    async ({ uuid, env_uuid }) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.deleteEnvByApplicationUuid({ path: { uuid, env_uuid } }),
+        "deleteEnv"
+      );
+      return ok(`Env var ${env_uuid} deleted from application ${uuid}.`, data);
+    }
+  );
+
+  server.registerTool(
     "deploy",
     {
       title: "Trigger deploy",
@@ -934,6 +980,297 @@ export function registerCoolifyTools(server: McpServer) {
       return ok(
         `Deployment ${uuid} cancelled.`,
         await unwrap(sdk.cancelDeploymentByUuid({ path: { uuid } }), "cancelDeployment")
+      );
+    }
+  );
+
+  // ============================================
+  // Application Creation Tools
+  // ============================================
+
+  server.registerTool(
+    "createPublicApplication",
+    {
+      title: "Create public git application",
+      description:
+        "Create a new application based on a public git repository. Requires project_uuid, server_uuid, environment_name (or environment_uuid), git_repository, git_branch, build_pack, and ports_exposes.",
+      inputSchema: z.zCreatePublicApplicationData.shape.body.shape,
+    },
+    async (body) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createPublicApplication({ body }),
+        "createPublicApplication"
+      );
+      const uuid = isRecord(data) ? data.uuid : undefined;
+      return ok(
+        uuid ? `Application created with UUID: ${uuid}` : "Application created.",
+        data
+      );
+    }
+  );
+
+  server.registerTool(
+    "createPrivateGithubAppApplication",
+    {
+      title: "Create private GitHub App application",
+      description:
+        "Create a new application using a private GitHub App. Requires project_uuid, server_uuid, environment_name (or environment_uuid), github_app_uuid, git_repository, git_branch, build_pack, and ports_exposes.",
+      inputSchema: z.zCreatePrivateGithubAppApplicationData.shape.body.shape,
+    },
+    async (body) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createPrivateGithubAppApplication({ body }),
+        "createPrivateGithubAppApplication"
+      );
+      const uuid = isRecord(data) ? data.uuid : undefined;
+      return ok(
+        uuid ? `Application created with UUID: ${uuid}` : "Application created.",
+        data
+      );
+    }
+  );
+
+  server.registerTool(
+    "createPrivateDeployKeyApplication",
+    {
+      title: "Create private deploy key application",
+      description:
+        "Create a new application using a private SSH deploy key. Requires project_uuid, server_uuid, environment_name (or environment_uuid), private_key_uuid, git_repository, git_branch, build_pack, and ports_exposes.",
+      inputSchema: z.zCreatePrivateDeployKeyApplicationData.shape.body.shape,
+    },
+    async (body) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createPrivateDeployKeyApplication({ body }),
+        "createPrivateDeployKeyApplication"
+      );
+      const uuid = isRecord(data) ? data.uuid : undefined;
+      return ok(
+        uuid ? `Application created with UUID: ${uuid}` : "Application created.",
+        data
+      );
+    }
+  );
+
+  server.registerTool(
+    "createDockerfileApplication",
+    {
+      title: "Create Dockerfile application",
+      description:
+        "Create a new application from a Dockerfile. Requires project_uuid, server_uuid, environment_name (or environment_uuid), and dockerfile content.",
+      inputSchema: z.zCreateDockerfileApplicationData.shape.body.shape,
+    },
+    async (body) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createDockerfileApplication({ body }),
+        "createDockerfileApplication"
+      );
+      const uuid = isRecord(data) ? data.uuid : undefined;
+      return ok(
+        uuid ? `Application created with UUID: ${uuid}` : "Application created.",
+        data
+      );
+    }
+  );
+
+  server.registerTool(
+    "createDockerImageApplication",
+    {
+      title: "Create Docker image application",
+      description:
+        "Create a new application from a prebuilt Docker image. Requires project_uuid, server_uuid, environment_name (or environment_uuid), docker_registry_image_name, and ports_exposes.",
+      inputSchema: z.zCreateDockerimageApplicationData.shape.body.shape,
+    },
+    async (body) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createDockerimageApplication({ body }),
+        "createDockerImageApplication"
+      );
+      const uuid = isRecord(data) ? data.uuid : undefined;
+      return ok(
+        uuid ? `Application created with UUID: ${uuid}` : "Application created.",
+        data
+      );
+    }
+  );
+
+  server.registerTool(
+    "createDockerComposeApplication",
+    {
+      title: "Create Docker Compose application",
+      description:
+        "Create a new application from Docker Compose. Requires project_uuid, server_uuid, environment_name (or environment_uuid), and docker_compose_raw (YAML content).",
+      inputSchema: z.zCreateDockercomposeApplicationData.shape.body.shape,
+    },
+    async (body) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createDockercomposeApplication({ body }),
+        "createDockerComposeApplication"
+      );
+      const uuid = isRecord(data) ? data.uuid : undefined;
+      return ok(
+        uuid ? `Application created with UUID: ${uuid}` : "Application created.",
+        data
+      );
+    }
+  );
+
+  // ============================================
+  // Application Management Tools
+  // ============================================
+
+  server.registerTool(
+    "updateApplication",
+    {
+      title: "Update application",
+      description: "Update an application's configuration by UUID.",
+      inputSchema: {
+        ...z.zUpdateApplicationByUuidData.shape.path.shape,
+        ...z.zUpdateApplicationByUuidData.shape.body.shape,
+      },
+    },
+    async ({ uuid, ...body }) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.updateApplicationByUuid({ path: { uuid }, body }),
+        "updateApplication"
+      );
+      return ok(`Application ${uuid} updated.`, redactSecrets(data));
+    }
+  );
+
+  server.registerTool(
+    "deleteApplication",
+    {
+      title: "Delete application",
+      description: "Delete an application by UUID. Optionally delete volumes, configurations, and connected networks.",
+      inputSchema: {
+        ...z.zDeleteApplicationByUuidData.shape.path.shape,
+        ...z.zDeleteApplicationByUuidData.shape.query.unwrap().shape,
+      },
+    },
+    async ({ uuid, ...query }) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.deleteApplicationByUuid({ path: { uuid }, query }),
+        "deleteApplication"
+      );
+      return ok(`Application ${uuid} deleted.`, data);
+    }
+  );
+
+  server.registerTool(
+    "startApplication",
+    {
+      title: "Start application",
+      description: "Start an application by UUID. Optionally force rebuild.",
+      inputSchema: {
+        ...z.zStartApplicationByUuidData.shape.path.shape,
+        ...z.zStartApplicationByUuidData.shape.query.unwrap().shape,
+      },
+    },
+    async ({ uuid, ...query }) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.startApplicationByUuid({ path: { uuid }, query }),
+        "startApplication"
+      );
+      return ok(`Application ${uuid} start initiated.`, data);
+    }
+  );
+
+  server.registerTool(
+    "stopApplication",
+    {
+      title: "Stop application",
+      description: "Stop an application by UUID.",
+      inputSchema: z.zStopApplicationByUuidData.shape.path.shape,
+    },
+    async ({ uuid }) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.stopApplicationByUuid({ path: { uuid } }),
+        "stopApplication"
+      );
+      return ok(`Application ${uuid} stopped.`, data);
+    }
+  );
+
+  server.registerTool(
+    "restartApplication",
+    {
+      title: "Restart application",
+      description: "Restart an application by UUID.",
+      inputSchema: z.zRestartApplicationByUuidData.shape.path.shape,
+    },
+    async ({ uuid }) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.restartApplicationByUuid({ path: { uuid } }),
+        "restartApplication"
+      );
+      return ok(`Application ${uuid} restarted.`, data);
+    }
+  );
+
+  // ============================================
+  // Services
+  // ============================================
+
+  server.registerTool(
+    "listServices",
+    {
+      title: "List services",
+      description: "List all Coolify services (one-click apps like databases, caches, etc.).",
+      inputSchema: zod.object({
+        limit: zod.number().int().min(1).optional(),
+        offset: zod.number().int().min(0).optional(),
+        summary: zod.boolean().optional(),
+      }),
+    },
+    async ({ limit, offset, summary }) => {
+      const data = await unwrap(sdk.listServices(), "listServices");
+      const items = Array.isArray(data) ? data : [];
+      const useSummary = summary ?? true;
+      const summarized = useSummary
+        ? items.map((item) => {
+            if (!isRecord(item)) return item;
+            return pickFields(item, ["id", "uuid", "name", "status", "server_id"]);
+          })
+        : items;
+      const redacted = redactSecrets(summarized);
+      const page = paginate(redacted as typeof summarized, limit, offset);
+      return listWithMeta("Services fetched.", page.items, {
+        total: page.total,
+        offset: page.offset,
+        limit: page.limit,
+        hasMore: page.hasMore,
+      });
+    }
+  );
+
+  server.registerTool(
+    "createService",
+    {
+      title: "Create service",
+      description: "Create a new one-click service (database, cache, etc.). Requires type, name, project_uuid, server_uuid, and environment_name.",
+      inputSchema: z.zCreateServiceData.shape.body.shape,
+    },
+    async (body) => {
+      requireWrite();
+      const data = await unwrap(
+        sdk.createService({ body }),
+        "createService"
+      );
+      const uuid = isRecord(data) ? data.uuid : undefined;
+      return ok(
+        uuid ? `Service created with UUID: ${uuid}` : "Service created.",
+        data
       );
     }
   );
