@@ -3,6 +3,140 @@
 import { z } from 'zod';
 
 /**
+ * Service model
+ */
+export const zService = z.object({
+    id: z.optional(z.int()),
+    uuid: z.optional(z.string()),
+    name: z.optional(z.string()),
+    environment_id: z.optional(z.int()),
+    server_id: z.optional(z.int()),
+    description: z.optional(z.string()),
+    docker_compose_raw: z.optional(z.string()),
+    docker_compose: z.optional(z.string()),
+    destination_type: z.optional(z.string()),
+    destination_id: z.optional(z.int()),
+    connect_to_docker_network: z.optional(z.boolean()),
+    is_container_label_escape_enabled: z.optional(z.boolean()),
+    is_container_label_readonly_enabled: z.optional(z.boolean()),
+    config_hash: z.optional(z.string()),
+    service_type: z.optional(z.string()),
+    created_at: z.optional(z.string()),
+    updated_at: z.optional(z.string()),
+    deleted_at: z.optional(z.string())
+});
+
+/**
+ * Server Settings model
+ */
+export const zServerSetting = z.object({
+    id: z.optional(z.int()),
+    concurrent_builds: z.optional(z.int()),
+    deployment_queue_limit: z.optional(z.int()),
+    dynamic_timeout: z.optional(z.int()),
+    force_disabled: z.optional(z.boolean()),
+    force_server_cleanup: z.optional(z.boolean()),
+    is_build_server: z.optional(z.boolean()),
+    is_cloudflare_tunnel: z.optional(z.boolean()),
+    is_jump_server: z.optional(z.boolean()),
+    is_logdrain_axiom_enabled: z.optional(z.boolean()),
+    is_logdrain_custom_enabled: z.optional(z.boolean()),
+    is_logdrain_highlight_enabled: z.optional(z.boolean()),
+    is_logdrain_newrelic_enabled: z.optional(z.boolean()),
+    is_metrics_enabled: z.optional(z.boolean()),
+    is_reachable: z.optional(z.boolean()),
+    is_sentinel_enabled: z.optional(z.boolean()),
+    is_swarm_manager: z.optional(z.boolean()),
+    is_swarm_worker: z.optional(z.boolean()),
+    is_terminal_enabled: z.optional(z.boolean()),
+    is_usable: z.optional(z.boolean()),
+    logdrain_axiom_api_key: z.optional(z.string()),
+    logdrain_axiom_dataset_name: z.optional(z.string()),
+    logdrain_custom_config: z.optional(z.string()),
+    logdrain_custom_config_parser: z.optional(z.string()),
+    logdrain_highlight_project_id: z.optional(z.string()),
+    logdrain_newrelic_base_uri: z.optional(z.string()),
+    logdrain_newrelic_license_key: z.optional(z.string()),
+    sentinel_metrics_history_days: z.optional(z.int()),
+    sentinel_metrics_refresh_rate_seconds: z.optional(z.int()),
+    sentinel_token: z.optional(z.string()),
+    docker_cleanup_frequency: z.optional(z.string()),
+    docker_cleanup_threshold: z.optional(z.int()),
+    server_id: z.optional(z.int()),
+    wildcard_domain: z.optional(z.string()),
+    created_at: z.optional(z.string()),
+    updated_at: z.optional(z.string()),
+    delete_unused_volumes: z.optional(z.boolean()),
+    delete_unused_networks: z.optional(z.boolean())
+});
+
+/**
+ * Server model
+ */
+export const zServer = z.object({
+    id: z.optional(z.int()),
+    uuid: z.optional(z.string()),
+    name: z.optional(z.string()),
+    description: z.optional(z.string()),
+    ip: z.optional(z.string()),
+    user: z.optional(z.string()),
+    port: z.optional(z.int()),
+    proxy: z.optional(z.record(z.string(), z.unknown())),
+    proxy_type: z.optional(z.enum([
+        'traefik',
+        'caddy',
+        'none'
+    ])),
+    high_disk_usage_notification_sent: z.optional(z.boolean()),
+    unreachable_notification_sent: z.optional(z.boolean()),
+    unreachable_count: z.optional(z.int()),
+    validation_logs: z.optional(z.string()),
+    log_drain_notification_sent: z.optional(z.boolean()),
+    swarm_cluster: z.optional(z.string()),
+    settings: z.optional(zServerSetting)
+});
+
+/**
+ * Environment model
+ */
+export const zEnvironment = z.object({
+    id: z.optional(z.int()),
+    name: z.optional(z.string()),
+    project_id: z.optional(z.int()),
+    created_at: z.optional(z.string()),
+    updated_at: z.optional(z.string()),
+    description: z.optional(z.string())
+});
+
+/**
+ * Project model
+ */
+export const zProject = z.object({
+    id: z.optional(z.int()),
+    uuid: z.optional(z.string()),
+    name: z.optional(z.string()),
+    description: z.optional(z.string()),
+    environments: z.optional(z.array(zEnvironment))
+});
+
+/**
+ * Private Key model
+ */
+export const zPrivateKey = z.object({
+    id: z.optional(z.int()),
+    uuid: z.optional(z.string()),
+    name: z.optional(z.string()),
+    description: z.optional(z.string()),
+    private_key: z.optional(z.string()),
+    public_key: z.optional(z.string()),
+    fingerprint: z.optional(z.string()),
+    is_git_related: z.optional(z.boolean()),
+    team_id: z.optional(z.int()),
+    created_at: z.optional(z.string()),
+    updated_at: z.optional(z.string())
+});
+
+/**
  * Environment Variable model
  */
 export const zEnvironmentVariable = z.object({
@@ -161,6 +295,471 @@ export const zListApplicationsData = z.object({
  */
 export const zListApplicationsResponse = z.array(zApplication);
 
+export const zCreatePublicApplicationData = z.object({
+    body: z.object({
+        project_uuid: z.string(),
+        server_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        git_repository: z.string(),
+        git_branch: z.string(),
+        build_pack: z.enum([
+            'nixpacks',
+            'static',
+            'dockerfile',
+            'dockercompose'
+        ]),
+        ports_exposes: z.string(),
+        destination_uuid: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        domains: z.optional(z.string()),
+        git_commit_sha: z.optional(z.string()),
+        docker_registry_image_name: z.optional(z.string()),
+        docker_registry_image_tag: z.optional(z.string()),
+        is_static: z.optional(z.boolean()),
+        static_image: z.optional(z.enum(['nginx:alpine'])),
+        install_command: z.optional(z.string()),
+        build_command: z.optional(z.string()),
+        start_command: z.optional(z.string()),
+        ports_mappings: z.optional(z.string()),
+        base_directory: z.optional(z.string()),
+        publish_directory: z.optional(z.string()),
+        health_check_enabled: z.optional(z.boolean()),
+        health_check_path: z.optional(z.string()),
+        health_check_port: z.optional(z.string()),
+        health_check_host: z.optional(z.string()),
+        health_check_method: z.optional(z.string()),
+        health_check_return_code: z.optional(z.int()),
+        health_check_scheme: z.optional(z.string()),
+        health_check_response_text: z.optional(z.string()),
+        health_check_interval: z.optional(z.int()),
+        health_check_timeout: z.optional(z.int()),
+        health_check_retries: z.optional(z.int()),
+        health_check_start_period: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        custom_labels: z.optional(z.string()),
+        custom_docker_run_options: z.optional(z.string()),
+        post_deployment_command: z.optional(z.string()),
+        post_deployment_command_container: z.optional(z.string()),
+        pre_deployment_command: z.optional(z.string()),
+        pre_deployment_command_container: z.optional(z.string()),
+        manual_webhook_secret_github: z.optional(z.string()),
+        manual_webhook_secret_gitlab: z.optional(z.string()),
+        manual_webhook_secret_bitbucket: z.optional(z.string()),
+        manual_webhook_secret_gitea: z.optional(z.string()),
+        redirect: z.optional(z.enum([
+            'www',
+            'non-www',
+            'both'
+        ])),
+        instant_deploy: z.optional(z.boolean()),
+        dockerfile: z.optional(z.string()),
+        docker_compose_location: z.optional(z.string()),
+        docker_compose_raw: z.optional(z.string()),
+        docker_compose_custom_start_command: z.optional(z.string()),
+        docker_compose_custom_build_command: z.optional(z.string()),
+        docker_compose_domains: z.optional(z.array(z.unknown())),
+        watch_paths: z.optional(z.string()),
+        use_build_server: z.optional(z.boolean()),
+        is_http_basic_auth_enabled: z.optional(z.boolean()),
+        http_basic_auth_username: z.optional(z.string()),
+        http_basic_auth_password: z.optional(z.string()),
+        connect_to_docker_network: z.optional(z.boolean()),
+        force_domain_override: z.optional(z.boolean()),
+        autogenerate_domain: z.optional(z.boolean()).default(true)
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Application created successfully.
+ */
+export const zCreatePublicApplicationResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
+export const zCreatePrivateGithubAppApplicationData = z.object({
+    body: z.object({
+        project_uuid: z.string(),
+        server_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        github_app_uuid: z.string(),
+        git_repository: z.string(),
+        git_branch: z.string(),
+        ports_exposes: z.string(),
+        destination_uuid: z.optional(z.string()),
+        build_pack: z.enum([
+            'nixpacks',
+            'static',
+            'dockerfile',
+            'dockercompose'
+        ]),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        domains: z.optional(z.string()),
+        git_commit_sha: z.optional(z.string()),
+        docker_registry_image_name: z.optional(z.string()),
+        docker_registry_image_tag: z.optional(z.string()),
+        is_static: z.optional(z.boolean()),
+        static_image: z.optional(z.enum(['nginx:alpine'])),
+        install_command: z.optional(z.string()),
+        build_command: z.optional(z.string()),
+        start_command: z.optional(z.string()),
+        ports_mappings: z.optional(z.string()),
+        base_directory: z.optional(z.string()),
+        publish_directory: z.optional(z.string()),
+        health_check_enabled: z.optional(z.boolean()),
+        health_check_path: z.optional(z.string()),
+        health_check_port: z.optional(z.string()),
+        health_check_host: z.optional(z.string()),
+        health_check_method: z.optional(z.string()),
+        health_check_return_code: z.optional(z.int()),
+        health_check_scheme: z.optional(z.string()),
+        health_check_response_text: z.optional(z.string()),
+        health_check_interval: z.optional(z.int()),
+        health_check_timeout: z.optional(z.int()),
+        health_check_retries: z.optional(z.int()),
+        health_check_start_period: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        custom_labels: z.optional(z.string()),
+        custom_docker_run_options: z.optional(z.string()),
+        post_deployment_command: z.optional(z.string()),
+        post_deployment_command_container: z.optional(z.string()),
+        pre_deployment_command: z.optional(z.string()),
+        pre_deployment_command_container: z.optional(z.string()),
+        manual_webhook_secret_github: z.optional(z.string()),
+        manual_webhook_secret_gitlab: z.optional(z.string()),
+        manual_webhook_secret_bitbucket: z.optional(z.string()),
+        manual_webhook_secret_gitea: z.optional(z.string()),
+        redirect: z.optional(z.enum([
+            'www',
+            'non-www',
+            'both'
+        ])),
+        instant_deploy: z.optional(z.boolean()),
+        dockerfile: z.optional(z.string()),
+        docker_compose_location: z.optional(z.string()),
+        docker_compose_raw: z.optional(z.string()),
+        docker_compose_custom_start_command: z.optional(z.string()),
+        docker_compose_custom_build_command: z.optional(z.string()),
+        docker_compose_domains: z.optional(z.array(z.unknown())),
+        watch_paths: z.optional(z.string()),
+        use_build_server: z.optional(z.boolean()),
+        is_http_basic_auth_enabled: z.optional(z.boolean()),
+        http_basic_auth_username: z.optional(z.string()),
+        http_basic_auth_password: z.optional(z.string()),
+        connect_to_docker_network: z.optional(z.boolean()),
+        force_domain_override: z.optional(z.boolean()),
+        autogenerate_domain: z.optional(z.boolean()).default(true)
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Application created successfully.
+ */
+export const zCreatePrivateGithubAppApplicationResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
+export const zCreatePrivateDeployKeyApplicationData = z.object({
+    body: z.object({
+        project_uuid: z.string(),
+        server_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        private_key_uuid: z.string(),
+        git_repository: z.string(),
+        git_branch: z.string(),
+        ports_exposes: z.string(),
+        destination_uuid: z.optional(z.string()),
+        build_pack: z.enum([
+            'nixpacks',
+            'static',
+            'dockerfile',
+            'dockercompose'
+        ]),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        domains: z.optional(z.string()),
+        git_commit_sha: z.optional(z.string()),
+        docker_registry_image_name: z.optional(z.string()),
+        docker_registry_image_tag: z.optional(z.string()),
+        is_static: z.optional(z.boolean()),
+        static_image: z.optional(z.enum(['nginx:alpine'])),
+        install_command: z.optional(z.string()),
+        build_command: z.optional(z.string()),
+        start_command: z.optional(z.string()),
+        ports_mappings: z.optional(z.string()),
+        base_directory: z.optional(z.string()),
+        publish_directory: z.optional(z.string()),
+        health_check_enabled: z.optional(z.boolean()),
+        health_check_path: z.optional(z.string()),
+        health_check_port: z.optional(z.string()),
+        health_check_host: z.optional(z.string()),
+        health_check_method: z.optional(z.string()),
+        health_check_return_code: z.optional(z.int()),
+        health_check_scheme: z.optional(z.string()),
+        health_check_response_text: z.optional(z.string()),
+        health_check_interval: z.optional(z.int()),
+        health_check_timeout: z.optional(z.int()),
+        health_check_retries: z.optional(z.int()),
+        health_check_start_period: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        custom_labels: z.optional(z.string()),
+        custom_docker_run_options: z.optional(z.string()),
+        post_deployment_command: z.optional(z.string()),
+        post_deployment_command_container: z.optional(z.string()),
+        pre_deployment_command: z.optional(z.string()),
+        pre_deployment_command_container: z.optional(z.string()),
+        manual_webhook_secret_github: z.optional(z.string()),
+        manual_webhook_secret_gitlab: z.optional(z.string()),
+        manual_webhook_secret_bitbucket: z.optional(z.string()),
+        manual_webhook_secret_gitea: z.optional(z.string()),
+        redirect: z.optional(z.enum([
+            'www',
+            'non-www',
+            'both'
+        ])),
+        instant_deploy: z.optional(z.boolean()),
+        dockerfile: z.optional(z.string()),
+        docker_compose_location: z.optional(z.string()),
+        docker_compose_raw: z.optional(z.string()),
+        docker_compose_custom_start_command: z.optional(z.string()),
+        docker_compose_custom_build_command: z.optional(z.string()),
+        docker_compose_domains: z.optional(z.array(z.unknown())),
+        watch_paths: z.optional(z.string()),
+        use_build_server: z.optional(z.boolean()),
+        is_http_basic_auth_enabled: z.optional(z.boolean()),
+        http_basic_auth_username: z.optional(z.string()),
+        http_basic_auth_password: z.optional(z.string()),
+        connect_to_docker_network: z.optional(z.boolean()),
+        force_domain_override: z.optional(z.boolean()),
+        autogenerate_domain: z.optional(z.boolean()).default(true)
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Application created successfully.
+ */
+export const zCreatePrivateDeployKeyApplicationResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
+export const zCreateDockerfileApplicationData = z.object({
+    body: z.object({
+        project_uuid: z.string(),
+        server_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        dockerfile: z.string(),
+        build_pack: z.optional(z.enum([
+            'nixpacks',
+            'static',
+            'dockerfile',
+            'dockercompose'
+        ])),
+        ports_exposes: z.optional(z.string()),
+        destination_uuid: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        domains: z.optional(z.string()),
+        docker_registry_image_name: z.optional(z.string()),
+        docker_registry_image_tag: z.optional(z.string()),
+        ports_mappings: z.optional(z.string()),
+        base_directory: z.optional(z.string()),
+        health_check_enabled: z.optional(z.boolean()),
+        health_check_path: z.optional(z.string()),
+        health_check_port: z.optional(z.string()),
+        health_check_host: z.optional(z.string()),
+        health_check_method: z.optional(z.string()),
+        health_check_return_code: z.optional(z.int()),
+        health_check_scheme: z.optional(z.string()),
+        health_check_response_text: z.optional(z.string()),
+        health_check_interval: z.optional(z.int()),
+        health_check_timeout: z.optional(z.int()),
+        health_check_retries: z.optional(z.int()),
+        health_check_start_period: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        custom_labels: z.optional(z.string()),
+        custom_docker_run_options: z.optional(z.string()),
+        post_deployment_command: z.optional(z.string()),
+        post_deployment_command_container: z.optional(z.string()),
+        pre_deployment_command: z.optional(z.string()),
+        pre_deployment_command_container: z.optional(z.string()),
+        manual_webhook_secret_github: z.optional(z.string()),
+        manual_webhook_secret_gitlab: z.optional(z.string()),
+        manual_webhook_secret_bitbucket: z.optional(z.string()),
+        manual_webhook_secret_gitea: z.optional(z.string()),
+        redirect: z.optional(z.enum([
+            'www',
+            'non-www',
+            'both'
+        ])),
+        instant_deploy: z.optional(z.boolean()),
+        use_build_server: z.optional(z.boolean()),
+        is_http_basic_auth_enabled: z.optional(z.boolean()),
+        http_basic_auth_username: z.optional(z.string()),
+        http_basic_auth_password: z.optional(z.string()),
+        connect_to_docker_network: z.optional(z.boolean()),
+        force_domain_override: z.optional(z.boolean()),
+        autogenerate_domain: z.optional(z.boolean()).default(true)
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Application created successfully.
+ */
+export const zCreateDockerfileApplicationResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
+export const zCreateDockerimageApplicationData = z.object({
+    body: z.object({
+        project_uuid: z.string(),
+        server_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        docker_registry_image_name: z.string(),
+        docker_registry_image_tag: z.optional(z.string()),
+        ports_exposes: z.string(),
+        destination_uuid: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        domains: z.optional(z.string()),
+        ports_mappings: z.optional(z.string()),
+        health_check_enabled: z.optional(z.boolean()),
+        health_check_path: z.optional(z.string()),
+        health_check_port: z.optional(z.string()),
+        health_check_host: z.optional(z.string()),
+        health_check_method: z.optional(z.string()),
+        health_check_return_code: z.optional(z.int()),
+        health_check_scheme: z.optional(z.string()),
+        health_check_response_text: z.optional(z.string()),
+        health_check_interval: z.optional(z.int()),
+        health_check_timeout: z.optional(z.int()),
+        health_check_retries: z.optional(z.int()),
+        health_check_start_period: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        custom_labels: z.optional(z.string()),
+        custom_docker_run_options: z.optional(z.string()),
+        post_deployment_command: z.optional(z.string()),
+        post_deployment_command_container: z.optional(z.string()),
+        pre_deployment_command: z.optional(z.string()),
+        pre_deployment_command_container: z.optional(z.string()),
+        manual_webhook_secret_github: z.optional(z.string()),
+        manual_webhook_secret_gitlab: z.optional(z.string()),
+        manual_webhook_secret_bitbucket: z.optional(z.string()),
+        manual_webhook_secret_gitea: z.optional(z.string()),
+        redirect: z.optional(z.enum([
+            'www',
+            'non-www',
+            'both'
+        ])),
+        instant_deploy: z.optional(z.boolean()),
+        use_build_server: z.optional(z.boolean()),
+        is_http_basic_auth_enabled: z.optional(z.boolean()),
+        http_basic_auth_username: z.optional(z.string()),
+        http_basic_auth_password: z.optional(z.string()),
+        connect_to_docker_network: z.optional(z.boolean()),
+        force_domain_override: z.optional(z.boolean()),
+        autogenerate_domain: z.optional(z.boolean()).default(true)
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Application created successfully.
+ */
+export const zCreateDockerimageApplicationResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
+export const zCreateDockercomposeApplicationData = z.object({
+    body: z.object({
+        project_uuid: z.string(),
+        server_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        docker_compose_raw: z.string(),
+        destination_uuid: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        instant_deploy: z.optional(z.boolean()),
+        use_build_server: z.optional(z.boolean()),
+        connect_to_docker_network: z.optional(z.boolean()),
+        force_domain_override: z.optional(z.boolean())
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Application created successfully.
+ */
+export const zCreateDockercomposeApplicationResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
+export const zDeleteApplicationByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.object({
+        delete_configurations: z.optional(z.boolean()).default(true),
+        delete_volumes: z.optional(z.boolean()).default(true),
+        docker_cleanup: z.optional(z.boolean()).default(true),
+        delete_connected_networks: z.optional(z.boolean()).default(true)
+    }))
+});
+
+/**
+ * Application deleted.
+ */
+export const zDeleteApplicationByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
 export const zGetApplicationByUuidData = z.object({
     body: z.optional(z.never()),
     path: z.object({
@@ -173,6 +772,94 @@ export const zGetApplicationByUuidData = z.object({
  * Get application by UUID.
  */
 export const zGetApplicationByUuidResponse = zApplication;
+
+export const zUpdateApplicationByUuidData = z.object({
+    body: z.object({
+        project_uuid: z.optional(z.string()),
+        server_uuid: z.optional(z.string()),
+        environment_name: z.optional(z.string()),
+        github_app_uuid: z.optional(z.string()),
+        git_repository: z.optional(z.string()),
+        git_branch: z.optional(z.string()),
+        ports_exposes: z.optional(z.string()),
+        destination_uuid: z.optional(z.string()),
+        build_pack: z.optional(z.enum([
+            'nixpacks',
+            'static',
+            'dockerfile',
+            'dockercompose'
+        ])),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        domains: z.optional(z.string()),
+        git_commit_sha: z.optional(z.string()),
+        docker_registry_image_name: z.optional(z.string()),
+        docker_registry_image_tag: z.optional(z.string()),
+        is_static: z.optional(z.boolean()),
+        install_command: z.optional(z.string()),
+        build_command: z.optional(z.string()),
+        start_command: z.optional(z.string()),
+        ports_mappings: z.optional(z.string()),
+        base_directory: z.optional(z.string()),
+        publish_directory: z.optional(z.string()),
+        health_check_enabled: z.optional(z.boolean()),
+        health_check_path: z.optional(z.string()),
+        health_check_port: z.optional(z.string()),
+        health_check_host: z.optional(z.string()),
+        health_check_method: z.optional(z.string()),
+        health_check_return_code: z.optional(z.int()),
+        health_check_scheme: z.optional(z.string()),
+        health_check_response_text: z.optional(z.string()),
+        health_check_interval: z.optional(z.int()),
+        health_check_timeout: z.optional(z.int()),
+        health_check_retries: z.optional(z.int()),
+        health_check_start_period: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        custom_labels: z.optional(z.string()),
+        custom_docker_run_options: z.optional(z.string()),
+        post_deployment_command: z.optional(z.string()),
+        post_deployment_command_container: z.optional(z.string()),
+        pre_deployment_command: z.optional(z.string()),
+        pre_deployment_command_container: z.optional(z.string()),
+        manual_webhook_secret_github: z.optional(z.string()),
+        manual_webhook_secret_gitlab: z.optional(z.string()),
+        manual_webhook_secret_bitbucket: z.optional(z.string()),
+        manual_webhook_secret_gitea: z.optional(z.string()),
+        redirect: z.optional(z.enum([
+            'www',
+            'non-www',
+            'both'
+        ])),
+        instant_deploy: z.optional(z.boolean()),
+        dockerfile: z.optional(z.string()),
+        docker_compose_location: z.optional(z.string()),
+        docker_compose_raw: z.optional(z.string()),
+        docker_compose_custom_start_command: z.optional(z.string()),
+        docker_compose_custom_build_command: z.optional(z.string()),
+        docker_compose_domains: z.optional(z.array(z.unknown())),
+        watch_paths: z.optional(z.string()),
+        use_build_server: z.optional(z.boolean()),
+        connect_to_docker_network: z.optional(z.boolean()),
+        force_domain_override: z.optional(z.boolean())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Application updated.
+ */
+export const zUpdateApplicationByUuidResponse = z.object({
+    uuid: z.optional(z.string())
+});
 
 export const zGetApplicationLogsByUuidData = z.object({
     body: z.optional(z.never()),
@@ -246,6 +933,72 @@ export const zCreateEnvByApplicationUuidData = z.object({
  */
 export const zCreateEnvByApplicationUuidResponse = z.object({
     uuid: z.optional(z.string())
+});
+
+export const zDeleteEnvByApplicationUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        env_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment variable deleted.
+ */
+export const zDeleteEnvByApplicationUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zStartApplicationByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.object({
+        force: z.optional(z.boolean()).default(false),
+        instant_deploy: z.optional(z.boolean()).default(false)
+    }))
+});
+
+/**
+ * Start application.
+ */
+export const zStartApplicationByUuidResponse = z.object({
+    message: z.optional(z.string()),
+    deployment_uuid: z.optional(z.string())
+});
+
+export const zStopApplicationByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Stop application.
+ */
+export const zStopApplicationByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zRestartApplicationByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Restart application.
+ */
+export const zRestartApplicationByUuidResponse = z.object({
+    message: z.optional(z.string()),
+    deployment_uuid: z.optional(z.string())
 });
 
 export const zListDatabasesData = z.object({
@@ -351,6 +1104,34 @@ export const zListDeploymentsByAppUuidData = z.object({
  */
 export const zListDeploymentsByAppUuidResponse = z.array(zApplication);
 
+export const zListGithubAppsData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * List of GitHub apps.
+ */
+export const zListGithubAppsResponse = z.array(z.object({
+    id: z.optional(z.int()),
+    uuid: z.optional(z.string()),
+    name: z.optional(z.string()),
+    organization: z.optional(z.string()),
+    api_url: z.optional(z.string()),
+    html_url: z.optional(z.string()),
+    custom_user: z.optional(z.string()),
+    custom_port: z.optional(z.int()),
+    app_id: z.optional(z.int()),
+    installation_id: z.optional(z.int()),
+    client_id: z.optional(z.string()),
+    private_key_id: z.optional(z.int()),
+    is_system_wide: z.optional(z.boolean()),
+    is_public: z.optional(z.boolean()),
+    team_id: z.optional(z.int()),
+    type: z.optional(z.string())
+}));
+
 export const zVersionData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
@@ -362,6 +1143,111 @@ export const zVersionData = z.object({
  */
 export const zVersionResponse = z.string();
 
+export const zListProjectsData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get all projects.
+ */
+export const zListProjectsResponse = z.array(zProject);
+
+export const zCreateProjectData = z.object({
+    body: z.object({
+        name: z.optional(z.string()),
+        description: z.optional(z.string())
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Project created.
+ */
+export const zCreateProjectResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
+export const zDeleteProjectByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Project deleted.
+ */
+export const zDeleteProjectByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zGetProjectByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Project details
+ */
+export const zGetProjectByUuidResponse = zProject;
+
+export const zUpdateProjectByUuidData = z.object({
+    body: z.object({
+        name: z.optional(z.string()),
+        description: z.optional(z.string())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Project updated.
+ */
+export const zUpdateProjectByUuidResponse = z.object({
+    uuid: z.optional(z.string()),
+    name: z.optional(z.string()),
+    description: z.optional(z.string())
+});
+
+export const zGetEnvironmentsData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * List of environments
+ */
+export const zGetEnvironmentsResponse = z.array(zEnvironment);
+
+export const zCreateEnvironmentData = z.object({
+    body: z.object({
+        name: z.optional(z.string())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment created.
+ */
+export const zCreateEnvironmentResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
 export const zListResourcesData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
@@ -372,3 +1258,220 @@ export const zListResourcesData = z.object({
  * Get all resources
  */
 export const zListResourcesResponse = z.string();
+
+export const zListPrivateKeysData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get all private keys.
+ */
+export const zListPrivateKeysResponse = z.array(zPrivateKey);
+
+export const zCreatePrivateKeyData = z.object({
+    body: z.object({
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        private_key: z.string()
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * The created private key's UUID.
+ */
+export const zCreatePrivateKeyResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
+export const zListServersData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get all servers.
+ */
+export const zListServersResponse = z.array(zServer);
+
+export const zCreateServerData = z.object({
+    body: z.object({
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        ip: z.optional(z.string()),
+        port: z.optional(z.int()),
+        user: z.optional(z.string()),
+        private_key_uuid: z.optional(z.string()),
+        is_build_server: z.optional(z.boolean()),
+        instant_validate: z.optional(z.boolean()),
+        proxy_type: z.optional(z.enum([
+            'traefik',
+            'caddy',
+            'none'
+        ]))
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Server created.
+ */
+export const zCreateServerResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
+export const zGetServerByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get server by UUID
+ */
+export const zGetServerByUuidResponse = zServer;
+
+export const zValidateServerByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Server validation started.
+ */
+export const zValidateServerByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zListServicesData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get all services
+ */
+export const zListServicesResponse = z.array(zService);
+
+export const zCreateServiceData = z.object({
+    body: z.object({
+        type: z.optional(z.enum([
+            'activepieces',
+            'appsmith',
+            'appwrite',
+            'authentik',
+            'babybuddy',
+            'budge',
+            'changedetection',
+            'chatwoot',
+            'classicpress-with-mariadb',
+            'classicpress-with-mysql',
+            'classicpress-without-database',
+            'cloudflared',
+            'code-server',
+            'dashboard',
+            'directus',
+            'directus-with-postgresql',
+            'docker-registry',
+            'docuseal',
+            'docuseal-with-postgres',
+            'dokuwiki',
+            'duplicati',
+            'emby',
+            'embystat',
+            'fider',
+            'filebrowser',
+            'firefly',
+            'formbricks',
+            'ghost',
+            'gitea',
+            'gitea-with-mariadb',
+            'gitea-with-mysql',
+            'gitea-with-postgresql',
+            'glance',
+            'glances',
+            'glitchtip',
+            'grafana',
+            'grafana-with-postgresql',
+            'grocy',
+            'heimdall',
+            'homepage',
+            'jellyfin',
+            'kuzzle',
+            'listmonk',
+            'logto',
+            'mediawiki',
+            'meilisearch',
+            'metabase',
+            'metube',
+            'minio',
+            'moodle',
+            'n8n',
+            'n8n-with-postgresql',
+            'next-image-transformation',
+            'nextcloud',
+            'nocodb',
+            'odoo',
+            'openblocks',
+            'pairdrop',
+            'penpot',
+            'phpmyadmin',
+            'pocketbase',
+            'posthog',
+            'reactive-resume',
+            'rocketchat',
+            'shlink',
+            'slash',
+            'snapdrop',
+            'statusnook',
+            'stirling-pdf',
+            'supabase',
+            'syncthing',
+            'tolgee',
+            'trigger',
+            'trigger-with-external-database',
+            'twenty',
+            'umami',
+            'unleash-with-postgresql',
+            'unleash-without-database',
+            'uptime-kuma',
+            'vaultwarden',
+            'vikunja',
+            'weblate',
+            'whoogle',
+            'wordpress-with-mariadb',
+            'wordpress-with-mysql',
+            'wordpress-without-database'
+        ])),
+        name: z.optional(z.string().max(255)),
+        description: z.optional(z.string()),
+        project_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        server_uuid: z.string(),
+        destination_uuid: z.optional(z.string()),
+        instant_deploy: z.optional(z.boolean()).default(false),
+        docker_compose_raw: z.optional(z.string())
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Service created successfully.
+ */
+export const zCreateServiceResponse = z.object({
+    uuid: z.optional(z.string()),
+    domains: z.optional(z.array(z.string()))
+});
