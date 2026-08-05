@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.1.0...coolify-mcp-v1.2.0) (2026-08-05)
+
+
+### Features
+
+* add deploy wait mode and diagnoseApp diagnostics tool ([8872024](https://github.com/frndchagas/coolify-mcp/commit/8872024d15a41576b121ac07dab353df70bc18cf))
+* add deploy wait mode and diagnoseApp diagnostics tool ([458f69b](https://github.com/frndchagas/coolify-mcp/commit/458f69b405ae6592038443787dd075a3ce16c6e9))
+
 ## [1.1.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.0.0...coolify-mcp-v1.1.0) (2026-08-05)
 
 
