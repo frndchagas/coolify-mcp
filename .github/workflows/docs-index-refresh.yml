@@ -1,0 +1,51 @@
+name: Docs Index Refresh
+
+on:
+  schedule:
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Rebuild docs index
+        run: npm run docs:index
+
+      - name: Open or update PR when the index changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet docs-index.json; then
+            echo "Docs index unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          existing=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open \
+            --head chore/docs-index-refresh --json number --jq '.[0].number // empty')
+          git checkout -B chore/docs-index-refresh
+          git add docs-index.json
+          git commit -m "chore: refresh bundled docs index"
+          git push -f origin chore/docs-index-refresh
+          if [ -z "$existing" ]; then
+            gh pr create --repo "$GITHUB_REPOSITORY" \
+              --title "chore: refresh bundled docs index" \
+              --body "Weekly rebuild of docs-index.json from coollabsio/coolify-docs (v4.x)." \
+              --head chore/docs-index-refresh
+          else
+            echo "PR #$existing already open — branch updated."
+          fi

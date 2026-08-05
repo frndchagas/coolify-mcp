@@ -10,7 +10,9 @@
     "generate": "openapi-ts",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
-    "docs:index": "node scripts/build-docs-index.mjs"
+    "docs:index": "node scripts/build-docs-index.mjs",
+    "lint": "eslint .",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.25.1",
@@ -18,11 +20,15 @@
     "zod": "4.3.5"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@hey-api/openapi-ts": "^0.90.1",
     "@types/express": "^4.17.21",
     "@types/node": "^22.18.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.8.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
+    "typescript-eslint": "^8.66.0",
     "vitest": "^4.1.10"
   },
   "description": "MCP server for Coolify — deploy, diagnose, and manage applications, databases, services, backups, and servers on your self-hosted PaaS. 64 tools generated from the official OpenAPI spec, docs search included, secrets masked by default.",
