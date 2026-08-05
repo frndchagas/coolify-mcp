@@ -4,7 +4,6 @@ import * as sdk from "../generated/sdk.gen.js";
 import * as z from "../generated/zod.gen.js";
 import {
   confirmDestructive,
-  list,
   listWithMeta,
   ok,
   parseBody,
