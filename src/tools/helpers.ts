@@ -1,5 +1,21 @@
 // Pure data helpers shared by the Coolify tools. No MCP or config dependencies.
 
+import { timingSafeEqual } from "node:crypto";
+
+// Constant-time bearer-token check for the HTTP transport.
+export function checkBearerAuth(
+  authorizationHeader: string | undefined,
+  expectedToken: string
+): boolean {
+  if (!authorizationHeader) return false;
+  const match = authorizationHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) return false;
+  const given = Buffer.from(match[1]);
+  const expected = Buffer.from(expectedToken);
+  if (given.length !== expected.length) return false;
+  return timingSafeEqual(given, expected);
+}
+
 export const SECRET_MASK = "********";
 export const RESOURCE_TYPE_KEYS = [
   "type",

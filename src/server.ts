@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import express, { type Request, type Response } from 'express';
+import express, { type NextFunction, type Request, type Response } from 'express';
 import { registerCoolifyTools } from './tools/coolify.js';
 import { registerDatabaseTools } from './tools/databases.js';
 import { registerDiagnosticsTools } from './tools/diagnostics.js';
@@ -14,9 +14,12 @@ import { registerServiceTools } from './tools/services.js';
 import {
 	COOLIFY_OPENAPI_REF,
 	COOLIFY_STRICT_VERSION,
+	MCP_HTTP_HOST,
 	MCP_HTTP_PORT,
+	MCP_HTTP_TOKEN,
 	MCP_TRANSPORT,
 } from './config.js';
+import { checkBearerAuth } from './tools/helpers.js';
 import { initializeClient } from './coolify/client.js';
 import { version } from './generated/sdk.gen.js';
 
@@ -77,9 +80,26 @@ async function startStdio() {
 	await server.connect(transport);
 }
 
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
+
 async function startHttp() {
 	const app = express();
 	app.use(express.json());
+
+	if (MCP_HTTP_TOKEN) {
+		const httpToken = MCP_HTTP_TOKEN;
+		app.use('/mcp', (req: Request, res: Response, next: NextFunction) => {
+			if (checkBearerAuth(req.headers.authorization, httpToken)) {
+				next();
+				return;
+			}
+			res.status(401).json({ error: 'Unauthorized' });
+		});
+	} else if (!LOOPBACK_HOSTS.has(MCP_HTTP_HOST)) {
+		console.warn(
+			`WARNING: HTTP transport bound to ${MCP_HTTP_HOST} without MCP_HTTP_TOKEN — anyone who can reach port ${MCP_HTTP_PORT} controls the Coolify instance behind this server.`
+		);
+	}
 
 	app.post('/mcp', async (req: Request, res: Response) => {
 		const transport = new StreamableHTTPServerTransport({
@@ -91,8 +111,8 @@ async function startHttp() {
 		await transport.handleRequest(req, res, req.body);
 	});
 
-	app.listen(MCP_HTTP_PORT, () => {
-		console.log(`MCP HTTP server listening on :${MCP_HTTP_PORT}/mcp`);
+	app.listen(MCP_HTTP_PORT, MCP_HTTP_HOST, () => {
+		console.log(`MCP HTTP server listening on ${MCP_HTTP_HOST}:${MCP_HTTP_PORT}/mcp`);
 	});
 }
 

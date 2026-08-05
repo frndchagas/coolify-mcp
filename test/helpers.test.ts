@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   SECRET_MASK,
+  checkBearerAuth,
   extractErrorMessage,
   hasCredentialInUrl,
   isHtmlResponse,
@@ -221,6 +222,22 @@ describe("toRecord / pickFields", () => {
 
   it("picks only present fields", () => {
     expect(pickFields({ a: 1, b: 2 }, ["a", "missing"])).toEqual({ a: 1 });
+  });
+});
+
+describe("checkBearerAuth", () => {
+  it("accepts a correct bearer token, case-insensitive scheme", () => {
+    expect(checkBearerAuth("Bearer s3cret", "s3cret")).toBe(true);
+    expect(checkBearerAuth("bearer s3cret", "s3cret")).toBe(true);
+  });
+
+  it("rejects missing, malformed, or wrong tokens", () => {
+    expect(checkBearerAuth(undefined, "s3cret")).toBe(false);
+    expect(checkBearerAuth("s3cret", "s3cret")).toBe(false);
+    expect(checkBearerAuth("Basic s3cret", "s3cret")).toBe(false);
+    expect(checkBearerAuth("Bearer wrong", "s3cret")).toBe(false);
+    expect(checkBearerAuth("Bearer s3cret2", "s3cret")).toBe(false);
+    expect(checkBearerAuth("Bearer ", "s3cret")).toBe(false);
   });
 });
 
