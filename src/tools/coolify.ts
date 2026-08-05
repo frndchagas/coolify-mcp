@@ -472,41 +472,6 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "listEnvs",
-    {
-      title: "List env vars",
-      description:
-        "List environment variables for an application (secrets masked by default).",
-      inputSchema: z.zListEnvsByApplicationUuidData.shape.path.extend({
-        showSecrets: zod.boolean().optional(),
-      }),
-    },
-    async ({ uuid, showSecrets }) => {
-      const envs = await unwrap(
-        sdk.listEnvsByApplicationUuid({ path: { uuid } }),
-        "listEnvs"
-      );
-      if (showSecrets) {
-        return listWithMeta(
-          `Env vars for ${uuid} fetched. WARNING: showSecrets=true returns plaintext secrets.`,
-          envs,
-          { showSecrets: true }
-        );
-      }
-      if (!Array.isArray(envs)) {
-        return listWithMeta(`Env vars for ${uuid} fetched.`, envs, {
-          secretsMasked: true,
-        });
-      }
-      return listWithMeta(
-        `Env vars for ${uuid} fetched. Secrets masked by default.`,
-        envs.map((env) => maskEnvVar(env)),
-        { secretsMasked: true }
-      );
-    }
-  );
-
-  server.registerTool(
     "listAppDeployments",
     {
       title: "List app deployments",
@@ -620,138 +585,152 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   server.registerTool(
-    "createEnv",
+    "applicationEnvs",
     {
-      title: "Create env var",
-      description: "Create a new environment variable for an application.",
+      title: "Manage application env vars",
+      description:
+        "Manage environment variables for an application. Actions: list (secrets masked unless showSecrets), create, update, upsert (create or update by key), bulk_update (pass envs array), delete (needs env_uuid).",
       inputSchema: {
-        ...z.zCreateEnvByApplicationUuidData.shape.path.shape,
-        ...z.zCreateEnvByApplicationUuidData.shape.body.shape,
+        uuid: zod.string().describe("Application UUID"),
+        action: zod.enum([
+          "list",
+          "create",
+          "update",
+          "upsert",
+          "bulk_update",
+          "delete",
+        ]),
+        key: zod.string().optional(),
+        value: zod.string().optional(),
+        env_uuid: zod.string().optional().describe("Required for delete"),
+        is_preview: zod.boolean().optional(),
+        is_literal: zod.boolean().optional(),
+        is_multiline: zod.boolean().optional(),
+        envs: zod
+          .array(
+            zod.object({
+              key: zod.string(),
+              value: zod.string(),
+              is_preview: zod.boolean().optional(),
+              is_literal: zod.boolean().optional(),
+            })
+          )
+          .optional()
+          .describe("For bulk_update: full list of env vars to apply"),
+        showSecrets: zod.boolean().optional(),
       },
     },
-    async ({ uuid, ...body }) => {
-      requireWrite();
-      const data = await unwrap(
-        sdk.createEnvByApplicationUuid({ path: { uuid }, body }),
-        "createEnv"
-      );
-      return ok(`Env var ${body.key} created.`, data);
-    }
-  );
-
-  server.registerTool(
-    "upsertEnv",
-    {
-      title: "Upsert env var",
-      description:
-        "Create or update an environment variable for an application (by key).",
-      inputSchema: zod.object({
-        ...z.zCreateEnvByApplicationUuidData.shape.path.shape,
-        ...z.zCreateEnvByApplicationUuidData.shape.body.shape,
-        key: zod.string().min(1),
-        value: zod.string(),
-      }),
-    },
-    async ({ uuid, key, ...body }) => {
-      requireWrite();
-      const payload = {
-        key,
-        ...body,
-      } as {
-        key: string;
-        value: string;
-        is_preview?: boolean;
-        is_literal?: boolean;
-        is_multiline?: boolean;
-        is_shown_once?: boolean;
+    async ({ uuid, action, env_uuid, envs, showSecrets, ...fields }) => {
+      const requireKeyValue = () => {
+        if (!fields.key || fields.value === undefined) {
+          throw new Error(`applicationEnvs(${action}): key and value are required`);
+        }
+        return { ...fields, key: fields.key, value: fields.value };
       };
-      if (payload.value === undefined) {
-        throw new Error("upsertEnv: value is required.");
-      }
-      if (payload.is_preview === undefined) {
-        payload.is_preview = false;
-      }
-      const envs = await unwrap(
-        sdk.listEnvsByApplicationUuid({ path: { uuid } }),
-        "upsertEnv"
-      );
-      if (Array.isArray(envs)) {
-        let matches = envs.filter((env) => env.key === key);
-        matches = matches.filter(
-          (env) => env.is_preview === payload.is_preview
-        );
-        if (matches.length > 1) {
-          const options = matches
-            .map((env) => `${env.uuid ?? "unknown"} (is_preview=${env.is_preview ?? "unknown"})`)
-            .join(", ");
-          throw new Error(
-            `upsertEnv: Multiple envs found for key ${key} with is_preview=${payload.is_preview}. Options: ${options}`
+      switch (action) {
+        case "list": {
+          const envList = await unwrap(
+            sdk.listEnvsByApplicationUuid({ path: { uuid } }),
+            "applicationEnvs(list)"
+          );
+          if (showSecrets) {
+            return listWithMeta(
+              `Env vars for ${uuid} fetched. WARNING: showSecrets=true returns plaintext secrets.`,
+              envList,
+              { showSecrets: true }
+            );
+          }
+          const masked = Array.isArray(envList)
+            ? envList.map((env) => maskEnvVar(env))
+            : envList;
+          return listWithMeta(
+            `Env vars for ${uuid} fetched. Secrets masked by default.`,
+            masked,
+            { secretsMasked: true }
           );
         }
-        if (matches.length > 0) {
+        case "create": {
+          requireWrite();
+          const body = requireKeyValue();
           const data = await unwrap(
-            sdk.updateEnvByApplicationUuid({ path: { uuid }, body: payload }),
-            "upsertEnv:update"
+            sdk.createEnvByApplicationUuid({ path: { uuid }, body }),
+            "applicationEnvs(create)"
           );
-          return ok(`Env var ${key} updated.`, data);
+          return ok(`Env var ${body.key} created.`, data);
         }
-        const data = await unwrap(
-          sdk.createEnvByApplicationUuid({ path: { uuid }, body: payload }),
-          "upsertEnv:create"
-        );
-        return ok(`Env var ${key} created.`, data);
+        case "update": {
+          requireWrite();
+          const body = requireKeyValue();
+          const data = await unwrap(
+            sdk.updateEnvByApplicationUuid({ path: { uuid }, body }),
+            "applicationEnvs(update)"
+          );
+          return ok(`Env var ${body.key} updated.`, data);
+        }
+        case "upsert": {
+          requireWrite();
+          const payload = requireKeyValue();
+          if (payload.is_preview === undefined) {
+            payload.is_preview = false;
+          }
+          const existing = await unwrap(
+            sdk.listEnvsByApplicationUuid({ path: { uuid } }),
+            "applicationEnvs(upsert)"
+          );
+          const matches = (Array.isArray(existing) ? existing : []).filter(
+            (env) =>
+              env.key === payload.key && env.is_preview === payload.is_preview
+          );
+          if (matches.length > 1) {
+            const options = matches
+              .map(
+                (env) =>
+                  `${env.uuid ?? "unknown"} (is_preview=${env.is_preview ?? "unknown"})`
+              )
+              .join(", ");
+            throw new Error(
+              `applicationEnvs(upsert): multiple envs found for key ${payload.key} with is_preview=${payload.is_preview}. Options: ${options}`
+            );
+          }
+          if (matches.length === 1) {
+            const data = await unwrap(
+              sdk.updateEnvByApplicationUuid({ path: { uuid }, body: payload }),
+              "applicationEnvs(upsert:update)"
+            );
+            return ok(`Env var ${payload.key} updated.`, data);
+          }
+          const data = await unwrap(
+            sdk.createEnvByApplicationUuid({ path: { uuid }, body: payload }),
+            "applicationEnvs(upsert:create)"
+          );
+          return ok(`Env var ${payload.key} created.`, data);
+        }
+        case "bulk_update": {
+          requireWrite();
+          if (!envs || envs.length === 0) {
+            throw new Error("applicationEnvs(bulk_update): envs array is required");
+          }
+          const data = await unwrap(
+            sdk.updateEnvsByApplicationUuid({
+              path: { uuid },
+              body: { data: envs },
+            }),
+            "applicationEnvs(bulk_update)"
+          );
+          return ok(`${envs.length} env vars applied to application ${uuid}.`, data);
+        }
+        case "delete": {
+          requireWrite();
+          if (!env_uuid) {
+            throw new Error("applicationEnvs(delete): env_uuid is required");
+          }
+          const data = await unwrap(
+            sdk.deleteEnvByApplicationUuid({ path: { uuid, env_uuid } }),
+            "applicationEnvs(delete)"
+          );
+          return ok(`Env var ${env_uuid} deleted from application ${uuid}.`, data);
+        }
       }
-      try {
-        const data = await unwrap(
-          sdk.updateEnvByApplicationUuid({ path: { uuid }, body: payload }),
-          "upsertEnv:update"
-        );
-        return ok(`Env var ${key} updated.`, data);
-      } catch {
-        const data = await unwrap(
-          sdk.createEnvByApplicationUuid({ path: { uuid }, body: payload }),
-          "upsertEnv:create"
-        );
-        return ok(`Env var ${key} created.`, data);
-      }
-    }
-  );
-
-  server.registerTool(
-    "updateEnv",
-    {
-      title: "Update env var",
-      description:
-        "Update an existing environment variable for an application.",
-      inputSchema: {
-        ...z.zUpdateEnvByApplicationUuidData.shape.path.shape,
-        ...z.zUpdateEnvByApplicationUuidData.shape.body.shape,
-      },
-    },
-    async ({ uuid, ...body }) => {
-      requireWrite();
-      const data = await unwrap(
-        sdk.updateEnvByApplicationUuid({ path: { uuid }, body }),
-        "updateEnv"
-      );
-      return ok(`Env var ${body.key} updated.`, data);
-    }
-  );
-
-  server.registerTool(
-    "deleteEnv",
-    {
-      title: "Delete env var",
-      description: "Delete an environment variable from an application by env UUID.",
-      inputSchema: z.zDeleteEnvByApplicationUuidData.shape.path.shape,
-    },
-    async ({ uuid, env_uuid }) => {
-      requireWrite();
-      const data = await unwrap(
-        sdk.deleteEnvByApplicationUuid({ path: { uuid, env_uuid } }),
-        "deleteEnv"
-      );
-      return ok(`Env var ${env_uuid} deleted from application ${uuid}.`, data);
     }
   );
 
@@ -1009,14 +988,35 @@ export function registerCoolifyTools(server: McpServer) {
     "updateApplication",
     {
       title: "Update application",
-      description: "Update an application's configuration by UUID.",
+      description:
+        "Update an application's configuration by UUID. Common fields are exposed; any other Coolify application field (install/build/start commands, health checks, resource limits, static flags, ...) can go in `extra` and is validated against the OpenAPI schema.",
       inputSchema: {
-        ...z.zUpdateApplicationByUuidData.shape.path.shape,
-        ...z.zUpdateApplicationByUuidData.shape.body.shape,
+        uuid: zod.string(),
+        name: zod.string().optional(),
+        description: zod.string().optional(),
+        domains: zod.string().optional(),
+        git_repository: zod.string().optional(),
+        git_branch: zod.string().optional(),
+        build_pack: zod
+          .enum(["nixpacks", "railpack", "static", "dockerfile", "dockercompose"])
+          .optional(),
+        ports_exposes: zod.string().optional(),
+        docker_registry_image_name: zod.string().optional(),
+        docker_registry_image_tag: zod.string().optional(),
+        instant_deploy: zod.boolean().optional(),
+        extra: zod
+          .record(zod.string(), zod.unknown())
+          .optional()
+          .describe("Additional Coolify application fields"),
       },
     },
-    async ({ uuid, ...body }) => {
+    async ({ uuid, extra, ...fields }) => {
       requireWrite();
+      const body = parseBody(
+        z.zUpdateApplicationByUuidData.shape.body,
+        { ...fields, ...(extra ?? {}) },
+        "updateApplication"
+      );
       const data = await unwrap(
         sdk.updateApplicationByUuid({ path: { uuid }, body }),
         "updateApplication"

@@ -236,7 +236,7 @@ describe("tool catalog smoke test", () => {
         all.set(name, tool);
       }
     }
-    expect(all.size).toBe(25);
+    expect(all.size).toBe(24);
     for (const [name, tool] of all) {
       expect(tool.config.description, `${name} needs a description`).toBeTruthy();
       expect(tool.config.inputSchema, `${name} needs an inputSchema`).toBeTruthy();
