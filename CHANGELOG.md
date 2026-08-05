@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.0.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.4.0...coolify-mcp-v2.0.0) (2026-08-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* deployments that relied on the HTTP transport listening on all interfaces must now set MCP_HTTP_TOKEN (recommended) or MCP_HTTP_HOST=0.0.0.0 explicitly.
+
+### Features
+
+* batch operations, server diagnostics, and health check ([d01d37b](https://github.com/frndchagas/coolify-mcp/commit/d01d37b9c969c5152e8e362079d34865b0de60c9))
+* batch operations, server diagnostics, and health check ([416ab4d](https://github.com/frndchagas/coolify-mcp/commit/416ab4d06550654dd9ef7c107fe7169769e09070))
+* secure defaults for the HTTP transport ([ce50adc](https://github.com/frndchagas/coolify-mcp/commit/ce50adc0c5cb2ba49de3ebbbbcf4ec8c6fcb3539))
+
 ## [1.4.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.3.0...coolify-mcp-v1.4.0) (2026-08-05)
 
 
