@@ -109,7 +109,6 @@ const USED_OPERATIONS = [
 	'POST /applications/private-deploy-key',
 	'POST /applications/dockerfile',
 	'POST /applications/dockerimage',
-	'POST /applications/dockercompose',
 	// Applications - manage
 	'PATCH /applications/{uuid}',
 	'DELETE /applications/{uuid}',

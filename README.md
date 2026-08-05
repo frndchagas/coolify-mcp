@@ -6,18 +6,19 @@
 [![node version](https://img.shields.io/node/v/@fndchagas/coolify-mcp.svg)](package.json)
 [![typescript](https://img.shields.io/badge/TypeScript-5.9.3-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![CI](https://github.com/frndchagas/coolify-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/frndchagas/coolify-mcp/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/frndchagas/coolify-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/frndchagas/coolify-mcp)
 
 MCP server for Coolify API - enables full deployment workflows from zero to production.
+
+Targets the **Coolify v4.1.2** API. Types and schemas are generated directly from Coolify's official OpenAPI spec, so tool inputs always match what the API actually accepts.
 
 ## Features
 
 - **Full Deployment Workflow**: Create projects, environments, servers, and applications from scratch
-- **6 Application Types**: Public git, GitHub App, Deploy Key, Dockerfile, Docker Image, Docker Compose
+- **5 Application Types**: Public git, GitHub App, Deploy Key, Dockerfile, Docker Image — plus Docker Compose deployments via `createService` (since Coolify v4.1, compose deployments are services)
 - **Environment Management**: Full CRUD for environment variables with secret masking
 - **Deployment Control**: Deploy, start, stop, restart applications
-- **Security**: Write protection, secret redaction, log sanitization
-- **38 Tools**: Complete coverage of Coolify API operations
+- **Security**: Write protection, secret redaction
+- **41 Tools**: generated from Coolify's OpenAPI spec
 
 ## Requirements
 
@@ -87,7 +88,6 @@ env = { COOLIFY_BASE_URL = "https://coolify.example.com/api/v1", COOLIFY_TOKEN =
 | `COOLIFY_BASE_URL` | required | Coolify API URL (e.g., `https://coolify.example.com/api/v1`) |
 | `COOLIFY_TOKEN` | required | API token from Coolify Settings > API |
 | `COOLIFY_ALLOW_WRITE` | `true` | Enable write operations (create, update, delete, deploy) |
-| `COOLIFY_ALLOW_UNSAFE_LOGS` | `false` | Allow raw logs without redaction |
 | `COOLIFY_STRICT_VERSION` | `false` | Fail on API version mismatch |
 | `MCP_TRANSPORT` | `stdio` | Transport: `stdio`, `http`, `both` |
 | `PORT` | `7331` | HTTP port (when using http transport) |
@@ -148,7 +148,8 @@ With this MCP, you can deploy an application from scratch:
 | `createPrivateDeployKeyApplication` | Create using SSH deploy key | ✓ |
 | `createDockerfileApplication` | Create from Dockerfile content | ✓ |
 | `createDockerImageApplication` | Create from Docker image | ✓ |
-| `createDockerComposeApplication` | Create from Docker Compose | ✓ |
+
+> Docker Compose deployments are created with `createService` passing `docker_compose_raw` — since Coolify v4.1 they are services, not applications.
 
 ### Applications - Manage
 
@@ -211,14 +212,6 @@ COOLIFY_ALLOW_WRITE=false
 - Database credentials are redacted
 - Use `showSecrets: true` only when necessary
 
-### Log Sanitization
-
-Logs are sanitized to remove sensitive data. Control with `logMode`:
-
-- `safe` (default): Redacts common secret patterns
-- `strict`: More aggressive redaction
-- `raw`: No redaction (requires `COOLIFY_ALLOW_UNSAFE_LOGS=true`)
-
 ## Development
 
 ```bash
@@ -233,9 +226,7 @@ npm run dev
 ```bash
 npm run dev            # Run in development mode
 npm run build          # Build TypeScript
-npm run generate       # Regenerate types from OpenAPI
-npm run fetch:openapi  # Fetch latest OpenAPI spec
-npm run update         # Fetch + regenerate
+npm run generate       # Fetch the pinned OpenAPI spec and regenerate types
 ```
 
 ### Pinned Coolify Version
@@ -243,12 +234,11 @@ npm run update         # Fetch + regenerate
 Version is defined in `src/coolify/constants.ts`. To update:
 
 1. Edit `COOLIFY_VERSION` in `src/coolify/constants.ts`
-2. Run `npm run update`
+2. Run `npm run generate`
 
 ## Registry Listings
 
-- MCP Registry (API): https://registry.modelcontextprotocol.io/v0.1/servers/io.github.frndchagas%2Fcoolify-mcp/versions/0.1.4
-- MCP Registry Docs: https://registry.modelcontextprotocol.io/docs
+- MCP Registry: [`io.github.frndchagas/coolify-mcp`](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.frndchagas%2Fcoolify-mcp)
 
 ## MCP Client Examples
 
@@ -267,14 +257,14 @@ await client.connect(transport);
 
 // List all applications
 const apps = await client.callTool({
-  name: 'coolify.listApplications',
+  name: 'listApplications',
   arguments: {},
 });
 console.log(apps.structuredContent);
 
 // Deploy an application
 const deploy = await client.callTool({
-  name: 'coolify.deploy',
+  name: 'deploy',
   arguments: { uuid: 'your-app-uuid' },
 });
 console.log(deploy.structuredContent);
@@ -301,7 +291,7 @@ const transport = new StdioClientTransport({
 await client.connect(transport);
 
 const result = await client.callTool({
-  name: 'coolify.getApplication',
+  name: 'getApplication',
   arguments: { uuid: 'your-app-uuid' },
 });
 console.log(result.structuredContent);

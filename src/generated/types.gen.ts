@@ -130,6 +130,10 @@ export type ServerSetting = {
      * The flag to indicate if the unused networks should be deleted.
      */
     delete_unused_networks?: boolean;
+    /**
+     * SSH connection timeout in seconds.
+     */
+    connection_timeout?: number;
 };
 
 /**
@@ -209,22 +213,6 @@ export type Project = {
     uuid?: string;
     name?: string;
     description?: string;
-    /**
-     * The environments of the project.
-     */
-    environments?: Array<Environment>;
-};
-
-/**
- * Environment model
- */
-export type Environment = {
-    id?: number;
-    name?: string;
-    project_id?: number;
-    created_at?: string;
-    updated_at?: string;
-    description?: string;
 };
 
 /**
@@ -268,9 +256,22 @@ export type EnvironmentVariable = {
     key?: string;
     value?: string;
     real_value?: string;
+    comment?: string;
     version?: string;
     created_at?: string;
     updated_at?: string;
+};
+
+/**
+ * Environment model
+ */
+export type Environment = {
+    id?: number;
+    name?: string;
+    project_id?: number;
+    created_at?: string;
+    updated_at?: string;
+    description?: string;
 };
 
 /**
@@ -281,6 +282,14 @@ export type ApplicationDeploymentQueue = {
     application_id?: string;
     deployment_uuid?: string;
     pull_request_id?: number;
+    docker_registry_image_tag?: string;
+    configuration_hash?: string;
+    configuration_snapshot?: {
+        [key: string]: unknown;
+    };
+    configuration_diff?: {
+        [key: string]: unknown;
+    };
     force_rebuild?: boolean;
     commit?: string;
     status?: string;
@@ -361,7 +370,7 @@ export type Application = {
     /**
      * Build pack.
      */
-    build_pack?: 'nixpacks' | 'static' | 'dockerfile' | 'dockercompose';
+    build_pack?: 'nixpacks' | 'railpack' | 'static' | 'dockerfile' | 'dockercompose';
     /**
      * Static image used when static site is deployed.
      */
@@ -446,6 +455,14 @@ export type Application = {
      * Health check start period in seconds.
      */
     health_check_start_period?: number;
+    /**
+     * Health check type: http or cmd.
+     */
+    health_check_type?: 'http' | 'cmd';
+    /**
+     * Health check command for CMD type.
+     */
+    health_check_command?: string;
     /**
      * Memory limit.
      */
@@ -635,7 +652,12 @@ export type Application = {
 export type ListApplicationsData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Filter applications by tag name.
+         */
+        tag?: string;
+    };
     url: '/applications';
 };
 
@@ -697,11 +719,11 @@ export type CreatePublicApplicationData = {
         /**
          * The build pack type.
          */
-        build_pack: 'nixpacks' | 'static' | 'dockerfile' | 'dockercompose';
+        build_pack: 'nixpacks' | 'railpack' | 'static' | 'dockerfile' | 'dockercompose';
         /**
          * The ports to expose.
          */
-        ports_exposes: string;
+        ports_exposes?: string;
         /**
          * The destination UUID.
          */
@@ -715,7 +737,7 @@ export type CreatePublicApplicationData = {
          */
         description?: string;
         /**
-         * The application domains.
+         * The application URLs in a comma-separated list.
          */
         domains?: string;
         /**
@@ -734,6 +756,18 @@ export type CreatePublicApplicationData = {
          * The flag to indicate if the application is static.
          */
         is_static?: boolean;
+        /**
+         * The flag to indicate if the application is a single-page application (SPA). Only relevant when is_static is true.
+         */
+        is_spa?: boolean;
+        /**
+         * The flag to indicate if auto-deploy is enabled on git push. Defaults to true.
+         */
+        is_auto_deploy_enabled?: boolean;
+        /**
+         * The flag to indicate if HTTPS is forced. Defaults to true.
+         */
+        is_force_https_enabled?: boolean;
         /**
          * The static image.
          */
@@ -891,13 +925,13 @@ export type CreatePublicApplicationData = {
          */
         dockerfile?: string;
         /**
+         * The Dockerfile location in the repository.
+         */
+        dockerfile_location?: string;
+        /**
          * The Docker Compose location.
          */
         docker_compose_location?: string;
-        /**
-         * The Docker Compose raw content.
-         */
-        docker_compose_raw?: string;
         /**
          * The Docker Compose custom start command.
          */
@@ -907,9 +941,18 @@ export type CreatePublicApplicationData = {
          */
         docker_compose_custom_build_command?: string;
         /**
-         * The Docker Compose domains.
+         * Array of URLs to be applied to containers of a dockercompose application.
          */
-        docker_compose_domains?: Array<unknown>;
+        docker_compose_domains?: Array<{
+            /**
+             * The service name as defined in docker-compose.
+             */
+            name?: string;
+            /**
+             * Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")
+             */
+            domain?: string;
+        }>;
         /**
          * The watch paths.
          */
@@ -942,6 +985,14 @@ export type CreatePublicApplicationData = {
          * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
          */
         autogenerate_domain?: boolean;
+        /**
+         * Escape special characters in labels. By default, $ (and other chars) is escaped. So if you write $ in the labels, it will be saved as $$. If you want to use env variables inside the labels, turn this off.
+         */
+        is_container_label_escape_enabled?: boolean;
+        /**
+         * Preserve repository during deployment.
+         */
+        is_preserve_repository_enabled?: boolean;
     };
     path?: never;
     query?: never;
@@ -1026,7 +1077,7 @@ export type CreatePrivateGithubAppApplicationData = {
         /**
          * The ports to expose.
          */
-        ports_exposes: string;
+        ports_exposes?: string;
         /**
          * The destination UUID.
          */
@@ -1034,7 +1085,7 @@ export type CreatePrivateGithubAppApplicationData = {
         /**
          * The build pack type.
          */
-        build_pack: 'nixpacks' | 'static' | 'dockerfile' | 'dockercompose';
+        build_pack: 'nixpacks' | 'railpack' | 'static' | 'dockerfile' | 'dockercompose';
         /**
          * The application name.
          */
@@ -1044,7 +1095,7 @@ export type CreatePrivateGithubAppApplicationData = {
          */
         description?: string;
         /**
-         * The application domains.
+         * The application URLs in a comma-separated list.
          */
         domains?: string;
         /**
@@ -1063,6 +1114,18 @@ export type CreatePrivateGithubAppApplicationData = {
          * The flag to indicate if the application is static.
          */
         is_static?: boolean;
+        /**
+         * The flag to indicate if the application is a single-page application (SPA). Only relevant when is_static is true.
+         */
+        is_spa?: boolean;
+        /**
+         * The flag to indicate if auto-deploy is enabled on git push. Defaults to true.
+         */
+        is_auto_deploy_enabled?: boolean;
+        /**
+         * The flag to indicate if HTTPS is forced. Defaults to true.
+         */
+        is_force_https_enabled?: boolean;
         /**
          * The static image.
          */
@@ -1220,13 +1283,13 @@ export type CreatePrivateGithubAppApplicationData = {
          */
         dockerfile?: string;
         /**
+         * The Dockerfile location in the repository
+         */
+        dockerfile_location?: string;
+        /**
          * The Docker Compose location.
          */
         docker_compose_location?: string;
-        /**
-         * The Docker Compose raw content.
-         */
-        docker_compose_raw?: string;
         /**
          * The Docker Compose custom start command.
          */
@@ -1236,9 +1299,18 @@ export type CreatePrivateGithubAppApplicationData = {
          */
         docker_compose_custom_build_command?: string;
         /**
-         * The Docker Compose domains.
+         * Array of URLs to be applied to containers of a dockercompose application.
          */
-        docker_compose_domains?: Array<unknown>;
+        docker_compose_domains?: Array<{
+            /**
+             * The service name as defined in docker-compose.
+             */
+            name?: string;
+            /**
+             * Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")
+             */
+            domain?: string;
+        }>;
         /**
          * The watch paths.
          */
@@ -1271,6 +1343,14 @@ export type CreatePrivateGithubAppApplicationData = {
          * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
          */
         autogenerate_domain?: boolean;
+        /**
+         * Escape special characters in labels. By default, $ (and other chars) is escaped. So if you write $ in the labels, it will be saved as $$. If you want to use env variables inside the labels, turn this off.
+         */
+        is_container_label_escape_enabled?: boolean;
+        /**
+         * Preserve repository during deployment.
+         */
+        is_preserve_repository_enabled?: boolean;
     };
     path?: never;
     query?: never;
@@ -1355,7 +1435,7 @@ export type CreatePrivateDeployKeyApplicationData = {
         /**
          * The ports to expose.
          */
-        ports_exposes: string;
+        ports_exposes?: string;
         /**
          * The destination UUID.
          */
@@ -1363,7 +1443,7 @@ export type CreatePrivateDeployKeyApplicationData = {
         /**
          * The build pack type.
          */
-        build_pack: 'nixpacks' | 'static' | 'dockerfile' | 'dockercompose';
+        build_pack: 'nixpacks' | 'railpack' | 'static' | 'dockerfile' | 'dockercompose';
         /**
          * The application name.
          */
@@ -1373,7 +1453,7 @@ export type CreatePrivateDeployKeyApplicationData = {
          */
         description?: string;
         /**
-         * The application domains.
+         * The application URLs in a comma-separated list.
          */
         domains?: string;
         /**
@@ -1392,6 +1472,18 @@ export type CreatePrivateDeployKeyApplicationData = {
          * The flag to indicate if the application is static.
          */
         is_static?: boolean;
+        /**
+         * The flag to indicate if the application is a single-page application (SPA). Only relevant when is_static is true.
+         */
+        is_spa?: boolean;
+        /**
+         * The flag to indicate if auto-deploy is enabled on git push. Defaults to true.
+         */
+        is_auto_deploy_enabled?: boolean;
+        /**
+         * The flag to indicate if HTTPS is forced. Defaults to true.
+         */
+        is_force_https_enabled?: boolean;
         /**
          * The static image.
          */
@@ -1549,13 +1641,13 @@ export type CreatePrivateDeployKeyApplicationData = {
          */
         dockerfile?: string;
         /**
+         * The Dockerfile location in the repository.
+         */
+        dockerfile_location?: string;
+        /**
          * The Docker Compose location.
          */
         docker_compose_location?: string;
-        /**
-         * The Docker Compose raw content.
-         */
-        docker_compose_raw?: string;
         /**
          * The Docker Compose custom start command.
          */
@@ -1565,9 +1657,18 @@ export type CreatePrivateDeployKeyApplicationData = {
          */
         docker_compose_custom_build_command?: string;
         /**
-         * The Docker Compose domains.
+         * Array of URLs to be applied to containers of a dockercompose application.
          */
-        docker_compose_domains?: Array<unknown>;
+        docker_compose_domains?: Array<{
+            /**
+             * The service name as defined in docker-compose.
+             */
+            name?: string;
+            /**
+             * Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")
+             */
+            domain?: string;
+        }>;
         /**
          * The watch paths.
          */
@@ -1600,6 +1701,14 @@ export type CreatePrivateDeployKeyApplicationData = {
          * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
          */
         autogenerate_domain?: boolean;
+        /**
+         * Escape special characters in labels. By default, $ (and other chars) is escaped. So if you write $ in the labels, it will be saved as $$. If you want to use env variables inside the labels, turn this off.
+         */
+        is_container_label_escape_enabled?: boolean;
+        /**
+         * Preserve repository during deployment.
+         */
+        is_preserve_repository_enabled?: boolean;
     };
     path?: never;
     query?: never;
@@ -1676,7 +1785,7 @@ export type CreateDockerfileApplicationData = {
         /**
          * The build pack type.
          */
-        build_pack?: 'nixpacks' | 'static' | 'dockerfile' | 'dockercompose';
+        build_pack?: 'dockerfile';
         /**
          * The ports to expose.
          */
@@ -1694,7 +1803,7 @@ export type CreateDockerfileApplicationData = {
          */
         description?: string;
         /**
-         * The application domains.
+         * The application URLs in a comma-separated list.
          */
         domains?: string;
         /**
@@ -1838,6 +1947,10 @@ export type CreateDockerfileApplicationData = {
          */
         instant_deploy?: boolean;
         /**
+         * The flag to indicate if HTTPS is forced. Defaults to true.
+         */
+        is_force_https_enabled?: boolean;
+        /**
          * Use build server.
          */
         use_build_server?: boolean;
@@ -1865,6 +1978,10 @@ export type CreateDockerfileApplicationData = {
          * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
          */
         autogenerate_domain?: boolean;
+        /**
+         * Escape special characters in labels. By default, $ (and other chars) is escaped. So if you write $ in the labels, it will be saved as $$. If you want to use env variables inside the labels, turn this off.
+         */
+        is_container_label_escape_enabled?: boolean;
     };
     path?: never;
     query?: never;
@@ -1945,7 +2062,7 @@ export type CreateDockerimageApplicationData = {
         /**
          * The ports to expose.
          */
-        ports_exposes: string;
+        ports_exposes?: string;
         /**
          * The destination UUID.
          */
@@ -1959,7 +2076,7 @@ export type CreateDockerimageApplicationData = {
          */
         description?: string;
         /**
-         * The application domains.
+         * The application URLs in a comma-separated list.
          */
         domains?: string;
         /**
@@ -2091,6 +2208,10 @@ export type CreateDockerimageApplicationData = {
          */
         instant_deploy?: boolean;
         /**
+         * The flag to indicate if HTTPS is forced. Defaults to true.
+         */
+        is_force_https_enabled?: boolean;
+        /**
          * Use build server.
          */
         use_build_server?: boolean;
@@ -2118,6 +2239,10 @@ export type CreateDockerimageApplicationData = {
          * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
          */
         autogenerate_domain?: boolean;
+        /**
+         * Escape special characters in labels. By default, $ (and other chars) is escaped. So if you write $ in the labels, it will be saved as $$. If you want to use env variables inside the labels, turn this off.
+         */
+        is_container_label_escape_enabled?: boolean;
     };
     path?: never;
     query?: never;
@@ -2165,107 +2290,6 @@ export type CreateDockerimageApplicationResponses = {
 };
 
 export type CreateDockerimageApplicationResponse = CreateDockerimageApplicationResponses[keyof CreateDockerimageApplicationResponses];
-
-export type CreateDockercomposeApplicationData = {
-    /**
-     * Application object that needs to be created.
-     */
-    body: {
-        /**
-         * The project UUID.
-         */
-        project_uuid: string;
-        /**
-         * The server UUID.
-         */
-        server_uuid: string;
-        /**
-         * The environment name. You need to provide at least one of environment_name or environment_uuid.
-         */
-        environment_name: string;
-        /**
-         * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
-         */
-        environment_uuid: string;
-        /**
-         * The Docker Compose raw content.
-         */
-        docker_compose_raw: string;
-        /**
-         * The destination UUID if the server has more than one destinations.
-         */
-        destination_uuid?: string;
-        /**
-         * The application name.
-         */
-        name?: string;
-        /**
-         * The application description.
-         */
-        description?: string;
-        /**
-         * The flag to indicate if the application should be deployed instantly.
-         */
-        instant_deploy?: boolean;
-        /**
-         * Use build server.
-         */
-        use_build_server?: boolean;
-        /**
-         * The flag to connect the service to the predefined Docker network.
-         */
-        connect_to_docker_network?: boolean;
-        /**
-         * Force domain usage even if conflicts are detected. Default is false.
-         */
-        force_domain_override?: boolean;
-    };
-    path?: never;
-    query?: never;
-    url: '/applications/dockercompose';
-};
-
-export type CreateDockercomposeApplicationErrors = {
-    /**
-     * Invalid token.
-     */
-    400: {
-        message?: string;
-    };
-    /**
-     * Unauthenticated.
-     */
-    401: {
-        message?: string;
-    };
-    /**
-     * Domain conflicts detected.
-     */
-    409: {
-        message?: string;
-        warning?: string;
-        conflicts?: Array<{
-            domain?: string;
-            resource_name?: string;
-            resource_uuid?: string;
-            resource_type?: 'application' | 'service' | 'instance';
-            message?: string;
-        }>;
-    };
-};
-
-export type CreateDockercomposeApplicationError = CreateDockercomposeApplicationErrors[keyof CreateDockercomposeApplicationErrors];
-
-export type CreateDockercomposeApplicationResponses = {
-    /**
-     * Application created successfully.
-     */
-    201: {
-        uuid?: string;
-    };
-};
-
-export type CreateDockercomposeApplicationResponse = CreateDockercomposeApplicationResponses[keyof CreateDockercomposeApplicationResponses];
 
 export type DeleteApplicationByUuidData = {
     body?: never;
@@ -2414,7 +2438,7 @@ export type UpdateApplicationByUuidData = {
         /**
          * The build pack type.
          */
-        build_pack?: 'nixpacks' | 'static' | 'dockerfile' | 'dockercompose';
+        build_pack?: 'nixpacks' | 'railpack' | 'static' | 'dockerfile' | 'dockercompose';
         /**
          * The application name.
          */
@@ -2424,7 +2448,7 @@ export type UpdateApplicationByUuidData = {
          */
         description?: string;
         /**
-         * The application domains.
+         * The application URLs in a comma-separated list.
          */
         domains?: string;
         /**
@@ -2443,6 +2467,18 @@ export type UpdateApplicationByUuidData = {
          * The flag to indicate if the application is static.
          */
         is_static?: boolean;
+        /**
+         * The flag to indicate if the application is a single-page application (SPA). Only relevant when is_static is true.
+         */
+        is_spa?: boolean;
+        /**
+         * The flag to indicate if auto-deploy is enabled on git push. Defaults to true.
+         */
+        is_auto_deploy_enabled?: boolean;
+        /**
+         * The flag to indicate if HTTPS is forced. Defaults to true.
+         */
+        is_force_https_enabled?: boolean;
         /**
          * The install command.
          */
@@ -2596,13 +2632,13 @@ export type UpdateApplicationByUuidData = {
          */
         dockerfile?: string;
         /**
+         * The Dockerfile location in the repository.
+         */
+        dockerfile_location?: string;
+        /**
          * The Docker Compose location.
          */
         docker_compose_location?: string;
-        /**
-         * The Docker Compose raw content.
-         */
-        docker_compose_raw?: string;
         /**
          * The Docker Compose custom start command.
          */
@@ -2612,9 +2648,18 @@ export type UpdateApplicationByUuidData = {
          */
         docker_compose_custom_build_command?: string;
         /**
-         * The Docker Compose domains.
+         * Array of URLs to be applied to containers of a dockercompose application.
          */
-        docker_compose_domains?: Array<unknown>;
+        docker_compose_domains?: Array<{
+            /**
+             * The service name as defined in docker-compose.
+             */
+            name?: string;
+            /**
+             * Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")
+             */
+            domain?: string;
+        }>;
         /**
          * The watch paths.
          */
@@ -2631,6 +2676,14 @@ export type UpdateApplicationByUuidData = {
          * Force domain usage even if conflicts are detected. Default is false.
          */
         force_domain_override?: boolean;
+        /**
+         * Escape special characters in labels. By default, $ (and other chars) is escaped. So if you write $ in the labels, it will be saved as $$. If you want to use env variables inside the labels, turn this off.
+         */
+        is_container_label_escape_enabled?: boolean;
+        /**
+         * Preserve git repository during application update. If false, the existing repository will be removed and replaced with the new one. If true, the existing repository will be kept and the new one will be ignored. Default is false.
+         */
+        is_preserve_repository_enabled?: boolean;
     };
     path: {
         /**
@@ -2852,9 +2905,7 @@ export type UpdateEnvByApplicationUuidResponses = {
     /**
      * Environment variable updated.
      */
-    201: {
-        message?: string;
-    };
+    201: EnvironmentVariable;
 };
 
 export type UpdateEnvByApplicationUuidResponse = UpdateEnvByApplicationUuidResponses[keyof UpdateEnvByApplicationUuidResponses];
@@ -3053,7 +3104,12 @@ export type StopApplicationByUuidData = {
          */
         uuid: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Perform docker cleanup (prune networks, volumes, etc.).
+         */
+        docker_cleanup?: boolean;
+    };
     url: '/applications/{uuid}/stop';
 };
 
@@ -3369,6 +3425,14 @@ export type DeployByTagOrUuidData = {
          * Pull Request Id for deploying specific PR builds. Cannot be used with tag parameter.
          */
         pr?: number;
+        /**
+         * Preview deployment identifier. Alias of pr.
+         */
+        pull_request_id?: number;
+        /**
+         * Docker image tag for Docker Image preview deployments. Requires pull_request_id.
+         */
+        docker_tag?: string;
     };
     url: '/deploy';
 };
@@ -4293,9 +4357,9 @@ export type ListServicesResponse = ListServicesResponses[keyof ListServicesRespo
 export type CreateServiceData = {
     body: {
         /**
-         * The one-click service type
+         * The one-click service type (e.g. "actualbudget", "calibre-web", "gitea-with-mysql" ...)
          */
-        type?: 'activepieces' | 'appsmith' | 'appwrite' | 'authentik' | 'babybuddy' | 'budge' | 'changedetection' | 'chatwoot' | 'classicpress-with-mariadb' | 'classicpress-with-mysql' | 'classicpress-without-database' | 'cloudflared' | 'code-server' | 'dashboard' | 'directus' | 'directus-with-postgresql' | 'docker-registry' | 'docuseal' | 'docuseal-with-postgres' | 'dokuwiki' | 'duplicati' | 'emby' | 'embystat' | 'fider' | 'filebrowser' | 'firefly' | 'formbricks' | 'ghost' | 'gitea' | 'gitea-with-mariadb' | 'gitea-with-mysql' | 'gitea-with-postgresql' | 'glance' | 'glances' | 'glitchtip' | 'grafana' | 'grafana-with-postgresql' | 'grocy' | 'heimdall' | 'homepage' | 'jellyfin' | 'kuzzle' | 'listmonk' | 'logto' | 'mediawiki' | 'meilisearch' | 'metabase' | 'metube' | 'minio' | 'moodle' | 'n8n' | 'n8n-with-postgresql' | 'next-image-transformation' | 'nextcloud' | 'nocodb' | 'odoo' | 'openblocks' | 'pairdrop' | 'penpot' | 'phpmyadmin' | 'pocketbase' | 'posthog' | 'reactive-resume' | 'rocketchat' | 'shlink' | 'slash' | 'snapdrop' | 'statusnook' | 'stirling-pdf' | 'supabase' | 'syncthing' | 'tolgee' | 'trigger' | 'trigger-with-external-database' | 'twenty' | 'umami' | 'unleash-with-postgresql' | 'unleash-without-database' | 'uptime-kuma' | 'vaultwarden' | 'vikunja' | 'weblate' | 'whoogle' | 'wordpress-with-mariadb' | 'wordpress-with-mysql' | 'wordpress-without-database';
+        type?: string;
         /**
          * Name of the service.
          */
@@ -4329,9 +4393,30 @@ export type CreateServiceData = {
          */
         instant_deploy?: boolean;
         /**
-         * The Docker Compose raw content.
+         * The base64 encoded Docker Compose content.
          */
         docker_compose_raw?: string;
+        /**
+         * Array of URLs to be applied to containers of a service.
+         */
+        urls?: Array<{
+            /**
+             * The service name as defined in docker-compose.
+             */
+            name?: string;
+            /**
+             * Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io").
+             */
+            url?: string;
+        }>;
+        /**
+         * Force domain override even if conflicts are detected.
+         */
+        force_domain_override?: boolean;
+        /**
+         * Escape special characters in labels. By default, $ (and other chars) is escaped. If you want to use env variables inside the labels, turn this off.
+         */
+        is_container_label_escape_enabled?: boolean;
     };
     path?: never;
     query?: never;
@@ -4350,6 +4435,20 @@ export type CreateServiceErrors = {
      */
     401: {
         message?: string;
+    };
+    /**
+     * Domain conflicts detected.
+     */
+    409: {
+        message?: string;
+        warning?: string;
+        conflicts?: Array<{
+            domain?: string;
+            resource_name?: string;
+            resource_uuid?: string;
+            resource_type?: 'application' | 'service' | 'instance';
+            message?: string;
+        }>;
     };
     /**
      * Validation error.
