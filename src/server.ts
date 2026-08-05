@@ -6,6 +6,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import express, { type Request, type Response } from 'express';
 import { registerCoolifyTools } from './tools/coolify.js';
 import { registerDatabaseTools } from './tools/databases.js';
+import { registerDiagnosticsTools } from './tools/diagnostics.js';
 import { registerInfraTools } from './tools/infra.js';
 import { registerResourceTools } from './tools/resources.js';
 import { registerServiceTools } from './tools/services.js';
@@ -32,6 +33,7 @@ registerDatabaseTools(server);
 registerServiceTools(server);
 registerResourceTools(server);
 registerInfraTools(server);
+registerDiagnosticsTools(server);
 
 function normalizeVersion(value: string) {
 	return value.replace(/^v/i, '');

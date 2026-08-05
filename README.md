@@ -16,10 +16,11 @@ Targets the **Coolify v4.1.2** API. Types and schemas are generated directly fro
 - **Full Deployment Workflow**: Create projects, environments, servers, and applications from scratch
 - **5 Application Types**: one `createApplication` tool covers public git, GitHub App, Deploy Key, Dockerfile, and Docker Image sources — plus Docker Compose deployments via `createService` (since Coolify v4.1, compose deployments are services)
 - **Environment Management**: Full CRUD for environment variables with secret masking
-- **Deployment Control**: Deploy, start, stop, restart applications
+- **Deployment Control**: Deploy (optionally waiting for the terminal status, with a log tail on failure), start, stop, restart applications
+- **Diagnostics**: `diagnoseApp` finds an app by UUID, name, or domain and aggregates status, recent deployments, failure log tails, runtime logs, and suggested next actions
 - **Security**: Write protection, secret redaction
 - **Near-full API coverage**: databases (8 engines, backups, envs), services, storages, scheduled tasks, teams, previews, servers, SSH keys, and GitHub Apps
-- **Token-efficient**: 62 tools whose definitions cost ~9k tokens of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
+- **Token-efficient**: 63 tools whose definitions cost ~9k tokens of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
 
 ## Requirements
 
@@ -172,7 +173,8 @@ With this MCP, you can deploy an application from scratch:
 
 | Tool | Description | Write |
 |------|-------------|-------|
-| `deploy` | Trigger a deployment | ✓ |
+| `deploy` | Trigger a deployment; `wait: true` polls to the terminal status and returns a log tail on failure | ✓ |
+| `diagnoseApp` | Diagnose an app by UUID, name, or domain: status, recent deployments, failure log tail, runtime logs, hints | |
 | `listDeployments` | List running deployments | |
 | `getDeployment` | Get deployment status and logs | |
 | `listAppDeployments` | List deployments for an application | |
