@@ -1098,28 +1098,6 @@ export function registerCoolifyTools(server: McpServer) {
     }
   );
 
-  server.registerTool(
-    "createDockerComposeApplication",
-    {
-      title: "Create Docker Compose application",
-      description:
-        "Create a new application from Docker Compose. Requires project_uuid, server_uuid, environment_name (or environment_uuid), and docker_compose_raw (YAML content).",
-      inputSchema: z.zCreateDockercomposeApplicationData.shape.body.shape,
-    },
-    async (body) => {
-      requireWrite();
-      const data = await unwrap(
-        sdk.createDockercomposeApplication({ body }),
-        "createDockerComposeApplication"
-      );
-      const uuid = isRecord(data) ? data.uuid : undefined;
-      return ok(
-        uuid ? `Application created with UUID: ${uuid}` : "Application created.",
-        data
-      );
-    }
-  );
-
   // ============================================
   // Application Management Tools
   // ============================================
@@ -1258,7 +1236,8 @@ export function registerCoolifyTools(server: McpServer) {
     "createService",
     {
       title: "Create service",
-      description: "Create a new one-click service (database, cache, etc.). Requires type, name, project_uuid, server_uuid, and environment_name.",
+      description:
+        "Create a one-click service (database, cache, etc.) or a Docker Compose deployment (pass docker_compose_raw with the YAML content). Requires project_uuid, server_uuid, and environment_name (or environment_uuid). Since Coolify v4.1, Docker Compose deployments are services, not applications.",
       inputSchema: z.zCreateServiceData.shape.body.shape,
     },
     async (body) => {

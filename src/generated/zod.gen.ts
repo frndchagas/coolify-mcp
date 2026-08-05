@@ -67,7 +67,8 @@ export const zServerSetting = z.object({
     created_at: z.optional(z.string()),
     updated_at: z.optional(z.string()),
     delete_unused_volumes: z.optional(z.boolean()),
-    delete_unused_networks: z.optional(z.boolean())
+    delete_unused_networks: z.optional(z.boolean()),
+    connection_timeout: z.optional(z.int())
 });
 
 /**
@@ -97,26 +98,13 @@ export const zServer = z.object({
 });
 
 /**
- * Environment model
- */
-export const zEnvironment = z.object({
-    id: z.optional(z.int()),
-    name: z.optional(z.string()),
-    project_id: z.optional(z.int()),
-    created_at: z.optional(z.string()),
-    updated_at: z.optional(z.string()),
-    description: z.optional(z.string())
-});
-
-/**
  * Project model
  */
 export const zProject = z.object({
     id: z.optional(z.int()),
     uuid: z.optional(z.string()),
     name: z.optional(z.string()),
-    description: z.optional(z.string()),
-    environments: z.optional(z.array(zEnvironment))
+    description: z.optional(z.string())
 });
 
 /**
@@ -154,9 +142,22 @@ export const zEnvironmentVariable = z.object({
     key: z.optional(z.string()),
     value: z.optional(z.string()),
     real_value: z.optional(z.string()),
+    comment: z.optional(z.string()),
     version: z.optional(z.string()),
     created_at: z.optional(z.string()),
     updated_at: z.optional(z.string())
+});
+
+/**
+ * Environment model
+ */
+export const zEnvironment = z.object({
+    id: z.optional(z.int()),
+    name: z.optional(z.string()),
+    project_id: z.optional(z.int()),
+    created_at: z.optional(z.string()),
+    updated_at: z.optional(z.string()),
+    description: z.optional(z.string())
 });
 
 /**
@@ -167,6 +168,10 @@ export const zApplicationDeploymentQueue = z.object({
     application_id: z.optional(z.string()),
     deployment_uuid: z.optional(z.string()),
     pull_request_id: z.optional(z.int()),
+    docker_registry_image_tag: z.optional(z.string()),
+    configuration_hash: z.optional(z.string()),
+    configuration_snapshot: z.optional(z.record(z.string(), z.unknown())),
+    configuration_diff: z.optional(z.record(z.string(), z.unknown())),
     force_rebuild: z.optional(z.boolean()),
     commit: z.optional(z.string()),
     status: z.optional(z.string()),
@@ -207,6 +212,7 @@ export const zApplication = z.object({
     docker_registry_image_tag: z.optional(z.string()),
     build_pack: z.optional(z.enum([
         'nixpacks',
+        'railpack',
         'static',
         'dockerfile',
         'dockercompose'
@@ -232,6 +238,8 @@ export const zApplication = z.object({
     health_check_timeout: z.optional(z.int()),
     health_check_retries: z.optional(z.int()),
     health_check_start_period: z.optional(z.int()),
+    health_check_type: z.optional(z.enum(['http', 'cmd'])),
+    health_check_command: z.optional(z.string()),
     limits_memory: z.optional(z.string()),
     limits_memory_swap: z.optional(z.string()),
     limits_memory_swappiness: z.optional(z.int()),
@@ -287,7 +295,9 @@ export const zApplication = z.object({
 export const zListApplicationsData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
-    query: z.optional(z.never())
+    query: z.optional(z.object({
+        tag: z.optional(z.string())
+    }))
 });
 
 /**
@@ -305,11 +315,12 @@ export const zCreatePublicApplicationData = z.object({
         git_branch: z.string(),
         build_pack: z.enum([
             'nixpacks',
+            'railpack',
             'static',
             'dockerfile',
             'dockercompose'
         ]),
-        ports_exposes: z.string(),
+        ports_exposes: z.optional(z.string()),
         destination_uuid: z.optional(z.string()),
         name: z.optional(z.string()),
         description: z.optional(z.string()),
@@ -318,6 +329,9 @@ export const zCreatePublicApplicationData = z.object({
         docker_registry_image_name: z.optional(z.string()),
         docker_registry_image_tag: z.optional(z.string()),
         is_static: z.optional(z.boolean()),
+        is_spa: z.optional(z.boolean()),
+        is_auto_deploy_enabled: z.optional(z.boolean()),
+        is_force_https_enabled: z.optional(z.boolean()),
         static_image: z.optional(z.enum(['nginx:alpine'])),
         install_command: z.optional(z.string()),
         build_command: z.optional(z.string()),
@@ -361,11 +375,14 @@ export const zCreatePublicApplicationData = z.object({
         ])),
         instant_deploy: z.optional(z.boolean()),
         dockerfile: z.optional(z.string()),
+        dockerfile_location: z.optional(z.string()),
         docker_compose_location: z.optional(z.string()),
-        docker_compose_raw: z.optional(z.string()),
         docker_compose_custom_start_command: z.optional(z.string()),
         docker_compose_custom_build_command: z.optional(z.string()),
-        docker_compose_domains: z.optional(z.array(z.unknown())),
+        docker_compose_domains: z.optional(z.array(z.object({
+            name: z.optional(z.string()),
+            domain: z.optional(z.string())
+        }))),
         watch_paths: z.optional(z.string()),
         use_build_server: z.optional(z.boolean()),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
@@ -373,7 +390,9 @@ export const zCreatePublicApplicationData = z.object({
         http_basic_auth_password: z.optional(z.string()),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
-        autogenerate_domain: z.optional(z.boolean()).default(true)
+        autogenerate_domain: z.optional(z.boolean()).default(true),
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        is_preserve_repository_enabled: z.optional(z.boolean()).default(false)
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -395,10 +414,11 @@ export const zCreatePrivateGithubAppApplicationData = z.object({
         github_app_uuid: z.string(),
         git_repository: z.string(),
         git_branch: z.string(),
-        ports_exposes: z.string(),
+        ports_exposes: z.optional(z.string()),
         destination_uuid: z.optional(z.string()),
         build_pack: z.enum([
             'nixpacks',
+            'railpack',
             'static',
             'dockerfile',
             'dockercompose'
@@ -410,6 +430,9 @@ export const zCreatePrivateGithubAppApplicationData = z.object({
         docker_registry_image_name: z.optional(z.string()),
         docker_registry_image_tag: z.optional(z.string()),
         is_static: z.optional(z.boolean()),
+        is_spa: z.optional(z.boolean()),
+        is_auto_deploy_enabled: z.optional(z.boolean()),
+        is_force_https_enabled: z.optional(z.boolean()),
         static_image: z.optional(z.enum(['nginx:alpine'])),
         install_command: z.optional(z.string()),
         build_command: z.optional(z.string()),
@@ -453,11 +476,14 @@ export const zCreatePrivateGithubAppApplicationData = z.object({
         ])),
         instant_deploy: z.optional(z.boolean()),
         dockerfile: z.optional(z.string()),
+        dockerfile_location: z.optional(z.string()),
         docker_compose_location: z.optional(z.string()),
-        docker_compose_raw: z.optional(z.string()),
         docker_compose_custom_start_command: z.optional(z.string()),
         docker_compose_custom_build_command: z.optional(z.string()),
-        docker_compose_domains: z.optional(z.array(z.unknown())),
+        docker_compose_domains: z.optional(z.array(z.object({
+            name: z.optional(z.string()),
+            domain: z.optional(z.string())
+        }))),
         watch_paths: z.optional(z.string()),
         use_build_server: z.optional(z.boolean()),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
@@ -465,7 +491,9 @@ export const zCreatePrivateGithubAppApplicationData = z.object({
         http_basic_auth_password: z.optional(z.string()),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
-        autogenerate_domain: z.optional(z.boolean()).default(true)
+        autogenerate_domain: z.optional(z.boolean()).default(true),
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        is_preserve_repository_enabled: z.optional(z.boolean()).default(false)
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -487,10 +515,11 @@ export const zCreatePrivateDeployKeyApplicationData = z.object({
         private_key_uuid: z.string(),
         git_repository: z.string(),
         git_branch: z.string(),
-        ports_exposes: z.string(),
+        ports_exposes: z.optional(z.string()),
         destination_uuid: z.optional(z.string()),
         build_pack: z.enum([
             'nixpacks',
+            'railpack',
             'static',
             'dockerfile',
             'dockercompose'
@@ -502,6 +531,9 @@ export const zCreatePrivateDeployKeyApplicationData = z.object({
         docker_registry_image_name: z.optional(z.string()),
         docker_registry_image_tag: z.optional(z.string()),
         is_static: z.optional(z.boolean()),
+        is_spa: z.optional(z.boolean()),
+        is_auto_deploy_enabled: z.optional(z.boolean()),
+        is_force_https_enabled: z.optional(z.boolean()),
         static_image: z.optional(z.enum(['nginx:alpine'])),
         install_command: z.optional(z.string()),
         build_command: z.optional(z.string()),
@@ -545,11 +577,14 @@ export const zCreatePrivateDeployKeyApplicationData = z.object({
         ])),
         instant_deploy: z.optional(z.boolean()),
         dockerfile: z.optional(z.string()),
+        dockerfile_location: z.optional(z.string()),
         docker_compose_location: z.optional(z.string()),
-        docker_compose_raw: z.optional(z.string()),
         docker_compose_custom_start_command: z.optional(z.string()),
         docker_compose_custom_build_command: z.optional(z.string()),
-        docker_compose_domains: z.optional(z.array(z.unknown())),
+        docker_compose_domains: z.optional(z.array(z.object({
+            name: z.optional(z.string()),
+            domain: z.optional(z.string())
+        }))),
         watch_paths: z.optional(z.string()),
         use_build_server: z.optional(z.boolean()),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
@@ -557,7 +592,9 @@ export const zCreatePrivateDeployKeyApplicationData = z.object({
         http_basic_auth_password: z.optional(z.string()),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
-        autogenerate_domain: z.optional(z.boolean()).default(true)
+        autogenerate_domain: z.optional(z.boolean()).default(true),
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        is_preserve_repository_enabled: z.optional(z.boolean()).default(false)
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -577,12 +614,7 @@ export const zCreateDockerfileApplicationData = z.object({
         environment_name: z.string(),
         environment_uuid: z.string(),
         dockerfile: z.string(),
-        build_pack: z.optional(z.enum([
-            'nixpacks',
-            'static',
-            'dockerfile',
-            'dockercompose'
-        ])),
+        build_pack: z.optional(z.enum(['dockerfile'])),
         ports_exposes: z.optional(z.string()),
         destination_uuid: z.optional(z.string()),
         name: z.optional(z.string()),
@@ -627,13 +659,15 @@ export const zCreateDockerfileApplicationData = z.object({
             'both'
         ])),
         instant_deploy: z.optional(z.boolean()),
+        is_force_https_enabled: z.optional(z.boolean()),
         use_build_server: z.optional(z.boolean()),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
-        autogenerate_domain: z.optional(z.boolean()).default(true)
+        autogenerate_domain: z.optional(z.boolean()).default(true),
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true)
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -654,7 +688,7 @@ export const zCreateDockerimageApplicationData = z.object({
         environment_uuid: z.string(),
         docker_registry_image_name: z.string(),
         docker_registry_image_tag: z.optional(z.string()),
-        ports_exposes: z.string(),
+        ports_exposes: z.optional(z.string()),
         destination_uuid: z.optional(z.string()),
         name: z.optional(z.string()),
         description: z.optional(z.string()),
@@ -695,13 +729,15 @@ export const zCreateDockerimageApplicationData = z.object({
             'both'
         ])),
         instant_deploy: z.optional(z.boolean()),
+        is_force_https_enabled: z.optional(z.boolean()),
         use_build_server: z.optional(z.boolean()),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
-        autogenerate_domain: z.optional(z.boolean()).default(true)
+        autogenerate_domain: z.optional(z.boolean()).default(true),
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true)
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -711,32 +747,6 @@ export const zCreateDockerimageApplicationData = z.object({
  * Application created successfully.
  */
 export const zCreateDockerimageApplicationResponse = z.object({
-    uuid: z.optional(z.string())
-});
-
-export const zCreateDockercomposeApplicationData = z.object({
-    body: z.object({
-        project_uuid: z.string(),
-        server_uuid: z.string(),
-        environment_name: z.string(),
-        environment_uuid: z.string(),
-        docker_compose_raw: z.string(),
-        destination_uuid: z.optional(z.string()),
-        name: z.optional(z.string()),
-        description: z.optional(z.string()),
-        instant_deploy: z.optional(z.boolean()),
-        use_build_server: z.optional(z.boolean()),
-        connect_to_docker_network: z.optional(z.boolean()),
-        force_domain_override: z.optional(z.boolean())
-    }),
-    path: z.optional(z.never()),
-    query: z.optional(z.never())
-});
-
-/**
- * Application created successfully.
- */
-export const zCreateDockercomposeApplicationResponse = z.object({
     uuid: z.optional(z.string())
 });
 
@@ -785,6 +795,7 @@ export const zUpdateApplicationByUuidData = z.object({
         destination_uuid: z.optional(z.string()),
         build_pack: z.optional(z.enum([
             'nixpacks',
+            'railpack',
             'static',
             'dockerfile',
             'dockercompose'
@@ -796,6 +807,9 @@ export const zUpdateApplicationByUuidData = z.object({
         docker_registry_image_name: z.optional(z.string()),
         docker_registry_image_tag: z.optional(z.string()),
         is_static: z.optional(z.boolean()),
+        is_spa: z.optional(z.boolean()),
+        is_auto_deploy_enabled: z.optional(z.boolean()),
+        is_force_https_enabled: z.optional(z.boolean()),
         install_command: z.optional(z.string()),
         build_command: z.optional(z.string()),
         start_command: z.optional(z.string()),
@@ -838,15 +852,20 @@ export const zUpdateApplicationByUuidData = z.object({
         ])),
         instant_deploy: z.optional(z.boolean()),
         dockerfile: z.optional(z.string()),
+        dockerfile_location: z.optional(z.string()),
         docker_compose_location: z.optional(z.string()),
-        docker_compose_raw: z.optional(z.string()),
         docker_compose_custom_start_command: z.optional(z.string()),
         docker_compose_custom_build_command: z.optional(z.string()),
-        docker_compose_domains: z.optional(z.array(z.unknown())),
+        docker_compose_domains: z.optional(z.array(z.object({
+            name: z.optional(z.string()),
+            domain: z.optional(z.string())
+        }))),
         watch_paths: z.optional(z.string()),
         use_build_server: z.optional(z.boolean()),
         connect_to_docker_network: z.optional(z.boolean()),
-        force_domain_override: z.optional(z.boolean())
+        force_domain_override: z.optional(z.boolean()),
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        is_preserve_repository_enabled: z.optional(z.boolean())
     }),
     path: z.object({
         uuid: z.string()
@@ -909,9 +928,7 @@ export const zUpdateEnvByApplicationUuidData = z.object({
 /**
  * Environment variable updated.
  */
-export const zUpdateEnvByApplicationUuidResponse = z.object({
-    message: z.optional(z.string())
-});
+export const zUpdateEnvByApplicationUuidResponse = zEnvironmentVariable;
 
 export const zCreateEnvByApplicationUuidData = z.object({
     body: z.object({
@@ -975,7 +992,9 @@ export const zStopApplicationByUuidData = z.object({
     path: z.object({
         uuid: z.string()
     }),
-    query: z.optional(z.never())
+    query: z.optional(z.object({
+        docker_cleanup: z.optional(z.boolean()).default(true)
+    }))
 });
 
 /**
@@ -1073,7 +1092,9 @@ export const zDeployByTagOrUuidData = z.object({
         tag: z.optional(z.string()),
         uuid: z.optional(z.string()),
         force: z.optional(z.boolean()),
-        pr: z.optional(z.int())
+        pr: z.optional(z.int()),
+        pull_request_id: z.optional(z.int()),
+        docker_tag: z.optional(z.string())
     }))
 });
 
@@ -1366,94 +1387,7 @@ export const zListServicesResponse = z.array(zService);
 
 export const zCreateServiceData = z.object({
     body: z.object({
-        type: z.optional(z.enum([
-            'activepieces',
-            'appsmith',
-            'appwrite',
-            'authentik',
-            'babybuddy',
-            'budge',
-            'changedetection',
-            'chatwoot',
-            'classicpress-with-mariadb',
-            'classicpress-with-mysql',
-            'classicpress-without-database',
-            'cloudflared',
-            'code-server',
-            'dashboard',
-            'directus',
-            'directus-with-postgresql',
-            'docker-registry',
-            'docuseal',
-            'docuseal-with-postgres',
-            'dokuwiki',
-            'duplicati',
-            'emby',
-            'embystat',
-            'fider',
-            'filebrowser',
-            'firefly',
-            'formbricks',
-            'ghost',
-            'gitea',
-            'gitea-with-mariadb',
-            'gitea-with-mysql',
-            'gitea-with-postgresql',
-            'glance',
-            'glances',
-            'glitchtip',
-            'grafana',
-            'grafana-with-postgresql',
-            'grocy',
-            'heimdall',
-            'homepage',
-            'jellyfin',
-            'kuzzle',
-            'listmonk',
-            'logto',
-            'mediawiki',
-            'meilisearch',
-            'metabase',
-            'metube',
-            'minio',
-            'moodle',
-            'n8n',
-            'n8n-with-postgresql',
-            'next-image-transformation',
-            'nextcloud',
-            'nocodb',
-            'odoo',
-            'openblocks',
-            'pairdrop',
-            'penpot',
-            'phpmyadmin',
-            'pocketbase',
-            'posthog',
-            'reactive-resume',
-            'rocketchat',
-            'shlink',
-            'slash',
-            'snapdrop',
-            'statusnook',
-            'stirling-pdf',
-            'supabase',
-            'syncthing',
-            'tolgee',
-            'trigger',
-            'trigger-with-external-database',
-            'twenty',
-            'umami',
-            'unleash-with-postgresql',
-            'unleash-without-database',
-            'uptime-kuma',
-            'vaultwarden',
-            'vikunja',
-            'weblate',
-            'whoogle',
-            'wordpress-with-mariadb',
-            'wordpress-with-mysql',
-            'wordpress-without-database'
-        ])),
+        type: z.optional(z.string()),
         name: z.optional(z.string().max(255)),
         description: z.optional(z.string()),
         project_uuid: z.string(),
@@ -1462,7 +1396,13 @@ export const zCreateServiceData = z.object({
         server_uuid: z.string(),
         destination_uuid: z.optional(z.string()),
         instant_deploy: z.optional(z.boolean()).default(false),
-        docker_compose_raw: z.optional(z.string())
+        docker_compose_raw: z.optional(z.string()),
+        urls: z.optional(z.array(z.object({
+            name: z.optional(z.string()),
+            url: z.optional(z.string())
+        }))),
+        force_domain_override: z.optional(z.boolean()).default(false),
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true)
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
