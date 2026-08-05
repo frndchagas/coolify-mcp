@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "generate": "openapi-ts",
     "prepublishOnly": "npm run build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "docs:index": "node scripts/build-docs-index.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.25.1",
@@ -24,7 +25,7 @@
     "typescript": "5.9.3",
     "vitest": "^4.1.10"
   },
-  "description": "MCP server for Coolify — deploy, diagnose, and manage applications, databases, services, backups, and servers on your self-hosted PaaS. 63 tools generated from the official OpenAPI spec, secrets masked by default.",
+  "description": "MCP server for Coolify — deploy, diagnose, and manage applications, databases, services, backups, and servers on your self-hosted PaaS. 64 tools generated from the official OpenAPI spec, docs search included, secrets masked by default.",
   "keywords": [
     "coolify",
     "mcp",
@@ -53,7 +54,8 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "docs-index.json"
   ],
   "engines": {
     "node": ">=18"

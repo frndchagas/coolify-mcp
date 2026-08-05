@@ -18,9 +18,10 @@ Targets the **Coolify v4.1.2** API. Types and schemas are generated directly fro
 - **Environment Management**: Full CRUD for environment variables with secret masking
 - **Deployment Control**: Deploy (optionally waiting for the terminal status, with a log tail on failure), start, stop, restart applications
 - **Diagnostics**: `diagnoseApp` finds an app by UUID, name, or domain and aggregates status, recent deployments, failure log tails, runtime logs, and suggested next actions
+- **Docs Search**: `searchDocs` runs full-text search across the official Coolify documentation from a bundled local index — no network needed
 - **Security**: Write protection, secret redaction
 - **Near-full API coverage**: databases (8 engines, backups, envs), services, storages, scheduled tasks, teams, previews, servers, SSH keys, and GitHub Apps
-- **Token-efficient**: 63 tools whose definitions cost ~9k tokens of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
+- **Token-efficient**: 64 tools whose definitions cost ~9k tokens of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
 
 ## Requirements
 
@@ -28,6 +29,10 @@ Targets the **Coolify v4.1.2** API. Types and schemas are generated directly fro
 - A Coolify API token (Settings > API in your Coolify dashboard)
 
 ## Install
+
+**Claude Desktop, one-click:** download [`coolify-mcp.mcpb`](https://github.com/frndchagas/coolify-mcp/releases/latest/download/coolify-mcp.mcpb) from the latest release and drag it into **Settings → Extensions**. You'll be prompted for your Coolify URL and token — no Node install, no JSON editing.
+
+**Via npm:**
 
 ```bash
 npm install -g @fndchagas/coolify-mcp
@@ -235,6 +240,7 @@ With this MCP, you can deploy an application from scratch:
 | Tool | Description |
 |------|-------------|
 | `listResources` | List all resources with filtering |
+| `searchDocs` | Full-text search across the official Coolify docs (bundled index, no network) |
 
 ## Security Features
 
