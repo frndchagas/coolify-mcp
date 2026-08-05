@@ -8,6 +8,7 @@ import {
   listWithMeta,
   ok,
   parseBody,
+  requireEnvironmentRef,
   requireWrite,
   unwrap,
 } from "./common.js";
@@ -116,13 +117,19 @@ export function registerDatabaseTools(server: McpServer) {
     {
       title: "Create database",
       description:
-        "Create a database. `type` selects the engine: postgresql, mysql, mariadb, mongodb, redis, keydb, dragonfly, or clickhouse. Requires project_uuid, server_uuid, environment_name, and environment_uuid. Engine-specific fields (versions, credentials, memory limits, ...) can be passed in `extra` and are validated per engine.",
+        "Create a database. `type` selects the engine: postgresql, mysql, mariadb, mongodb, redis, keydb, dragonfly, or clickhouse. Requires project_uuid, server_uuid, and environment_name or environment_uuid (one is enough). Engine-specific fields (versions, credentials, memory limits, ...) can be passed in `extra` and are validated per engine.",
       inputSchema: {
         type: zod.enum(DATABASE_ENGINES).describe("Database engine"),
         project_uuid: zod.string(),
         server_uuid: zod.string(),
-        environment_name: zod.string(),
-        environment_uuid: zod.string(),
+        environment_name: zod
+          .string()
+          .optional()
+          .describe("Environment name (or pass environment_uuid)"),
+        environment_uuid: zod
+          .string()
+          .optional()
+          .describe("Environment UUID (or pass environment_name)"),
         name: zod.string().optional(),
         description: zod.string().optional(),
         image: zod.string().optional(),
@@ -138,6 +145,7 @@ export function registerDatabaseTools(server: McpServer) {
     async ({ type, extra, ...fields }) => {
       requireWrite();
       const payload: Record<string, unknown> = { ...fields, ...(extra ?? {}) };
+      requireEnvironmentRef(payload, `createDatabase(${type})`);
       const data = await createDatabaseByEngine(type, payload);
       const uuid = isRecord(data) ? data.uuid : undefined;
       return ok(

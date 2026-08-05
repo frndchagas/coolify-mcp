@@ -69,6 +69,37 @@ async function fetchAndFixSpec(): Promise<OpenAPISpec> {
 	}
 
 	console.log(`Applied ${fixCount} fixes (removed format:uuid from parameters)`);
+
+	// Coolify's spec marks environment_name AND environment_uuid as required on
+	// create endpoints, but the API accepts either one (upstream fix pending:
+	// coollabsio/coolify#11134). Relax required arrays that contain both so the
+	// generated schemas and SDK request validation match real behavior.
+	let envFixCount = 0;
+	const walkSchemas = (node: unknown): void => {
+		if (Array.isArray(node)) {
+			for (const item of node) walkSchemas(item);
+			return;
+		}
+		if (node === null || typeof node !== 'object') return;
+		const record = node as Record<string, unknown>;
+		const required = record.required;
+		if (
+			Array.isArray(required) &&
+			required.includes('environment_name') &&
+			required.includes('environment_uuid')
+		) {
+			record.required = required.filter(
+				(field) => field !== 'environment_name' && field !== 'environment_uuid'
+			);
+			envFixCount++;
+		}
+		for (const value of Object.values(record)) walkSchemas(value);
+	};
+	walkSchemas(spec.paths ?? {});
+	console.log(
+		`Applied ${envFixCount} fixes (environment_name/environment_uuid one-of relaxation)`
+	);
+
 	return spec;
 }
 
