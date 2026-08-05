@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v0.2.0...coolify-mcp-v1.0.0) (2026-08-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* createPublicApplication, createPrivateGithubAppApplication, createPrivateDeployKeyApplication, createDockerfileApplication and createDockerImageApplication were replaced by createApplication with a type parameter.
+* createDockerComposeApplication was removed — Coolify v4.1 removed POST /applications/dockercompose. Docker Compose deployments are now services: use createService with docker_compose_raw.
+
+### Features
+
+* consolidate application creation into a single createApplication tool ([fff3f13](https://github.com/frndchagas/coolify-mcp/commit/fff3f133369a0293694e68eadda68a31211748bb))
+* target Coolify v4.1.2 API ([7a0eeaf](https://github.com/frndchagas/coolify-mcp/commit/7a0eeaf7ed0010435c91f14a0584a49b78d5cc31)), closes [#12](https://github.com/frndchagas/coolify-mcp/issues/12)
+
 ## [0.2.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v0.1.4...coolify-mcp-v0.2.0) (2026-01-21)
 
 
