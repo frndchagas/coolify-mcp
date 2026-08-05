@@ -16,6 +16,12 @@ export function registerResourceTools(server: McpServer) {
         uuid: zod.string().describe("Resource UUID"),
         action: zod.enum(["list", "create", "update", "delete"]),
         storage_uuid: zod.string().optional().describe("Required for update and delete"),
+        resource_uuid: zod
+          .string()
+          .optional()
+          .describe(
+            "For service storages: UUID of the sub-resource (container) inside the service to mount on. Required by the API when resource is 'service'."
+          ),
         type: zod.enum(["persistent", "file"]).optional(),
         name: zod.string().optional(),
         mount_path: zod.string().optional(),
