@@ -7,7 +7,9 @@ import {
   DATABASE_TYPE_KEYS,
   RESOURCE_STATUS_KEYS,
   RESOURCE_TYPE_KEYS,
+  extractDeploymentLogTail,
   isRecord,
+  isTerminalDeploymentStatus,
   maskEnvVar,
   matchesAnyField,
   normalizeItems,
@@ -744,15 +746,106 @@ export function registerCoolifyTools(server: McpServer) {
     "deploy",
     {
       title: "Trigger deploy",
-      description: "Trigger a deployment for an application by UUID or tag.",
-      inputSchema: z.zDeployByTagOrUuidData.shape.query.unwrap().shape,
+      description:
+        "Trigger a deployment for an application by UUID or tag. With wait=true, polls until every triggered deployment reaches a terminal status (finished/failed/cancelled) and returns a log tail for failures — raise your MCP client's tool timeout when waiting on long builds.",
+      inputSchema: {
+        ...z.zDeployByTagOrUuidData.shape.query.unwrap().shape,
+        wait: zod
+          .boolean()
+          .optional()
+          .describe("Poll until the deployment finishes instead of returning immediately"),
+        timeout_seconds: zod.number().int().min(10).max(1800).optional(),
+      },
     },
-    async (query) => {
+    async ({ wait, timeout_seconds, ...query }, extra) => {
       requireWrite();
-      return ok(
-        "Deployment triggered.",
-        await unwrap(sdk.deployByTagOrUuid({ query }), "deploy")
-      );
+      const result = await unwrap(sdk.deployByTagOrUuid({ query }), "deploy");
+      if (!wait) {
+        return ok("Deployment triggered.", result);
+      }
+
+      const triggered = isRecord(result) && Array.isArray(result.deployments)
+        ? result.deployments
+        : [];
+      const uuids = triggered
+        .map((d) =>
+          isRecord(d) && typeof d.deployment_uuid === "string"
+            ? d.deployment_uuid
+            : null
+        )
+        .filter((u): u is string => u !== null);
+      if (uuids.length === 0) {
+        return ok(
+          "Deployment triggered, but the API returned no deployment_uuid to wait on.",
+          result
+        );
+      }
+
+      const timeoutMs = (timeout_seconds ?? 600) * 1000;
+      const startedAt = Date.now();
+      const progressToken = extra._meta?.progressToken;
+      const statuses: Record<string, string> = {};
+      const pending = new Set(uuids);
+      let tick = 0;
+
+      while (pending.size > 0 && Date.now() - startedAt < timeoutMs) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        tick += 1;
+        for (const deploymentUuid of [...pending]) {
+          const deployment = await unwrap(
+            sdk.getDeploymentByUuid({ path: { uuid: deploymentUuid } }),
+            "deploy(wait)"
+          );
+          const status =
+            isRecord(deployment) && typeof deployment.status === "string"
+              ? deployment.status
+              : "unknown";
+          statuses[deploymentUuid] = status;
+          if (isTerminalDeploymentStatus(status)) {
+            pending.delete(deploymentUuid);
+          }
+        }
+        if (progressToken !== undefined) {
+          await extra.sendNotification({
+            method: "notifications/progress",
+            params: {
+              progressToken,
+              progress: tick,
+              message: `Waiting on deployments: ${Object.entries(statuses)
+                .map(([id, status]) => `${id}=${status}`)
+                .join(", ")}`,
+            },
+          });
+        }
+      }
+
+      const summaries: Record<string, unknown>[] = [];
+      for (const deploymentUuid of uuids) {
+        const status = statuses[deploymentUuid] ?? "unknown";
+        const summary: Record<string, unknown> = {
+          deployment_uuid: deploymentUuid,
+          status,
+        };
+        if (status === "failed") {
+          const deployment = await unwrap(
+            sdk.getDeploymentByUuid({ path: { uuid: deploymentUuid } }),
+            "deploy(wait)"
+          );
+          if (isRecord(deployment)) {
+            summary.log_tail = extractDeploymentLogTail(deployment.logs);
+          }
+        }
+        summaries.push(summary);
+      }
+
+      const timedOut = pending.size > 0;
+      const failed = summaries.filter((s) => s.status === "failed").length;
+      const text = timedOut
+        ? `Deployment wait timed out after ${Math.round((Date.now() - startedAt) / 1000)}s; last statuses: ${Object.values(statuses).join(", ")}.`
+        : failed > 0
+          ? `Deployment finished with ${failed} failure(s); log tails included.`
+          : "Deployment(s) finished successfully.";
+      return ok(text, { deployments: summaries, timed_out: timedOut });
     }
   );
 

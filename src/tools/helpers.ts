@@ -179,6 +179,32 @@ export function summarizeApplication(item: unknown): unknown {
   return Object.keys(summary).length > 0 ? summary : item;
 }
 
+// Coolify deployment statuses observed in the wild: queued, in_progress,
+// finished, failed, cancelled-by-user. Anything cancelled-* is terminal.
+export function isTerminalDeploymentStatus(status: string): boolean {
+  const normalized = status.trim().toLowerCase();
+  return (
+    normalized === "finished" ||
+    normalized === "failed" ||
+    normalized.startsWith("cancelled")
+  );
+}
+
+// Deployment logs arrive as a JSON string of [{output, type, timestamp, ...}].
+export function extractDeploymentLogTail(
+  logs: unknown,
+  maxLines = 40
+): string[] {
+  const parsed = parseMaybeJson(logs);
+  if (!Array.isArray(parsed)) return [];
+  return parsed
+    .map((entry) =>
+      isRecord(entry) && typeof entry.output === "string" ? entry.output : null
+    )
+    .filter((line): line is string => line !== null && line.trim() !== "")
+    .slice(-maxLines);
+}
+
 export function summarizeDatabase(item: unknown): unknown {
   if (!isRecord(item)) return item;
   const summary = pickFields(item, [
