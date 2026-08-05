@@ -26,8 +26,10 @@ jobs:
           echo "url=https://raw.githubusercontent.com/coollabsio/coolify/${version}/openapi.json" >> $GITHUB_OUTPUT
 
       - name: Download specs
+        env:
+          PINNED_URL: ${{ steps.pinned.outputs.url }}
         run: |
-          curl -sSL '${{ steps.pinned.outputs.url }}' -o /tmp/openapi-pinned.json
+          curl -sSL "$PINNED_URL" -o /tmp/openapi-pinned.json
           curl -sSL 'https://raw.githubusercontent.com/coollabsio/coolify/v4.x/openapi.json' -o /tmp/openapi-latest.json
 
       - name: Compare specs
