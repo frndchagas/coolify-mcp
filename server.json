@@ -3,13 +3,13 @@
   "name": "io.github.frndchagas/coolify-mcp",
   "title": "Coolify MCP",
   "description": "MCP server for Coolify API operations.",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@fndchagas/coolify-mcp",
-      "version": "0.1.4",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio"
       },

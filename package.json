@@ -1,6 +1,6 @@
 {
   "name": "@fndchagas/coolify-mcp",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "mcpName": "io.github.frndchagas/coolify-mcp",
   "type": "module",
   "scripts": {
