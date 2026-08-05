@@ -3,27 +3,25 @@ import { z as zod } from "zod";
 import { COOLIFY_ALLOW_WRITE } from "../config.js";
 import * as sdk from "../generated/sdk.gen.js";
 import * as z from "../generated/zod.gen.js";
-
-function extractErrorMessage(error: unknown): string {
-  if (typeof error === "string") return error;
-  if (typeof error === "object" && error !== null) {
-    if ("message" in error) {
-      return String((error as { message: unknown }).message);
-    }
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return "API request failed";
-    }
-  }
-  return "API request failed";
-}
-
-function isHtmlResponse(value: unknown): boolean {
-  if (typeof value !== "string") return false;
-  const trimmed = value.trim().toLowerCase();
-  return trimmed.startsWith("<!doctype html") || trimmed.startsWith("<html");
-}
+import {
+  DATABASE_TYPE_KEYS,
+  RESOURCE_STATUS_KEYS,
+  RESOURCE_TYPE_KEYS,
+  extractErrorMessage,
+  isHtmlResponse,
+  isRecord,
+  maskEnvVar,
+  matchesAnyField,
+  normalizeItems,
+  paginate,
+  parseMaybeJson,
+  pickFields,
+  redactSecrets,
+  summarizeApplication,
+  summarizeDatabase,
+  summarizeResource,
+  toRecord,
+} from "./helpers.js";
 
 async function unwrap<T>(
   promise: Promise<{ data?: T; error?: unknown }>,
@@ -44,16 +42,6 @@ async function unwrap<T>(
   return result.data as T;
 }
 
-// Convert any data to Record for structuredContent (single conversion point)
-function toRecord(data: unknown): Record<string, unknown> {
-  if (data === null || data === undefined) return {};
-  if (typeof data === "object" && !Array.isArray(data)) {
-    return data as Record<string, unknown>;
-  }
-  // Wrap primitives and arrays in a data property
-  return { data };
-}
-
 const ok = (text: string, data: unknown) => ({
   content: [{ type: "text" as const, text }],
   structuredContent: toRecord(data),
@@ -72,164 +60,6 @@ function requireWrite() {
       "Write operations are disabled (COOLIFY_ALLOW_WRITE=false)."
     );
   }
-}
-
-const SECRET_MASK = "********";
-const RESOURCE_TYPE_KEYS = ["type", "resource_type", "resourceable_type", "kind"];
-const RESOURCE_STATUS_KEYS = ["status", "state"];
-const DATABASE_TYPE_KEYS = ["type", "database_type", "kind"];
-const SENSITIVE_KEY_PATTERN =
-  /(pass(word)?|secret|token|api[_-]?key|private[_-]?key|access[_-]?key|credential|connection|string|dsn)/i;
-const URL_KEY_PATTERN = /(url|uri|dsn)/i;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function parseMaybeJson(value: unknown): unknown {
-  if (typeof value !== "string") return value;
-  try {
-    return JSON.parse(value) as unknown;
-  } catch {
-    return value;
-  }
-}
-
-function normalizeItems(value: unknown): unknown[] | null {
-  const parsed = parseMaybeJson(value);
-  if (Array.isArray(parsed)) return parsed;
-  if (isRecord(parsed) && Array.isArray(parsed.items)) return parsed.items;
-  return null;
-}
-
-function normalizeString(value: string): string {
-  return value.trim().toLowerCase();
-}
-
-function matchesAnyField(
-  item: unknown,
-  keys: string[],
-  expected?: string
-): boolean {
-  if (!expected) return true;
-  if (!isRecord(item)) return false;
-  const expectedValue = normalizeString(expected);
-  for (const key of keys) {
-    const raw = item[key];
-    if (typeof raw === "string" && normalizeString(raw) === expectedValue) {
-      return true;
-    }
-    if (typeof raw === "number" && String(raw) === expectedValue) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function paginate<T>(items: T[], limit?: number, offset?: number) {
-  const safeOffset = Math.max(0, offset ?? 0);
-  if (limit === undefined) {
-    return {
-      items: items.slice(safeOffset),
-      total: items.length,
-      offset: safeOffset,
-      hasMore: false,
-    };
-  }
-  const safeLimit = Math.max(1, limit);
-  return {
-    items: items.slice(safeOffset, safeOffset + safeLimit),
-    total: items.length,
-    offset: safeOffset,
-    limit: safeLimit,
-    hasMore: safeOffset + safeLimit < items.length,
-  };
-}
-
-function pickFields(
-  source: Record<string, unknown>,
-  fields: string[]
-): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  for (const field of fields) {
-    if (field in source) {
-      result[field] = source[field];
-    }
-  }
-  return result;
-}
-
-function summarizeResource(item: unknown): unknown {
-  if (!isRecord(item)) return item;
-  const summary = pickFields(item, ["id", "name", "status", "type"]);
-  return Object.keys(summary).length > 0 ? summary : item;
-}
-
-function maskEnvValue(value: unknown): unknown {
-  if (value === undefined || value === null) return value;
-  return SECRET_MASK;
-}
-
-function maskEnvVar(item: unknown): unknown {
-  if (!isRecord(item)) return item;
-  const hasValue = item.value !== undefined || item.real_value !== undefined;
-  return {
-    ...item,
-    value: maskEnvValue(item.value),
-    real_value: maskEnvValue(item.real_value),
-    ...(hasValue ? { is_secret: true } : {}),
-  };
-}
-
-function hasCredentialInUrl(value: string): boolean {
-  return /:\/\/[^/]+@/.test(value);
-}
-
-function shouldRedactField(key: string, value: unknown): boolean {
-  if (SENSITIVE_KEY_PATTERN.test(key)) return true;
-  if (
-    URL_KEY_PATTERN.test(key) &&
-    typeof value === "string" &&
-    hasCredentialInUrl(value)
-  ) {
-    return true;
-  }
-  return false;
-}
-
-function redactSecrets(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map((item) => redactSecrets(item));
-  if (!isRecord(value)) return value;
-  const result: Record<string, unknown> = {};
-  for (const [key, fieldValue] of Object.entries(value)) {
-    if (shouldRedactField(key, fieldValue)) {
-      result[key] = SECRET_MASK;
-      continue;
-    }
-    result[key] = redactSecrets(fieldValue);
-  }
-  return result;
-}
-
-function summarizeApplication(item: unknown): unknown {
-  if (!isRecord(item)) return item;
-  const summary = pickFields(item, ["id", "uuid", "name", "status", "fqdn"]);
-  return Object.keys(summary).length > 0 ? summary : item;
-}
-
-function summarizeDatabase(item: unknown): unknown {
-  if (!isRecord(item)) return item;
-  const summary = pickFields(item, [
-    "id",
-    "uuid",
-    "name",
-    "status",
-    "type",
-    "database_type",
-    "host",
-    "port",
-  ]);
-  return Object.keys(summary).length > 0 ? summary : item;
 }
 
 export function registerCoolifyTools(server: McpServer) {
