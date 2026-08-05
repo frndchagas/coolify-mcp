@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.2.0...coolify-mcp-v1.2.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* expose resource_uuid for service storages and add module dispatch tests ([bdc096e](https://github.com/frndchagas/coolify-mcp/commit/bdc096e56fd1b0bf0c51b2127232a2dd059fdba8))
+* expose resource_uuid for service storages and add module dispatch tests ([6667f68](https://github.com/frndchagas/coolify-mcp/commit/6667f68119e680e9eea8903ef971bc714e287028))
+
 ## [1.2.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.1.0...coolify-mcp-v1.2.0) (2026-08-05)
 
 
