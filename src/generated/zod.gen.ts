@@ -3,6 +3,36 @@
 import { z } from 'zod';
 
 /**
+ * User model
+ */
+export const zUser = z.object({
+    id: z.optional(z.int()),
+    name: z.optional(z.string()),
+    email: z.optional(z.string()),
+    email_verified_at: z.optional(z.string()),
+    created_at: z.optional(z.string()),
+    updated_at: z.optional(z.string()),
+    two_factor_confirmed_at: z.optional(z.string()),
+    force_password_reset: z.optional(z.boolean()),
+    marketing_emails: z.optional(z.boolean())
+});
+
+/**
+ * Team model
+ */
+export const zTeam = z.object({
+    id: z.optional(z.int()),
+    name: z.optional(z.string()),
+    description: z.optional(z.string()),
+    personal_team: z.optional(z.boolean()),
+    created_at: z.optional(z.string()),
+    updated_at: z.optional(z.string()),
+    show_boarding: z.optional(z.boolean()),
+    custom_server_limit: z.optional(z.string()),
+    members: z.optional(z.array(zUser))
+});
+
+/**
  * Service model
  */
 export const zService = z.object({
@@ -95,6 +125,41 @@ export const zServer = z.object({
     log_drain_notification_sent: z.optional(z.boolean()),
     swarm_cluster: z.optional(z.string()),
     settings: z.optional(zServerSetting)
+});
+
+/**
+ * Scheduled Task Execution model
+ */
+export const zScheduledTaskExecution = z.object({
+    uuid: z.optional(z.string()),
+    status: z.optional(z.enum([
+        'success',
+        'failed',
+        'running'
+    ])),
+    message: z.optional(z.string()),
+    retry_count: z.optional(z.int()),
+    duration: z.optional(z.number()),
+    started_at: z.optional(z.iso.datetime()),
+    finished_at: z.optional(z.iso.datetime()),
+    created_at: z.optional(z.iso.datetime()),
+    updated_at: z.optional(z.iso.datetime())
+});
+
+/**
+ * Scheduled Task model
+ */
+export const zScheduledTask = z.object({
+    id: z.optional(z.int()),
+    uuid: z.optional(z.string()),
+    enabled: z.optional(z.boolean()),
+    name: z.optional(z.string()),
+    command: z.optional(z.string()),
+    frequency: z.optional(z.string()),
+    container: z.optional(z.string()),
+    timeout: z.optional(z.int()),
+    created_at: z.optional(z.iso.datetime()),
+    updated_at: z.optional(z.iso.datetime())
 });
 
 /**
@@ -952,6 +1017,28 @@ export const zCreateEnvByApplicationUuidResponse = z.object({
     uuid: z.optional(z.string())
 });
 
+export const zUpdateEnvsByApplicationUuidData = z.object({
+    body: z.object({
+        data: z.array(z.object({
+            key: z.optional(z.string()),
+            value: z.optional(z.string()),
+            is_preview: z.optional(z.boolean()),
+            is_literal: z.optional(z.boolean()),
+            is_multiline: z.optional(z.boolean()),
+            is_shown_once: z.optional(z.boolean())
+        }))
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment variables updated.
+ */
+export const zUpdateEnvsByApplicationUuidResponse = z.array(zEnvironmentVariable);
+
 export const zDeleteEnvByApplicationUuidData = z.object({
     body: z.optional(z.never()),
     path: z.object({
@@ -1020,6 +1107,97 @@ export const zRestartApplicationByUuidResponse = z.object({
     deployment_uuid: z.optional(z.string())
 });
 
+export const zListStoragesByApplicationUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * All storages by application UUID.
+ */
+export const zListStoragesByApplicationUuidResponse = z.object({
+    persistent_storages: z.optional(z.array(z.record(z.string(), z.unknown()))),
+    file_storages: z.optional(z.array(z.record(z.string(), z.unknown())))
+});
+
+export const zUpdateStorageByApplicationUuidData = z.object({
+    body: z.object({
+        uuid: z.optional(z.string()),
+        id: z.optional(z.int()),
+        type: z.enum(['persistent', 'file']),
+        is_preview_suffix_enabled: z.optional(z.boolean()),
+        name: z.optional(z.string()),
+        mount_path: z.optional(z.string()),
+        host_path: z.optional(z.string()),
+        content: z.optional(z.string())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Storage updated.
+ */
+export const zUpdateStorageByApplicationUuidResponse = z.record(z.string(), z.unknown());
+
+export const zCreateStorageByApplicationUuidData = z.object({
+    body: z.object({
+        type: z.enum(['persistent', 'file']),
+        name: z.optional(z.string()),
+        mount_path: z.string(),
+        host_path: z.optional(z.string()),
+        content: z.optional(z.string()),
+        is_directory: z.optional(z.boolean()),
+        fs_path: z.optional(z.string())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Storage created.
+ */
+export const zCreateStorageByApplicationUuidResponse = z.record(z.string(), z.unknown());
+
+export const zDeleteStorageByApplicationUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        storage_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Storage deleted.
+ */
+export const zDeleteStorageByApplicationUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zDeletePreviewDeploymentByPullRequestIdData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        pull_request_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Preview deletion queued.
+ */
+export const zDeletePreviewDeploymentByPullRequestIdResponse = z.object({
+    message: z.optional(z.string())
+});
+
 export const zListDatabasesData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
@@ -1030,6 +1208,70 @@ export const zListDatabasesData = z.object({
  * Get all databases
  */
 export const zListDatabasesResponse = z.string();
+
+export const zGetDatabaseBackupsByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get all backups for a database
+ */
+export const zGetDatabaseBackupsByUuidResponse = z.string();
+
+export const zCreateDatabaseBackupData = z.object({
+    body: z.object({
+        frequency: z.string(),
+        enabled: z.optional(z.boolean()).default(true),
+        save_s3: z.optional(z.boolean()).default(false),
+        s3_storage_uuid: z.optional(z.string()),
+        databases_to_backup: z.optional(z.string()),
+        dump_all: z.optional(z.boolean()).default(false),
+        backup_now: z.optional(z.boolean()),
+        database_backup_retention_amount_locally: z.optional(z.int()),
+        database_backup_retention_days_locally: z.optional(z.int()),
+        database_backup_retention_max_storage_locally: z.optional(z.number()),
+        database_backup_retention_amount_s3: z.optional(z.int()),
+        database_backup_retention_days_s3: z.optional(z.int()),
+        database_backup_retention_max_storage_s3: z.optional(z.number()),
+        timeout: z.optional(z.int()).default(3600)
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Backup configuration created successfully
+ */
+export const zCreateDatabaseBackupResponse = z.object({
+    uuid: z.optional(z.uuid()),
+    message: z.optional(z.string())
+});
+
+export const zDeleteDatabaseByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.object({
+        delete_configurations: z.optional(z.boolean()).default(true),
+        delete_volumes: z.optional(z.boolean()).default(true),
+        docker_cleanup: z.optional(z.boolean()).default(true),
+        delete_connected_networks: z.optional(z.boolean()).default(true)
+    }))
+});
+
+/**
+ * Database deleted.
+ */
+export const zDeleteDatabaseByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
 
 export const zGetDatabaseByUuidData = z.object({
     body: z.optional(z.never()),
@@ -1043,6 +1285,589 @@ export const zGetDatabaseByUuidData = z.object({
  * Get all databases
  */
 export const zGetDatabaseByUuidResponse = z.string();
+
+export const zUpdateDatabaseByUuidData = z.object({
+    body: z.object({
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        image: z.optional(z.string()),
+        is_public: z.optional(z.boolean()),
+        public_port: z.optional(z.int()),
+        public_port_timeout: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        postgres_user: z.optional(z.string()),
+        postgres_password: z.optional(z.string()),
+        postgres_db: z.optional(z.string()),
+        postgres_initdb_args: z.optional(z.string()),
+        postgres_host_auth_method: z.optional(z.string()),
+        postgres_conf: z.optional(z.string()),
+        clickhouse_admin_user: z.optional(z.string()),
+        clickhouse_admin_password: z.optional(z.string()),
+        dragonfly_password: z.optional(z.string()),
+        redis_password: z.optional(z.string()),
+        redis_conf: z.optional(z.string()),
+        keydb_password: z.optional(z.string()),
+        keydb_conf: z.optional(z.string()),
+        mariadb_conf: z.optional(z.string()),
+        mariadb_root_password: z.optional(z.string()),
+        mariadb_user: z.optional(z.string()),
+        mariadb_password: z.optional(z.string()),
+        mariadb_database: z.optional(z.string()),
+        mongo_conf: z.optional(z.string()),
+        mongo_initdb_root_username: z.optional(z.string()),
+        mongo_initdb_root_password: z.optional(z.string()),
+        mongo_initdb_database: z.optional(z.string()),
+        mysql_root_password: z.optional(z.string()),
+        mysql_password: z.optional(z.string()),
+        mysql_user: z.optional(z.string()),
+        mysql_database: z.optional(z.string()),
+        mysql_conf: z.optional(z.string()),
+        health_check_enabled: z.optional(z.boolean()).default(true),
+        health_check_interval: z.optional(z.int().gte(1)).default(15),
+        health_check_timeout: z.optional(z.int().gte(1)).default(5),
+        health_check_retries: z.optional(z.int().gte(1)).default(5),
+        health_check_start_period: z.optional(z.int().gte(0)).default(5)
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+export const zDeleteBackupConfigurationByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        scheduled_backup_uuid: z.string()
+    }),
+    query: z.optional(z.object({
+        delete_s3: z.optional(z.boolean()).default(false)
+    }))
+});
+
+/**
+ * Backup configuration deleted.
+ */
+export const zDeleteBackupConfigurationByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zUpdateDatabaseBackupData = z.object({
+    body: z.object({
+        save_s3: z.optional(z.boolean()),
+        s3_storage_uuid: z.optional(z.string()),
+        backup_now: z.optional(z.boolean()),
+        enabled: z.optional(z.boolean()),
+        databases_to_backup: z.optional(z.string()),
+        dump_all: z.optional(z.boolean()),
+        frequency: z.optional(z.string()),
+        database_backup_retention_amount_locally: z.optional(z.int()),
+        database_backup_retention_days_locally: z.optional(z.int()),
+        database_backup_retention_max_storage_locally: z.optional(z.number()),
+        database_backup_retention_amount_s3: z.optional(z.int()),
+        database_backup_retention_days_s3: z.optional(z.int()),
+        database_backup_retention_max_storage_s3: z.optional(z.number()),
+        timeout: z.optional(z.int()).default(3600)
+    }),
+    path: z.object({
+        uuid: z.string(),
+        scheduled_backup_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+export const zCreateDatabasePostgresqlData = z.object({
+    body: z.object({
+        server_uuid: z.string(),
+        project_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        postgres_user: z.optional(z.string()),
+        postgres_password: z.optional(z.string()),
+        postgres_db: z.optional(z.string()),
+        postgres_initdb_args: z.optional(z.string()),
+        postgres_host_auth_method: z.optional(z.string()),
+        postgres_conf: z.optional(z.string()),
+        destination_uuid: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        image: z.optional(z.string()),
+        is_public: z.optional(z.boolean()),
+        public_port: z.optional(z.int()),
+        public_port_timeout: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        instant_deploy: z.optional(z.boolean())
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+export const zCreateDatabaseClickhouseData = z.object({
+    body: z.object({
+        server_uuid: z.string(),
+        project_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        destination_uuid: z.optional(z.string()),
+        clickhouse_admin_user: z.optional(z.string()),
+        clickhouse_admin_password: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        image: z.optional(z.string()),
+        is_public: z.optional(z.boolean()),
+        public_port: z.optional(z.int()),
+        public_port_timeout: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        instant_deploy: z.optional(z.boolean())
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+export const zCreateDatabaseDragonflyData = z.object({
+    body: z.object({
+        server_uuid: z.string(),
+        project_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        destination_uuid: z.optional(z.string()),
+        dragonfly_password: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        image: z.optional(z.string()),
+        is_public: z.optional(z.boolean()),
+        public_port: z.optional(z.int()),
+        public_port_timeout: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        instant_deploy: z.optional(z.boolean())
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+export const zCreateDatabaseRedisData = z.object({
+    body: z.object({
+        server_uuid: z.string(),
+        project_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        destination_uuid: z.optional(z.string()),
+        redis_password: z.optional(z.string()),
+        redis_conf: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        image: z.optional(z.string()),
+        is_public: z.optional(z.boolean()),
+        public_port: z.optional(z.int()),
+        public_port_timeout: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        instant_deploy: z.optional(z.boolean())
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+export const zCreateDatabaseKeydbData = z.object({
+    body: z.object({
+        server_uuid: z.string(),
+        project_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        destination_uuid: z.optional(z.string()),
+        keydb_password: z.optional(z.string()),
+        keydb_conf: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        image: z.optional(z.string()),
+        is_public: z.optional(z.boolean()),
+        public_port: z.optional(z.int()),
+        public_port_timeout: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        instant_deploy: z.optional(z.boolean())
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+export const zCreateDatabaseMariadbData = z.object({
+    body: z.object({
+        server_uuid: z.string(),
+        project_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        destination_uuid: z.optional(z.string()),
+        mariadb_conf: z.optional(z.string()),
+        mariadb_root_password: z.optional(z.string()),
+        mariadb_user: z.optional(z.string()),
+        mariadb_password: z.optional(z.string()),
+        mariadb_database: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        image: z.optional(z.string()),
+        is_public: z.optional(z.boolean()),
+        public_port: z.optional(z.int()),
+        public_port_timeout: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        instant_deploy: z.optional(z.boolean())
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+export const zCreateDatabaseMysqlData = z.object({
+    body: z.object({
+        server_uuid: z.string(),
+        project_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        destination_uuid: z.optional(z.string()),
+        mysql_root_password: z.optional(z.string()),
+        mysql_password: z.optional(z.string()),
+        mysql_user: z.optional(z.string()),
+        mysql_database: z.optional(z.string()),
+        mysql_conf: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        image: z.optional(z.string()),
+        is_public: z.optional(z.boolean()),
+        public_port: z.optional(z.int()),
+        public_port_timeout: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        instant_deploy: z.optional(z.boolean())
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+export const zCreateDatabaseMongodbData = z.object({
+    body: z.object({
+        server_uuid: z.string(),
+        project_uuid: z.string(),
+        environment_name: z.string(),
+        environment_uuid: z.string(),
+        destination_uuid: z.optional(z.string()),
+        mongo_conf: z.optional(z.string()),
+        mongo_initdb_root_username: z.optional(z.string()),
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        image: z.optional(z.string()),
+        is_public: z.optional(z.boolean()),
+        public_port: z.optional(z.int()),
+        public_port_timeout: z.optional(z.int()),
+        limits_memory: z.optional(z.string()),
+        limits_memory_swap: z.optional(z.string()),
+        limits_memory_swappiness: z.optional(z.int()),
+        limits_memory_reservation: z.optional(z.string()),
+        limits_cpus: z.optional(z.string()),
+        limits_cpuset: z.optional(z.string()),
+        limits_cpu_shares: z.optional(z.int()),
+        instant_deploy: z.optional(z.boolean())
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+export const zDeleteBackupExecutionByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        scheduled_backup_uuid: z.string(),
+        execution_uuid: z.string()
+    }),
+    query: z.optional(z.object({
+        delete_s3: z.optional(z.boolean()).default(false)
+    }))
+});
+
+/**
+ * Backup execution deleted.
+ */
+export const zDeleteBackupExecutionByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zListBackupExecutionsData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        scheduled_backup_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * List of backup executions
+ */
+export const zListBackupExecutionsResponse = z.object({
+    executions: z.optional(z.array(z.object({
+        uuid: z.optional(z.string()),
+        filename: z.optional(z.string()),
+        size: z.optional(z.int()),
+        created_at: z.optional(z.string()),
+        message: z.optional(z.string()),
+        status: z.optional(z.string())
+    })))
+});
+
+export const zStartDatabaseByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Start database.
+ */
+export const zStartDatabaseByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zStopDatabaseByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.object({
+        docker_cleanup: z.optional(z.boolean()).default(true)
+    }))
+});
+
+/**
+ * Stop database.
+ */
+export const zStopDatabaseByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zRestartDatabaseByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Restart database.
+ */
+export const zRestartDatabaseByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zListEnvsByDatabaseUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment variables.
+ */
+export const zListEnvsByDatabaseUuidResponse = z.array(zEnvironmentVariable);
+
+export const zUpdateEnvByDatabaseUuidData = z.object({
+    body: z.object({
+        key: z.string(),
+        value: z.string(),
+        is_literal: z.optional(z.boolean()),
+        is_multiline: z.optional(z.boolean()),
+        is_shown_once: z.optional(z.boolean())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment variable updated.
+ */
+export const zUpdateEnvByDatabaseUuidResponse = zEnvironmentVariable;
+
+export const zCreateEnvByDatabaseUuidData = z.object({
+    body: z.object({
+        key: z.optional(z.string()),
+        value: z.optional(z.string()),
+        is_literal: z.optional(z.boolean()),
+        is_multiline: z.optional(z.boolean()),
+        is_shown_once: z.optional(z.boolean())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment variable created.
+ */
+export const zCreateEnvByDatabaseUuidResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
+export const zUpdateEnvsByDatabaseUuidData = z.object({
+    body: z.object({
+        data: z.array(z.object({
+            key: z.optional(z.string()),
+            value: z.optional(z.string()),
+            is_literal: z.optional(z.boolean()),
+            is_multiline: z.optional(z.boolean()),
+            is_shown_once: z.optional(z.boolean())
+        }))
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment variables updated.
+ */
+export const zUpdateEnvsByDatabaseUuidResponse = z.array(zEnvironmentVariable);
+
+export const zDeleteEnvByDatabaseUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        env_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment variable deleted.
+ */
+export const zDeleteEnvByDatabaseUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zListStoragesByDatabaseUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * All storages by database UUID.
+ */
+export const zListStoragesByDatabaseUuidResponse = z.object({
+    persistent_storages: z.optional(z.array(z.record(z.string(), z.unknown()))),
+    file_storages: z.optional(z.array(z.record(z.string(), z.unknown())))
+});
+
+export const zUpdateStorageByDatabaseUuidData = z.object({
+    body: z.object({
+        uuid: z.optional(z.string()),
+        id: z.optional(z.int()),
+        type: z.enum(['persistent', 'file']),
+        is_preview_suffix_enabled: z.optional(z.boolean()),
+        name: z.optional(z.string()),
+        mount_path: z.optional(z.string()),
+        host_path: z.optional(z.string()),
+        content: z.optional(z.string())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Storage updated.
+ */
+export const zUpdateStorageByDatabaseUuidResponse = z.record(z.string(), z.unknown());
+
+export const zCreateStorageByDatabaseUuidData = z.object({
+    body: z.object({
+        type: z.enum(['persistent', 'file']),
+        name: z.optional(z.string()),
+        mount_path: z.string(),
+        host_path: z.optional(z.string()),
+        content: z.optional(z.string()),
+        is_directory: z.optional(z.boolean()),
+        fs_path: z.optional(z.string())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Storage created.
+ */
+export const zCreateStorageByDatabaseUuidResponse = z.record(z.string(), z.unknown());
+
+export const zDeleteStorageByDatabaseUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        storage_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Storage deleted.
+ */
+export const zDeleteStorageByDatabaseUuidResponse = z.object({
+    message: z.optional(z.string())
+});
 
 export const zListDeploymentsData = z.object({
     body: z.optional(z.never()),
@@ -1152,6 +1977,38 @@ export const zListGithubAppsResponse = z.array(z.object({
     team_id: z.optional(z.int()),
     type: z.optional(z.string())
 }));
+
+export const zLoadRepositoriesData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        github_app_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Repositories loaded successfully.
+ */
+export const zLoadRepositoriesResponse = z.object({
+    repositories: z.optional(z.array(z.record(z.string(), z.unknown())))
+});
+
+export const zLoadBranchesData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        github_app_id: z.int(),
+        owner: z.string(),
+        repo: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Branches loaded successfully.
+ */
+export const zLoadBranchesResponse = z.object({
+    branches: z.optional(z.array(z.record(z.string(), z.unknown())))
+});
 
 export const zVersionData = z.object({
     body: z.optional(z.never()),
@@ -1280,6 +2137,174 @@ export const zListResourcesData = z.object({
  */
 export const zListResourcesResponse = z.string();
 
+export const zListScheduledTasksByApplicationUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get all scheduled tasks for an application.
+ */
+export const zListScheduledTasksByApplicationUuidResponse = z.array(zScheduledTask);
+
+export const zCreateScheduledTaskByApplicationUuidData = z.object({
+    body: z.object({
+        name: z.string(),
+        command: z.string(),
+        frequency: z.string(),
+        container: z.optional(z.string()),
+        timeout: z.optional(z.int()).default(300),
+        enabled: z.optional(z.boolean()).default(true)
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Scheduled task created.
+ */
+export const zCreateScheduledTaskByApplicationUuidResponse = zScheduledTask;
+
+export const zDeleteScheduledTaskByApplicationUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        task_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Scheduled task deleted.
+ */
+export const zDeleteScheduledTaskByApplicationUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zUpdateScheduledTaskByApplicationUuidData = z.object({
+    body: z.object({
+        name: z.optional(z.string()),
+        command: z.optional(z.string()),
+        frequency: z.optional(z.string()),
+        container: z.optional(z.string()),
+        timeout: z.optional(z.int()).default(300),
+        enabled: z.optional(z.boolean()).default(true)
+    }),
+    path: z.object({
+        uuid: z.string(),
+        task_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Scheduled task updated.
+ */
+export const zUpdateScheduledTaskByApplicationUuidResponse = zScheduledTask;
+
+export const zListScheduledTaskExecutionsByApplicationUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        task_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get all executions for a scheduled task.
+ */
+export const zListScheduledTaskExecutionsByApplicationUuidResponse = z.array(zScheduledTaskExecution);
+
+export const zListScheduledTasksByServiceUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get all scheduled tasks for a service.
+ */
+export const zListScheduledTasksByServiceUuidResponse = z.array(zScheduledTask);
+
+export const zCreateScheduledTaskByServiceUuidData = z.object({
+    body: z.object({
+        name: z.string(),
+        command: z.string(),
+        frequency: z.string(),
+        container: z.optional(z.string()),
+        timeout: z.optional(z.int()).default(300),
+        enabled: z.optional(z.boolean()).default(true)
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Scheduled task created.
+ */
+export const zCreateScheduledTaskByServiceUuidResponse = zScheduledTask;
+
+export const zDeleteScheduledTaskByServiceUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        task_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Scheduled task deleted.
+ */
+export const zDeleteScheduledTaskByServiceUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zUpdateScheduledTaskByServiceUuidData = z.object({
+    body: z.object({
+        name: z.optional(z.string()),
+        command: z.optional(z.string()),
+        frequency: z.optional(z.string()),
+        container: z.optional(z.string()),
+        timeout: z.optional(z.int()).default(300),
+        enabled: z.optional(z.boolean()).default(true)
+    }),
+    path: z.object({
+        uuid: z.string(),
+        task_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Scheduled task updated.
+ */
+export const zUpdateScheduledTaskByServiceUuidResponse = zScheduledTask;
+
+export const zListScheduledTaskExecutionsByServiceUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        task_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get all executions for a scheduled task.
+ */
+export const zListScheduledTaskExecutionsByServiceUuidResponse = z.array(zScheduledTaskExecution);
+
 export const zListPrivateKeysData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
@@ -1290,6 +2315,23 @@ export const zListPrivateKeysData = z.object({
  * Get all private keys.
  */
 export const zListPrivateKeysResponse = z.array(zPrivateKey);
+
+export const zUpdatePrivateKeyData = z.object({
+    body: z.object({
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        private_key: z.string()
+    }),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * The updated private key's UUID.
+ */
+export const zUpdatePrivateKeyResponse = z.object({
+    uuid: z.optional(z.string())
+});
 
 export const zCreatePrivateKeyData = z.object({
     body: z.object({
@@ -1307,6 +2349,34 @@ export const zCreatePrivateKeyData = z.object({
 export const zCreatePrivateKeyResponse = z.object({
     uuid: z.optional(z.string())
 });
+
+export const zDeletePrivateKeyByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Private Key deleted.
+ */
+export const zDeletePrivateKeyByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zGetPrivateKeyByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get all private keys.
+ */
+export const zGetPrivateKeyByUuidResponse = zPrivateKey;
 
 export const zListServersData = z.object({
     body: z.optional(z.never()),
@@ -1346,6 +2416,21 @@ export const zCreateServerResponse = z.object({
     uuid: z.optional(z.string())
 });
 
+export const zDeleteServerByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Server deleted.
+ */
+export const zDeleteServerByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
 export const zGetServerByUuidData = z.object({
     body: z.optional(z.never()),
     path: z.object({
@@ -1358,6 +2443,76 @@ export const zGetServerByUuidData = z.object({
  * Get server by UUID
  */
 export const zGetServerByUuidResponse = zServer;
+
+export const zUpdateServerByUuidData = z.object({
+    body: z.object({
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        ip: z.optional(z.string()),
+        port: z.optional(z.int()),
+        user: z.optional(z.string()),
+        private_key_uuid: z.optional(z.string()),
+        is_build_server: z.optional(z.boolean()),
+        instant_validate: z.optional(z.boolean()),
+        proxy_type: z.optional(z.enum([
+            'traefik',
+            'caddy',
+            'none'
+        ])),
+        concurrent_builds: z.optional(z.int()),
+        dynamic_timeout: z.optional(z.int()),
+        deployment_queue_limit: z.optional(z.int()),
+        server_disk_usage_notification_threshold: z.optional(z.int()),
+        server_disk_usage_check_frequency: z.optional(z.string()),
+        connection_timeout: z.optional(z.int())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Server updated.
+ */
+export const zUpdateServerByUuidResponse = zServer;
+
+export const zGetResourcesByServerUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get resources by server
+ */
+export const zGetResourcesByServerUuidResponse = z.array(z.object({
+    id: z.optional(z.int()),
+    uuid: z.optional(z.string()),
+    name: z.optional(z.string()),
+    type: z.optional(z.string()),
+    created_at: z.optional(z.string()),
+    updated_at: z.optional(z.string()),
+    status: z.optional(z.string())
+}));
+
+export const zGetDomainsByServerUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get domains by server
+ */
+export const zGetDomainsByServerUuidResponse = z.array(z.object({
+    ip: z.optional(z.string()),
+    domains: z.optional(z.array(z.string()))
+}));
 
 export const zValidateServerByUuidData = z.object({
     body: z.optional(z.never()),
@@ -1415,3 +2570,346 @@ export const zCreateServiceResponse = z.object({
     uuid: z.optional(z.string()),
     domains: z.optional(z.array(z.string()))
 });
+
+export const zDeleteServiceByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.object({
+        delete_configurations: z.optional(z.boolean()).default(true),
+        delete_volumes: z.optional(z.boolean()).default(true),
+        docker_cleanup: z.optional(z.boolean()).default(true),
+        delete_connected_networks: z.optional(z.boolean()).default(true)
+    }))
+});
+
+/**
+ * Delete a service by UUID
+ */
+export const zDeleteServiceByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zGetServiceByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Get a service by UUID.
+ */
+export const zGetServiceByUuidResponse = zService;
+
+export const zUpdateServiceByUuidData = z.object({
+    body: z.object({
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        project_uuid: z.optional(z.string()),
+        environment_name: z.optional(z.string()),
+        environment_uuid: z.optional(z.string()),
+        server_uuid: z.optional(z.string()),
+        destination_uuid: z.optional(z.string()),
+        instant_deploy: z.optional(z.boolean()),
+        connect_to_docker_network: z.optional(z.boolean()).default(false),
+        docker_compose_raw: z.optional(z.string()),
+        urls: z.optional(z.array(z.object({
+            name: z.optional(z.string()),
+            url: z.optional(z.string())
+        }))),
+        force_domain_override: z.optional(z.boolean()).default(false),
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true)
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Service updated.
+ */
+export const zUpdateServiceByUuidResponse = z.object({
+    uuid: z.optional(z.string()),
+    domains: z.optional(z.array(z.string()))
+});
+
+export const zListEnvsByServiceUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * All environment variables by service UUID.
+ */
+export const zListEnvsByServiceUuidResponse = z.array(zEnvironmentVariable);
+
+export const zUpdateEnvByServiceUuidData = z.object({
+    body: z.object({
+        key: z.string(),
+        value: z.string(),
+        is_preview: z.optional(z.boolean()),
+        is_literal: z.optional(z.boolean()),
+        is_multiline: z.optional(z.boolean()),
+        is_shown_once: z.optional(z.boolean())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment variable updated.
+ */
+export const zUpdateEnvByServiceUuidResponse = zEnvironmentVariable;
+
+export const zCreateEnvByServiceUuidData = z.object({
+    body: z.object({
+        key: z.optional(z.string()),
+        value: z.optional(z.string()),
+        is_preview: z.optional(z.boolean()),
+        is_literal: z.optional(z.boolean()),
+        is_multiline: z.optional(z.boolean()),
+        is_shown_once: z.optional(z.boolean())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment variable created.
+ */
+export const zCreateEnvByServiceUuidResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
+export const zUpdateEnvsByServiceUuidData = z.object({
+    body: z.object({
+        data: z.array(z.object({
+            key: z.optional(z.string()),
+            value: z.optional(z.string()),
+            is_preview: z.optional(z.boolean()),
+            is_literal: z.optional(z.boolean()),
+            is_multiline: z.optional(z.boolean()),
+            is_shown_once: z.optional(z.boolean())
+        }))
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment variables updated.
+ */
+export const zUpdateEnvsByServiceUuidResponse = z.array(zEnvironmentVariable);
+
+export const zDeleteEnvByServiceUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        env_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment variable deleted.
+ */
+export const zDeleteEnvByServiceUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zStartServiceByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Start service.
+ */
+export const zStartServiceByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zStopServiceByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.object({
+        docker_cleanup: z.optional(z.boolean()).default(true)
+    }))
+});
+
+/**
+ * Stop service.
+ */
+export const zStopServiceByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zRestartServiceByUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.object({
+        latest: z.optional(z.boolean()).default(false)
+    }))
+});
+
+/**
+ * Restart service.
+ */
+export const zRestartServiceByUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zListStoragesByServiceUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * All storages by service UUID.
+ */
+export const zListStoragesByServiceUuidResponse = z.object({
+    persistent_storages: z.optional(z.array(z.record(z.string(), z.unknown()))),
+    file_storages: z.optional(z.array(z.record(z.string(), z.unknown())))
+});
+
+export const zUpdateStorageByServiceUuidData = z.object({
+    body: z.object({
+        uuid: z.optional(z.string()),
+        id: z.optional(z.int()),
+        type: z.enum(['persistent', 'file']),
+        is_preview_suffix_enabled: z.optional(z.boolean()),
+        name: z.optional(z.string()),
+        mount_path: z.optional(z.string()),
+        host_path: z.optional(z.string()),
+        content: z.optional(z.string())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Storage updated.
+ */
+export const zUpdateStorageByServiceUuidResponse = z.record(z.string(), z.unknown());
+
+export const zCreateStorageByServiceUuidData = z.object({
+    body: z.object({
+        type: z.enum(['persistent', 'file']),
+        resource_uuid: z.string(),
+        name: z.optional(z.string()),
+        mount_path: z.string(),
+        host_path: z.optional(z.string()),
+        content: z.optional(z.string()),
+        is_directory: z.optional(z.boolean()),
+        fs_path: z.optional(z.string())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Storage created.
+ */
+export const zCreateStorageByServiceUuidResponse = z.record(z.string(), z.unknown());
+
+export const zDeleteStorageByServiceUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        storage_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Storage deleted.
+ */
+export const zDeleteStorageByServiceUuidResponse = z.object({
+    message: z.optional(z.string())
+});
+
+export const zListTeamsData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * List of teams.
+ */
+export const zListTeamsResponse = z.array(zTeam);
+
+export const zGetTeamByIdData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * List of teams.
+ */
+export const zGetTeamByIdResponse = zTeam;
+
+export const zGetMembersByTeamIdData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * List of members.
+ */
+export const zGetMembersByTeamIdResponse = z.array(zUser);
+
+export const zGetCurrentTeamData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Current Team.
+ */
+export const zGetCurrentTeamResponse = zTeam;
+
+export const zGetCurrentTeamMembersData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Currently authenticated team members.
+ */
+export const zGetCurrentTeamMembersResponse = z.array(zUser);

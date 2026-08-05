@@ -5,6 +5,10 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import express, { type Request, type Response } from 'express';
 import { registerCoolifyTools } from './tools/coolify.js';
+import { registerDatabaseTools } from './tools/databases.js';
+import { registerInfraTools } from './tools/infra.js';
+import { registerResourceTools } from './tools/resources.js';
+import { registerServiceTools } from './tools/services.js';
 import {
 	COOLIFY_OPENAPI_REF,
 	COOLIFY_STRICT_VERSION,
@@ -24,6 +28,10 @@ const server = new McpServer({
 
 initializeClient();
 registerCoolifyTools(server);
+registerDatabaseTools(server);
+registerServiceTools(server);
+registerResourceTools(server);
+registerInfraTools(server);
 
 function normalizeVersion(value: string) {
 	return value.replace(/^v/i, '');

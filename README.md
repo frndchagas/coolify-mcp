@@ -18,7 +18,8 @@ Targets the **Coolify v4.1.2** API. Types and schemas are generated directly fro
 - **Environment Management**: Full CRUD for environment variables with secret masking
 - **Deployment Control**: Deploy, start, stop, restart applications
 - **Security**: Write protection, secret redaction
-- **Token-efficient**: 37 tools whose definitions cost ~5k tokens of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
+- **Near-full API coverage**: databases (8 engines, backups, envs), services, storages, scheduled tasks, teams, previews, servers, SSH keys, and GitHub Apps
+- **Token-efficient**: 62 tools whose definitions cost ~9k tokens of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
 
 ## Requirements
 
@@ -177,14 +178,54 @@ With this MCP, you can deploy an application from scratch:
 | `listAppDeployments` | List deployments for an application | |
 | `cancelDeployment` | Cancel a running deployment | ✓ |
 
-### Databases & Services
+### Databases
 
 | Tool | Description | Write |
 |------|-------------|-------|
 | `listDatabases` | List all databases | |
 | `getDatabase` | Get database details | |
-| `listServices` | List one-click services | |
-| `createService` | Create a one-click service | ✓ |
+| `createDatabase` | Create a database; `type` selects the engine: postgresql, mysql, mariadb, mongodb, redis, keydb, dragonfly, clickhouse | ✓ |
+| `updateDatabase` | Update database configuration | ✓ |
+| `deleteDatabase` | Delete a database (volumes/configs deleted by default) | ✓ |
+| `controlDatabase` | Start, stop, or restart a database | ✓ |
+| `databaseBackups` | Manage backup schedules and executions (list/create/update/delete/list_executions/delete_execution) | ✓ |
+| `databaseEnvs` | Manage database env vars (list/create/update/bulk_update/delete) | ✓ |
+
+### Services
+
+| Tool | Description | Write |
+|------|-------------|-------|
+| `listServices` | List services | |
+| `getService` | Get service details (secrets masked by default) | |
+| `createService` | Create a one-click service or Docker Compose deployment | ✓ |
+| `updateService` | Update a service | ✓ |
+| `deleteService` | Delete a service | ✓ |
+| `controlService` | Start, stop, or restart a service | ✓ |
+| `serviceEnvs` | Manage service env vars (list/create/update/bulk_update/delete) | ✓ |
+
+### Storages, Scheduled Tasks & Previews
+
+| Tool | Description | Write |
+|------|-------------|-------|
+| `storages` | Manage persistent volumes and file mounts for applications, databases, and services | ✓ |
+| `scheduledTasks` | Manage cron tasks for applications and services, including execution history | ✓ |
+| `deletePreview` | Delete a preview deployment by pull request id | ✓ |
+| `bulkUpdateEnvs` | Apply a list of env vars to an application in one call | ✓ |
+
+### Teams, Servers & Git
+
+| Tool | Description | Write |
+|------|-------------|-------|
+| `teams` | List teams, get current team, and list members | |
+| `updateServer` | Update server configuration | ✓ |
+| `deleteServer` | Delete a server | ✓ |
+| `getServerResources` | List resources running on a server | |
+| `getServerDomains` | List domains configured on a server | |
+| `getPrivateKey` | Get SSH key metadata (key material masked by default) | |
+| `updatePrivateKey` | Update an SSH private key | ✓ |
+| `deletePrivateKey` | Delete an SSH private key | ✓ |
+| `getGithubAppRepositories` | List repositories accessible to a GitHub App | |
+| `getGithubAppBranches` | List branches of a repository | |
 
 ### Other
 

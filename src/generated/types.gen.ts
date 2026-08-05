@@ -5,6 +5,90 @@ export type ClientOptions = {
 };
 
 /**
+ * User model
+ */
+export type User = {
+    /**
+     * The user identifier in the database.
+     */
+    id?: number;
+    /**
+     * The user name.
+     */
+    name?: string;
+    /**
+     * The user email.
+     */
+    email?: string;
+    /**
+     * The date when the user email was verified.
+     */
+    email_verified_at?: string;
+    /**
+     * The date when the user was created.
+     */
+    created_at?: string;
+    /**
+     * The date when the user was updated.
+     */
+    updated_at?: string;
+    /**
+     * The date when the user two factor was confirmed.
+     */
+    two_factor_confirmed_at?: string;
+    /**
+     * The flag to force the user to reset the password.
+     */
+    force_password_reset?: boolean;
+    /**
+     * The flag to receive marketing emails.
+     */
+    marketing_emails?: boolean;
+};
+
+/**
+ * Team model
+ */
+export type Team = {
+    /**
+     * The unique identifier of the team.
+     */
+    id?: number;
+    /**
+     * The name of the team.
+     */
+    name?: string;
+    /**
+     * The description of the team.
+     */
+    description?: string;
+    /**
+     * Whether the team is personal or not.
+     */
+    personal_team?: boolean;
+    /**
+     * The date and time the team was created.
+     */
+    created_at?: string;
+    /**
+     * The date and time the team was last updated.
+     */
+    updated_at?: string;
+    /**
+     * Whether to show the boarding screen or not.
+     */
+    show_boarding?: boolean;
+    /**
+     * The custom server limit.
+     */
+    custom_server_limit?: string;
+    /**
+     * The members of the team.
+     */
+    members?: Array<User>;
+};
+
+/**
  * Service model
  */
 export type Service = {
@@ -203,6 +287,94 @@ export type Server = {
      */
     swarm_cluster?: string;
     settings?: ServerSetting;
+};
+
+/**
+ * Scheduled Task Execution model
+ */
+export type ScheduledTaskExecution = {
+    /**
+     * The unique identifier of the execution.
+     */
+    uuid?: string;
+    /**
+     * The status of the execution.
+     */
+    status?: 'success' | 'failed' | 'running';
+    /**
+     * The output message of the execution.
+     */
+    message?: string;
+    /**
+     * The number of retries.
+     */
+    retry_count?: number;
+    /**
+     * Duration in seconds.
+     */
+    duration?: number;
+    /**
+     * When the execution started.
+     */
+    started_at?: string;
+    /**
+     * When the execution finished.
+     */
+    finished_at?: string;
+    /**
+     * When the record was created.
+     */
+    created_at?: string;
+    /**
+     * When the record was last updated.
+     */
+    updated_at?: string;
+};
+
+/**
+ * Scheduled Task model
+ */
+export type ScheduledTask = {
+    /**
+     * The unique identifier of the scheduled task in the database.
+     */
+    id?: number;
+    /**
+     * The unique identifier of the scheduled task.
+     */
+    uuid?: string;
+    /**
+     * The flag to indicate if the scheduled task is enabled.
+     */
+    enabled?: boolean;
+    /**
+     * The name of the scheduled task.
+     */
+    name?: string;
+    /**
+     * The command to execute.
+     */
+    command?: string;
+    /**
+     * The frequency of the scheduled task.
+     */
+    frequency?: string;
+    /**
+     * The container where the command should be executed.
+     */
+    container?: string;
+    /**
+     * The timeout of the scheduled task in seconds.
+     */
+    timeout?: number;
+    /**
+     * The date and time when the scheduled task was created.
+     */
+    created_at?: string;
+    /**
+     * The date and time when the scheduled task was last updated.
+     */
+    updated_at?: string;
 };
 
 /**
@@ -2984,6 +3156,80 @@ export type CreateEnvByApplicationUuidResponses = {
 
 export type CreateEnvByApplicationUuidResponse = CreateEnvByApplicationUuidResponses[keyof CreateEnvByApplicationUuidResponses];
 
+export type UpdateEnvsByApplicationUuidData = {
+    /**
+     * Bulk envs updated.
+     */
+    body: {
+        data: Array<{
+            /**
+             * The key of the environment variable.
+             */
+            key?: string;
+            /**
+             * The value of the environment variable.
+             */
+            value?: string;
+            /**
+             * The flag to indicate if the environment variable is used in preview deployments.
+             */
+            is_preview?: boolean;
+            /**
+             * The flag to indicate if the environment variable is a literal, nothing espaced.
+             */
+            is_literal?: boolean;
+            /**
+             * The flag to indicate if the environment variable is multiline.
+             */
+            is_multiline?: boolean;
+            /**
+             * The flag to indicate if the environment variable's value is shown on the UI.
+             */
+            is_shown_once?: boolean;
+        }>;
+    };
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/envs/bulk';
+};
+
+export type UpdateEnvsByApplicationUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type UpdateEnvsByApplicationUuidError = UpdateEnvsByApplicationUuidErrors[keyof UpdateEnvsByApplicationUuidErrors];
+
+export type UpdateEnvsByApplicationUuidResponses = {
+    /**
+     * Environment variables updated.
+     */
+    201: Array<EnvironmentVariable>;
+};
+
+export type UpdateEnvsByApplicationUuidResponse = UpdateEnvsByApplicationUuidResponses[keyof UpdateEnvsByApplicationUuidResponses];
+
 export type DeleteEnvByApplicationUuidData = {
     body?: never;
     path: {
@@ -3197,6 +3443,350 @@ export type RestartApplicationByUuidResponses = {
 
 export type RestartApplicationByUuidResponse = RestartApplicationByUuidResponses[keyof RestartApplicationByUuidResponses];
 
+export type ListStoragesByApplicationUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/storages';
+};
+
+export type ListStoragesByApplicationUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type ListStoragesByApplicationUuidError = ListStoragesByApplicationUuidErrors[keyof ListStoragesByApplicationUuidErrors];
+
+export type ListStoragesByApplicationUuidResponses = {
+    /**
+     * All storages by application UUID.
+     */
+    200: {
+        persistent_storages?: Array<{
+            [key: string]: unknown;
+        }>;
+        file_storages?: Array<{
+            [key: string]: unknown;
+        }>;
+    };
+};
+
+export type ListStoragesByApplicationUuidResponse = ListStoragesByApplicationUuidResponses[keyof ListStoragesByApplicationUuidResponses];
+
+export type UpdateStorageByApplicationUuidData = {
+    /**
+     * Storage updated. For read-only storages (from docker-compose or services), only is_preview_suffix_enabled can be updated.
+     */
+    body: {
+        /**
+         * The UUID of the storage (preferred).
+         */
+        uuid?: string;
+        /**
+         * The ID of the storage (deprecated, use uuid instead).
+         */
+        id?: number;
+        /**
+         * The type of storage: persistent or file.
+         */
+        type: 'persistent' | 'file';
+        /**
+         * Whether to add -pr-N suffix for preview deployments.
+         */
+        is_preview_suffix_enabled?: boolean;
+        /**
+         * The volume name (persistent only, not allowed for read-only storages).
+         */
+        name?: string;
+        /**
+         * The container mount path (not allowed for read-only storages).
+         */
+        mount_path?: string;
+        /**
+         * The host path (persistent only, not allowed for read-only storages).
+         */
+        host_path?: string;
+        /**
+         * The file content (file only, not allowed for read-only storages).
+         */
+        content?: string;
+    };
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/storages';
+};
+
+export type UpdateStorageByApplicationUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateStorageByApplicationUuidError = UpdateStorageByApplicationUuidErrors[keyof UpdateStorageByApplicationUuidErrors];
+
+export type UpdateStorageByApplicationUuidResponses = {
+    /**
+     * Storage updated.
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type UpdateStorageByApplicationUuidResponse = UpdateStorageByApplicationUuidResponses[keyof UpdateStorageByApplicationUuidResponses];
+
+export type CreateStorageByApplicationUuidData = {
+    body: {
+        /**
+         * The type of storage.
+         */
+        type: 'persistent' | 'file';
+        /**
+         * Volume name (persistent only, required for persistent).
+         */
+        name?: string;
+        /**
+         * The container mount path.
+         */
+        mount_path: string;
+        /**
+         * The host path (persistent only, optional).
+         */
+        host_path?: string;
+        /**
+         * File content (file only, optional).
+         */
+        content?: string;
+        /**
+         * Whether this is a directory mount (file only, default false).
+         */
+        is_directory?: boolean;
+        /**
+         * Host directory path (required when is_directory is true).
+         */
+        fs_path?: string;
+    };
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/storages';
+};
+
+export type CreateStorageByApplicationUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateStorageByApplicationUuidError = CreateStorageByApplicationUuidErrors[keyof CreateStorageByApplicationUuidErrors];
+
+export type CreateStorageByApplicationUuidResponses = {
+    /**
+     * Storage created.
+     */
+    201: {
+        [key: string]: unknown;
+    };
+};
+
+export type CreateStorageByApplicationUuidResponse = CreateStorageByApplicationUuidResponses[keyof CreateStorageByApplicationUuidResponses];
+
+export type DeleteStorageByApplicationUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+        /**
+         * UUID of the storage.
+         */
+        storage_uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/storages/{storage_uuid}';
+};
+
+export type DeleteStorageByApplicationUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type DeleteStorageByApplicationUuidError = DeleteStorageByApplicationUuidErrors[keyof DeleteStorageByApplicationUuidErrors];
+
+export type DeleteStorageByApplicationUuidResponses = {
+    /**
+     * Storage deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteStorageByApplicationUuidResponse = DeleteStorageByApplicationUuidResponses[keyof DeleteStorageByApplicationUuidResponses];
+
+export type DeletePreviewDeploymentByPullRequestIdData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+        /**
+         * Pull request ID of the preview to delete.
+         */
+        pull_request_id: number;
+    };
+    query?: never;
+    url: '/applications/{uuid}/previews/{pull_request_id}';
+};
+
+export type DeletePreviewDeploymentByPullRequestIdErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type DeletePreviewDeploymentByPullRequestIdError = DeletePreviewDeploymentByPullRequestIdErrors[keyof DeletePreviewDeploymentByPullRequestIdErrors];
+
+export type DeletePreviewDeploymentByPullRequestIdResponses = {
+    /**
+     * Preview deletion queued.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeletePreviewDeploymentByPullRequestIdResponse = DeletePreviewDeploymentByPullRequestIdResponses[keyof DeletePreviewDeploymentByPullRequestIdResponses];
+
 export type ListDatabasesData = {
     body?: never;
     path?: never;
@@ -3229,6 +3819,229 @@ export type ListDatabasesResponses = {
 };
 
 export type ListDatabasesResponse = ListDatabasesResponses[keyof ListDatabasesResponses];
+
+export type GetDatabaseBackupsByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/backups';
+};
+
+export type GetDatabaseBackupsByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type GetDatabaseBackupsByUuidError = GetDatabaseBackupsByUuidErrors[keyof GetDatabaseBackupsByUuidErrors];
+
+export type GetDatabaseBackupsByUuidResponses = {
+    /**
+     * Get all backups for a database
+     */
+    200: string;
+};
+
+export type GetDatabaseBackupsByUuidResponse = GetDatabaseBackupsByUuidResponses[keyof GetDatabaseBackupsByUuidResponses];
+
+export type CreateDatabaseBackupData = {
+    /**
+     * Backup configuration data
+     */
+    body: {
+        /**
+         * Backup frequency (cron expression or: every_minute, hourly, daily, weekly, monthly, yearly)
+         */
+        frequency: string;
+        /**
+         * Whether the backup is enabled
+         */
+        enabled?: boolean;
+        /**
+         * Whether to save backups to S3
+         */
+        save_s3?: boolean;
+        /**
+         * S3 storage UUID (required if save_s3 is true)
+         */
+        s3_storage_uuid?: string;
+        /**
+         * Comma separated list of databases to backup
+         */
+        databases_to_backup?: string;
+        /**
+         * Whether to dump all databases
+         */
+        dump_all?: boolean;
+        /**
+         * Whether to trigger backup immediately after creation
+         */
+        backup_now?: boolean;
+        /**
+         * Number of backups to retain locally
+         */
+        database_backup_retention_amount_locally?: number;
+        /**
+         * Number of days to retain backups locally
+         */
+        database_backup_retention_days_locally?: number;
+        /**
+         * Max storage (GB) for local backups
+         */
+        database_backup_retention_max_storage_locally?: number;
+        /**
+         * Number of backups to retain in S3
+         */
+        database_backup_retention_amount_s3?: number;
+        /**
+         * Number of days to retain backups in S3
+         */
+        database_backup_retention_days_s3?: number;
+        /**
+         * Max storage (GB) for S3 backups
+         */
+        database_backup_retention_max_storage_s3?: number;
+        /**
+         * Backup job timeout in seconds (min: 60, max: 36000)
+         */
+        timeout?: number;
+    };
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/backups';
+};
+
+export type CreateDatabaseBackupErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateDatabaseBackupError = CreateDatabaseBackupErrors[keyof CreateDatabaseBackupErrors];
+
+export type CreateDatabaseBackupResponses = {
+    /**
+     * Backup configuration created successfully
+     */
+    201: {
+        uuid?: string;
+        message?: string;
+    };
+};
+
+export type CreateDatabaseBackupResponse = CreateDatabaseBackupResponses[keyof CreateDatabaseBackupResponses];
+
+export type DeleteDatabaseByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: {
+        /**
+         * Delete configurations.
+         */
+        delete_configurations?: boolean;
+        /**
+         * Delete volumes.
+         */
+        delete_volumes?: boolean;
+        /**
+         * Run docker cleanup.
+         */
+        docker_cleanup?: boolean;
+        /**
+         * Delete connected networks.
+         */
+        delete_connected_networks?: boolean;
+    };
+    url: '/databases/{uuid}';
+};
+
+export type DeleteDatabaseByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type DeleteDatabaseByUuidError = DeleteDatabaseByUuidErrors[keyof DeleteDatabaseByUuidErrors];
+
+export type DeleteDatabaseByUuidResponses = {
+    /**
+     * Database deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteDatabaseByUuidResponse = DeleteDatabaseByUuidResponses[keyof DeleteDatabaseByUuidResponses];
 
 export type GetDatabaseByUuidData = {
     body?: never;
@@ -3273,6 +4086,2304 @@ export type GetDatabaseByUuidResponses = {
 };
 
 export type GetDatabaseByUuidResponse = GetDatabaseByUuidResponses[keyof GetDatabaseByUuidResponses];
+
+export type UpdateDatabaseByUuidData = {
+    /**
+     * Database data
+     */
+    body: {
+        /**
+         * Name of the database
+         */
+        name?: string;
+        /**
+         * Description of the database
+         */
+        description?: string;
+        /**
+         * Docker Image of the database
+         */
+        image?: string;
+        /**
+         * Is the database public?
+         */
+        is_public?: boolean;
+        /**
+         * Public port of the database
+         */
+        public_port?: number;
+        /**
+         * Public port timeout in seconds (default: 3600)
+         */
+        public_port_timeout?: number;
+        /**
+         * Memory limit of the database
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit of the database
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness of the database
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation of the database
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit of the database
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set of the database
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares of the database
+         */
+        limits_cpu_shares?: number;
+        /**
+         * PostgreSQL user
+         */
+        postgres_user?: string;
+        /**
+         * PostgreSQL password
+         */
+        postgres_password?: string;
+        /**
+         * PostgreSQL database
+         */
+        postgres_db?: string;
+        /**
+         * PostgreSQL initdb args
+         */
+        postgres_initdb_args?: string;
+        /**
+         * PostgreSQL host auth method
+         */
+        postgres_host_auth_method?: string;
+        /**
+         * PostgreSQL conf
+         */
+        postgres_conf?: string;
+        /**
+         * Clickhouse admin user
+         */
+        clickhouse_admin_user?: string;
+        /**
+         * Clickhouse admin password
+         */
+        clickhouse_admin_password?: string;
+        /**
+         * DragonFly password
+         */
+        dragonfly_password?: string;
+        /**
+         * Redis password
+         */
+        redis_password?: string;
+        /**
+         * Redis conf
+         */
+        redis_conf?: string;
+        /**
+         * KeyDB password
+         */
+        keydb_password?: string;
+        /**
+         * KeyDB conf
+         */
+        keydb_conf?: string;
+        /**
+         * MariaDB conf
+         */
+        mariadb_conf?: string;
+        /**
+         * MariaDB root password
+         */
+        mariadb_root_password?: string;
+        /**
+         * MariaDB user
+         */
+        mariadb_user?: string;
+        /**
+         * MariaDB password
+         */
+        mariadb_password?: string;
+        /**
+         * MariaDB database
+         */
+        mariadb_database?: string;
+        /**
+         * Mongo conf
+         */
+        mongo_conf?: string;
+        /**
+         * Mongo initdb root username
+         */
+        mongo_initdb_root_username?: string;
+        /**
+         * Mongo initdb root password
+         */
+        mongo_initdb_root_password?: string;
+        /**
+         * Mongo initdb init database
+         */
+        mongo_initdb_database?: string;
+        /**
+         * MySQL root password
+         */
+        mysql_root_password?: string;
+        /**
+         * MySQL password
+         */
+        mysql_password?: string;
+        /**
+         * MySQL user
+         */
+        mysql_user?: string;
+        /**
+         * MySQL database
+         */
+        mysql_database?: string;
+        /**
+         * MySQL conf
+         */
+        mysql_conf?: string;
+        /**
+         * Enable the database healthcheck probe.
+         */
+        health_check_enabled?: boolean;
+        /**
+         * Healthcheck interval in seconds.
+         */
+        health_check_interval?: number;
+        /**
+         * Healthcheck timeout in seconds.
+         */
+        health_check_timeout?: number;
+        /**
+         * Healthcheck retries count.
+         */
+        health_check_retries?: number;
+        /**
+         * Healthcheck start period in seconds.
+         */
+        health_check_start_period?: number;
+    };
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}';
+};
+
+export type UpdateDatabaseByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateDatabaseByUuidError = UpdateDatabaseByUuidErrors[keyof UpdateDatabaseByUuidErrors];
+
+export type UpdateDatabaseByUuidResponses = {
+    /**
+     * Database updated
+     */
+    200: unknown;
+};
+
+export type DeleteBackupConfigurationByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database
+         */
+        uuid: string;
+        /**
+         * UUID of the backup configuration to delete
+         */
+        scheduled_backup_uuid: string;
+    };
+    query?: {
+        /**
+         * Whether to delete all backup files from S3
+         */
+        delete_s3?: boolean;
+    };
+    url: '/databases/{uuid}/backups/{scheduled_backup_uuid}';
+};
+
+export type DeleteBackupConfigurationByUuidErrors = {
+    /**
+     * Backup configuration not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type DeleteBackupConfigurationByUuidError = DeleteBackupConfigurationByUuidErrors[keyof DeleteBackupConfigurationByUuidErrors];
+
+export type DeleteBackupConfigurationByUuidResponses = {
+    /**
+     * Backup configuration deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteBackupConfigurationByUuidResponse = DeleteBackupConfigurationByUuidResponses[keyof DeleteBackupConfigurationByUuidResponses];
+
+export type UpdateDatabaseBackupData = {
+    /**
+     * Database backup configuration data
+     */
+    body: {
+        /**
+         * Whether data is saved in s3 or not
+         */
+        save_s3?: boolean;
+        /**
+         * S3 storage UUID
+         */
+        s3_storage_uuid?: string;
+        /**
+         * Whether to take a backup now or not
+         */
+        backup_now?: boolean;
+        /**
+         * Whether the backup is enabled or not
+         */
+        enabled?: boolean;
+        /**
+         * Comma separated list of databases to backup
+         */
+        databases_to_backup?: string;
+        /**
+         * Whether all databases are dumped or not
+         */
+        dump_all?: boolean;
+        /**
+         * Frequency of the backup
+         */
+        frequency?: string;
+        /**
+         * Retention amount of the backup locally
+         */
+        database_backup_retention_amount_locally?: number;
+        /**
+         * Retention days of the backup locally
+         */
+        database_backup_retention_days_locally?: number;
+        /**
+         * Max storage of the backup locally
+         */
+        database_backup_retention_max_storage_locally?: number;
+        /**
+         * Retention amount of the backup in s3
+         */
+        database_backup_retention_amount_s3?: number;
+        /**
+         * Retention days of the backup in s3
+         */
+        database_backup_retention_days_s3?: number;
+        /**
+         * Max storage of the backup in S3
+         */
+        database_backup_retention_max_storage_s3?: number;
+        /**
+         * Backup job timeout in seconds (min: 60, max: 36000)
+         */
+        timeout?: number;
+    };
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+        /**
+         * UUID of the backup configuration.
+         */
+        scheduled_backup_uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/backups/{scheduled_backup_uuid}';
+};
+
+export type UpdateDatabaseBackupErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateDatabaseBackupError = UpdateDatabaseBackupErrors[keyof UpdateDatabaseBackupErrors];
+
+export type UpdateDatabaseBackupResponses = {
+    /**
+     * Database backup configuration updated
+     */
+    200: unknown;
+};
+
+export type CreateDatabasePostgresqlData = {
+    /**
+     * Database data
+     */
+    body: {
+        /**
+         * UUID of the server
+         */
+        server_uuid: string;
+        /**
+         * UUID of the project
+         */
+        project_uuid: string;
+        /**
+         * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * PostgreSQL user
+         */
+        postgres_user?: string;
+        /**
+         * PostgreSQL password
+         */
+        postgres_password?: string;
+        /**
+         * PostgreSQL database
+         */
+        postgres_db?: string;
+        /**
+         * PostgreSQL initdb args
+         */
+        postgres_initdb_args?: string;
+        /**
+         * PostgreSQL host auth method
+         */
+        postgres_host_auth_method?: string;
+        /**
+         * PostgreSQL conf
+         */
+        postgres_conf?: string;
+        /**
+         * UUID of the destination if the server has multiple destinations
+         */
+        destination_uuid?: string;
+        /**
+         * Name of the database
+         */
+        name?: string;
+        /**
+         * Description of the database
+         */
+        description?: string;
+        /**
+         * Docker Image of the database
+         */
+        image?: string;
+        /**
+         * Is the database public?
+         */
+        is_public?: boolean;
+        /**
+         * Public port of the database
+         */
+        public_port?: number;
+        /**
+         * Public port timeout in seconds (default: 3600)
+         */
+        public_port_timeout?: number;
+        /**
+         * Memory limit of the database
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit of the database
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness of the database
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation of the database
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit of the database
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set of the database
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares of the database
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Instant deploy the database
+         */
+        instant_deploy?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/databases/postgresql';
+};
+
+export type CreateDatabasePostgresqlErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateDatabasePostgresqlError = CreateDatabasePostgresqlErrors[keyof CreateDatabasePostgresqlErrors];
+
+export type CreateDatabasePostgresqlResponses = {
+    /**
+     * Database updated
+     */
+    200: unknown;
+};
+
+export type CreateDatabaseClickhouseData = {
+    /**
+     * Database data
+     */
+    body: {
+        /**
+         * UUID of the server
+         */
+        server_uuid: string;
+        /**
+         * UUID of the project
+         */
+        project_uuid: string;
+        /**
+         * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * UUID of the destination if the server has multiple destinations
+         */
+        destination_uuid?: string;
+        /**
+         * Clickhouse admin user
+         */
+        clickhouse_admin_user?: string;
+        /**
+         * Clickhouse admin password
+         */
+        clickhouse_admin_password?: string;
+        /**
+         * Name of the database
+         */
+        name?: string;
+        /**
+         * Description of the database
+         */
+        description?: string;
+        /**
+         * Docker Image of the database
+         */
+        image?: string;
+        /**
+         * Is the database public?
+         */
+        is_public?: boolean;
+        /**
+         * Public port of the database
+         */
+        public_port?: number;
+        /**
+         * Public port timeout in seconds (default: 3600)
+         */
+        public_port_timeout?: number;
+        /**
+         * Memory limit of the database
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit of the database
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness of the database
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation of the database
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit of the database
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set of the database
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares of the database
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Instant deploy the database
+         */
+        instant_deploy?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/databases/clickhouse';
+};
+
+export type CreateDatabaseClickhouseErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateDatabaseClickhouseError = CreateDatabaseClickhouseErrors[keyof CreateDatabaseClickhouseErrors];
+
+export type CreateDatabaseClickhouseResponses = {
+    /**
+     * Database updated
+     */
+    200: unknown;
+};
+
+export type CreateDatabaseDragonflyData = {
+    /**
+     * Database data
+     */
+    body: {
+        /**
+         * UUID of the server
+         */
+        server_uuid: string;
+        /**
+         * UUID of the project
+         */
+        project_uuid: string;
+        /**
+         * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * UUID of the destination if the server has multiple destinations
+         */
+        destination_uuid?: string;
+        /**
+         * DragonFly password
+         */
+        dragonfly_password?: string;
+        /**
+         * Name of the database
+         */
+        name?: string;
+        /**
+         * Description of the database
+         */
+        description?: string;
+        /**
+         * Docker Image of the database
+         */
+        image?: string;
+        /**
+         * Is the database public?
+         */
+        is_public?: boolean;
+        /**
+         * Public port of the database
+         */
+        public_port?: number;
+        /**
+         * Public port timeout in seconds (default: 3600)
+         */
+        public_port_timeout?: number;
+        /**
+         * Memory limit of the database
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit of the database
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness of the database
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation of the database
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit of the database
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set of the database
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares of the database
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Instant deploy the database
+         */
+        instant_deploy?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/databases/dragonfly';
+};
+
+export type CreateDatabaseDragonflyErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateDatabaseDragonflyError = CreateDatabaseDragonflyErrors[keyof CreateDatabaseDragonflyErrors];
+
+export type CreateDatabaseDragonflyResponses = {
+    /**
+     * Database updated
+     */
+    200: unknown;
+};
+
+export type CreateDatabaseRedisData = {
+    /**
+     * Database data
+     */
+    body: {
+        /**
+         * UUID of the server
+         */
+        server_uuid: string;
+        /**
+         * UUID of the project
+         */
+        project_uuid: string;
+        /**
+         * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * UUID of the destination if the server has multiple destinations
+         */
+        destination_uuid?: string;
+        /**
+         * Redis password
+         */
+        redis_password?: string;
+        /**
+         * Redis conf
+         */
+        redis_conf?: string;
+        /**
+         * Name of the database
+         */
+        name?: string;
+        /**
+         * Description of the database
+         */
+        description?: string;
+        /**
+         * Docker Image of the database
+         */
+        image?: string;
+        /**
+         * Is the database public?
+         */
+        is_public?: boolean;
+        /**
+         * Public port of the database
+         */
+        public_port?: number;
+        /**
+         * Public port timeout in seconds (default: 3600)
+         */
+        public_port_timeout?: number;
+        /**
+         * Memory limit of the database
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit of the database
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness of the database
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation of the database
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit of the database
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set of the database
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares of the database
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Instant deploy the database
+         */
+        instant_deploy?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/databases/redis';
+};
+
+export type CreateDatabaseRedisErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateDatabaseRedisError = CreateDatabaseRedisErrors[keyof CreateDatabaseRedisErrors];
+
+export type CreateDatabaseRedisResponses = {
+    /**
+     * Database updated
+     */
+    200: unknown;
+};
+
+export type CreateDatabaseKeydbData = {
+    /**
+     * Database data
+     */
+    body: {
+        /**
+         * UUID of the server
+         */
+        server_uuid: string;
+        /**
+         * UUID of the project
+         */
+        project_uuid: string;
+        /**
+         * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * UUID of the destination if the server has multiple destinations
+         */
+        destination_uuid?: string;
+        /**
+         * KeyDB password
+         */
+        keydb_password?: string;
+        /**
+         * KeyDB conf
+         */
+        keydb_conf?: string;
+        /**
+         * Name of the database
+         */
+        name?: string;
+        /**
+         * Description of the database
+         */
+        description?: string;
+        /**
+         * Docker Image of the database
+         */
+        image?: string;
+        /**
+         * Is the database public?
+         */
+        is_public?: boolean;
+        /**
+         * Public port of the database
+         */
+        public_port?: number;
+        /**
+         * Public port timeout in seconds (default: 3600)
+         */
+        public_port_timeout?: number;
+        /**
+         * Memory limit of the database
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit of the database
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness of the database
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation of the database
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit of the database
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set of the database
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares of the database
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Instant deploy the database
+         */
+        instant_deploy?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/databases/keydb';
+};
+
+export type CreateDatabaseKeydbErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateDatabaseKeydbError = CreateDatabaseKeydbErrors[keyof CreateDatabaseKeydbErrors];
+
+export type CreateDatabaseKeydbResponses = {
+    /**
+     * Database updated
+     */
+    200: unknown;
+};
+
+export type CreateDatabaseMariadbData = {
+    /**
+     * Database data
+     */
+    body: {
+        /**
+         * UUID of the server
+         */
+        server_uuid: string;
+        /**
+         * UUID of the project
+         */
+        project_uuid: string;
+        /**
+         * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * UUID of the destination if the server has multiple destinations
+         */
+        destination_uuid?: string;
+        /**
+         * MariaDB conf
+         */
+        mariadb_conf?: string;
+        /**
+         * MariaDB root password
+         */
+        mariadb_root_password?: string;
+        /**
+         * MariaDB user
+         */
+        mariadb_user?: string;
+        /**
+         * MariaDB password
+         */
+        mariadb_password?: string;
+        /**
+         * MariaDB database
+         */
+        mariadb_database?: string;
+        /**
+         * Name of the database
+         */
+        name?: string;
+        /**
+         * Description of the database
+         */
+        description?: string;
+        /**
+         * Docker Image of the database
+         */
+        image?: string;
+        /**
+         * Is the database public?
+         */
+        is_public?: boolean;
+        /**
+         * Public port of the database
+         */
+        public_port?: number;
+        /**
+         * Public port timeout in seconds (default: 3600)
+         */
+        public_port_timeout?: number;
+        /**
+         * Memory limit of the database
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit of the database
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness of the database
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation of the database
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit of the database
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set of the database
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares of the database
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Instant deploy the database
+         */
+        instant_deploy?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/databases/mariadb';
+};
+
+export type CreateDatabaseMariadbErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateDatabaseMariadbError = CreateDatabaseMariadbErrors[keyof CreateDatabaseMariadbErrors];
+
+export type CreateDatabaseMariadbResponses = {
+    /**
+     * Database updated
+     */
+    200: unknown;
+};
+
+export type CreateDatabaseMysqlData = {
+    /**
+     * Database data
+     */
+    body: {
+        /**
+         * UUID of the server
+         */
+        server_uuid: string;
+        /**
+         * UUID of the project
+         */
+        project_uuid: string;
+        /**
+         * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * UUID of the destination if the server has multiple destinations
+         */
+        destination_uuid?: string;
+        /**
+         * MySQL root password
+         */
+        mysql_root_password?: string;
+        /**
+         * MySQL password
+         */
+        mysql_password?: string;
+        /**
+         * MySQL user
+         */
+        mysql_user?: string;
+        /**
+         * MySQL database
+         */
+        mysql_database?: string;
+        /**
+         * MySQL conf
+         */
+        mysql_conf?: string;
+        /**
+         * Name of the database
+         */
+        name?: string;
+        /**
+         * Description of the database
+         */
+        description?: string;
+        /**
+         * Docker Image of the database
+         */
+        image?: string;
+        /**
+         * Is the database public?
+         */
+        is_public?: boolean;
+        /**
+         * Public port of the database
+         */
+        public_port?: number;
+        /**
+         * Public port timeout in seconds (default: 3600)
+         */
+        public_port_timeout?: number;
+        /**
+         * Memory limit of the database
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit of the database
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness of the database
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation of the database
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit of the database
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set of the database
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares of the database
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Instant deploy the database
+         */
+        instant_deploy?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/databases/mysql';
+};
+
+export type CreateDatabaseMysqlErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateDatabaseMysqlError = CreateDatabaseMysqlErrors[keyof CreateDatabaseMysqlErrors];
+
+export type CreateDatabaseMysqlResponses = {
+    /**
+     * Database updated
+     */
+    200: unknown;
+};
+
+export type CreateDatabaseMongodbData = {
+    /**
+     * Database data
+     */
+    body: {
+        /**
+         * UUID of the server
+         */
+        server_uuid: string;
+        /**
+         * UUID of the project
+         */
+        project_uuid: string;
+        /**
+         * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_name: string;
+        /**
+         * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
+         */
+        environment_uuid: string;
+        /**
+         * UUID of the destination if the server has multiple destinations
+         */
+        destination_uuid?: string;
+        /**
+         * MongoDB conf
+         */
+        mongo_conf?: string;
+        /**
+         * MongoDB initdb root username
+         */
+        mongo_initdb_root_username?: string;
+        /**
+         * Name of the database
+         */
+        name?: string;
+        /**
+         * Description of the database
+         */
+        description?: string;
+        /**
+         * Docker Image of the database
+         */
+        image?: string;
+        /**
+         * Is the database public?
+         */
+        is_public?: boolean;
+        /**
+         * Public port of the database
+         */
+        public_port?: number;
+        /**
+         * Public port timeout in seconds (default: 3600)
+         */
+        public_port_timeout?: number;
+        /**
+         * Memory limit of the database
+         */
+        limits_memory?: string;
+        /**
+         * Memory swap limit of the database
+         */
+        limits_memory_swap?: string;
+        /**
+         * Memory swappiness of the database
+         */
+        limits_memory_swappiness?: number;
+        /**
+         * Memory reservation of the database
+         */
+        limits_memory_reservation?: string;
+        /**
+         * CPU limit of the database
+         */
+        limits_cpus?: string;
+        /**
+         * CPU set of the database
+         */
+        limits_cpuset?: string;
+        /**
+         * CPU shares of the database
+         */
+        limits_cpu_shares?: number;
+        /**
+         * Instant deploy the database
+         */
+        instant_deploy?: boolean;
+    };
+    path?: never;
+    query?: never;
+    url: '/databases/mongodb';
+};
+
+export type CreateDatabaseMongodbErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateDatabaseMongodbError = CreateDatabaseMongodbErrors[keyof CreateDatabaseMongodbErrors];
+
+export type CreateDatabaseMongodbResponses = {
+    /**
+     * Database updated
+     */
+    200: unknown;
+};
+
+export type DeleteBackupExecutionByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database
+         */
+        uuid: string;
+        /**
+         * UUID of the backup configuration
+         */
+        scheduled_backup_uuid: string;
+        /**
+         * UUID of the backup execution to delete
+         */
+        execution_uuid: string;
+    };
+    query?: {
+        /**
+         * Whether to delete the backup from S3
+         */
+        delete_s3?: boolean;
+    };
+    url: '/databases/{uuid}/backups/{scheduled_backup_uuid}/executions/{execution_uuid}';
+};
+
+export type DeleteBackupExecutionByUuidErrors = {
+    /**
+     * Backup execution not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type DeleteBackupExecutionByUuidError = DeleteBackupExecutionByUuidErrors[keyof DeleteBackupExecutionByUuidErrors];
+
+export type DeleteBackupExecutionByUuidResponses = {
+    /**
+     * Backup execution deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteBackupExecutionByUuidResponse = DeleteBackupExecutionByUuidResponses[keyof DeleteBackupExecutionByUuidResponses];
+
+export type ListBackupExecutionsData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database
+         */
+        uuid: string;
+        /**
+         * UUID of the backup configuration
+         */
+        scheduled_backup_uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/backups/{scheduled_backup_uuid}/executions';
+};
+
+export type ListBackupExecutionsErrors = {
+    /**
+     * Backup configuration not found.
+     */
+    404: unknown;
+};
+
+export type ListBackupExecutionsResponses = {
+    /**
+     * List of backup executions
+     */
+    200: {
+        executions?: Array<{
+            uuid?: string;
+            filename?: string;
+            size?: number;
+            created_at?: string;
+            message?: string;
+            status?: string;
+        }>;
+    };
+};
+
+export type ListBackupExecutionsResponse = ListBackupExecutionsResponses[keyof ListBackupExecutionsResponses];
+
+export type StartDatabaseByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/start';
+};
+
+export type StartDatabaseByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type StartDatabaseByUuidError = StartDatabaseByUuidErrors[keyof StartDatabaseByUuidErrors];
+
+export type StartDatabaseByUuidResponses = {
+    /**
+     * Start database.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type StartDatabaseByUuidResponse = StartDatabaseByUuidResponses[keyof StartDatabaseByUuidResponses];
+
+export type StopDatabaseByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: {
+        /**
+         * Perform docker cleanup (prune networks, volumes, etc.).
+         */
+        docker_cleanup?: boolean;
+    };
+    url: '/databases/{uuid}/stop';
+};
+
+export type StopDatabaseByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type StopDatabaseByUuidError = StopDatabaseByUuidErrors[keyof StopDatabaseByUuidErrors];
+
+export type StopDatabaseByUuidResponses = {
+    /**
+     * Stop database.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type StopDatabaseByUuidResponse = StopDatabaseByUuidResponses[keyof StopDatabaseByUuidResponses];
+
+export type RestartDatabaseByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/restart';
+};
+
+export type RestartDatabaseByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type RestartDatabaseByUuidError = RestartDatabaseByUuidErrors[keyof RestartDatabaseByUuidErrors];
+
+export type RestartDatabaseByUuidResponses = {
+    /**
+     * Restart database.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type RestartDatabaseByUuidResponse = RestartDatabaseByUuidResponses[keyof RestartDatabaseByUuidResponses];
+
+export type ListEnvsByDatabaseUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/envs';
+};
+
+export type ListEnvsByDatabaseUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type ListEnvsByDatabaseUuidError = ListEnvsByDatabaseUuidErrors[keyof ListEnvsByDatabaseUuidErrors];
+
+export type ListEnvsByDatabaseUuidResponses = {
+    /**
+     * Environment variables.
+     */
+    200: Array<EnvironmentVariable>;
+};
+
+export type ListEnvsByDatabaseUuidResponse = ListEnvsByDatabaseUuidResponses[keyof ListEnvsByDatabaseUuidResponses];
+
+export type UpdateEnvByDatabaseUuidData = {
+    /**
+     * Env updated.
+     */
+    body: {
+        /**
+         * The key of the environment variable.
+         */
+        key: string;
+        /**
+         * The value of the environment variable.
+         */
+        value: string;
+        /**
+         * The flag to indicate if the environment variable is a literal, nothing espaced.
+         */
+        is_literal?: boolean;
+        /**
+         * The flag to indicate if the environment variable is multiline.
+         */
+        is_multiline?: boolean;
+        /**
+         * The flag to indicate if the environment variable's value is shown on the UI.
+         */
+        is_shown_once?: boolean;
+    };
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/envs';
+};
+
+export type UpdateEnvByDatabaseUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateEnvByDatabaseUuidError = UpdateEnvByDatabaseUuidErrors[keyof UpdateEnvByDatabaseUuidErrors];
+
+export type UpdateEnvByDatabaseUuidResponses = {
+    /**
+     * Environment variable updated.
+     */
+    201: EnvironmentVariable;
+};
+
+export type UpdateEnvByDatabaseUuidResponse = UpdateEnvByDatabaseUuidResponses[keyof UpdateEnvByDatabaseUuidResponses];
+
+export type CreateEnvByDatabaseUuidData = {
+    /**
+     * Env created.
+     */
+    body: {
+        /**
+         * The key of the environment variable.
+         */
+        key?: string;
+        /**
+         * The value of the environment variable.
+         */
+        value?: string;
+        /**
+         * The flag to indicate if the environment variable is a literal, nothing espaced.
+         */
+        is_literal?: boolean;
+        /**
+         * The flag to indicate if the environment variable is multiline.
+         */
+        is_multiline?: boolean;
+        /**
+         * The flag to indicate if the environment variable's value is shown on the UI.
+         */
+        is_shown_once?: boolean;
+    };
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/envs';
+};
+
+export type CreateEnvByDatabaseUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateEnvByDatabaseUuidError = CreateEnvByDatabaseUuidErrors[keyof CreateEnvByDatabaseUuidErrors];
+
+export type CreateEnvByDatabaseUuidResponses = {
+    /**
+     * Environment variable created.
+     */
+    201: {
+        uuid?: string;
+    };
+};
+
+export type CreateEnvByDatabaseUuidResponse = CreateEnvByDatabaseUuidResponses[keyof CreateEnvByDatabaseUuidResponses];
+
+export type UpdateEnvsByDatabaseUuidData = {
+    /**
+     * Bulk envs updated.
+     */
+    body: {
+        data: Array<{
+            /**
+             * The key of the environment variable.
+             */
+            key?: string;
+            /**
+             * The value of the environment variable.
+             */
+            value?: string;
+            /**
+             * The flag to indicate if the environment variable is a literal, nothing espaced.
+             */
+            is_literal?: boolean;
+            /**
+             * The flag to indicate if the environment variable is multiline.
+             */
+            is_multiline?: boolean;
+            /**
+             * The flag to indicate if the environment variable's value is shown on the UI.
+             */
+            is_shown_once?: boolean;
+        }>;
+    };
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/envs/bulk';
+};
+
+export type UpdateEnvsByDatabaseUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateEnvsByDatabaseUuidError = UpdateEnvsByDatabaseUuidErrors[keyof UpdateEnvsByDatabaseUuidErrors];
+
+export type UpdateEnvsByDatabaseUuidResponses = {
+    /**
+     * Environment variables updated.
+     */
+    201: Array<EnvironmentVariable>;
+};
+
+export type UpdateEnvsByDatabaseUuidResponse = UpdateEnvsByDatabaseUuidResponses[keyof UpdateEnvsByDatabaseUuidResponses];
+
+export type DeleteEnvByDatabaseUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+        /**
+         * UUID of the environment variable.
+         */
+        env_uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/envs/{env_uuid}';
+};
+
+export type DeleteEnvByDatabaseUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type DeleteEnvByDatabaseUuidError = DeleteEnvByDatabaseUuidErrors[keyof DeleteEnvByDatabaseUuidErrors];
+
+export type DeleteEnvByDatabaseUuidResponses = {
+    /**
+     * Environment variable deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteEnvByDatabaseUuidResponse = DeleteEnvByDatabaseUuidResponses[keyof DeleteEnvByDatabaseUuidResponses];
+
+export type ListStoragesByDatabaseUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/storages';
+};
+
+export type ListStoragesByDatabaseUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type ListStoragesByDatabaseUuidError = ListStoragesByDatabaseUuidErrors[keyof ListStoragesByDatabaseUuidErrors];
+
+export type ListStoragesByDatabaseUuidResponses = {
+    /**
+     * All storages by database UUID.
+     */
+    200: {
+        persistent_storages?: Array<{
+            [key: string]: unknown;
+        }>;
+        file_storages?: Array<{
+            [key: string]: unknown;
+        }>;
+    };
+};
+
+export type ListStoragesByDatabaseUuidResponse = ListStoragesByDatabaseUuidResponses[keyof ListStoragesByDatabaseUuidResponses];
+
+export type UpdateStorageByDatabaseUuidData = {
+    /**
+     * Storage updated. For read-only storages (from docker-compose or services), only is_preview_suffix_enabled can be updated.
+     */
+    body: {
+        /**
+         * The UUID of the storage (preferred).
+         */
+        uuid?: string;
+        /**
+         * The ID of the storage (deprecated, use uuid instead).
+         */
+        id?: number;
+        /**
+         * The type of storage: persistent or file.
+         */
+        type: 'persistent' | 'file';
+        /**
+         * Whether to add -pr-N suffix for preview deployments.
+         */
+        is_preview_suffix_enabled?: boolean;
+        /**
+         * The volume name (persistent only, not allowed for read-only storages).
+         */
+        name?: string;
+        /**
+         * The container mount path (not allowed for read-only storages).
+         */
+        mount_path?: string;
+        /**
+         * The host path (persistent only, not allowed for read-only storages).
+         */
+        host_path?: string;
+        /**
+         * The file content (file only, not allowed for read-only storages).
+         */
+        content?: string;
+    };
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/storages';
+};
+
+export type UpdateStorageByDatabaseUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateStorageByDatabaseUuidError = UpdateStorageByDatabaseUuidErrors[keyof UpdateStorageByDatabaseUuidErrors];
+
+export type UpdateStorageByDatabaseUuidResponses = {
+    /**
+     * Storage updated.
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type UpdateStorageByDatabaseUuidResponse = UpdateStorageByDatabaseUuidResponses[keyof UpdateStorageByDatabaseUuidResponses];
+
+export type CreateStorageByDatabaseUuidData = {
+    body: {
+        /**
+         * The type of storage.
+         */
+        type: 'persistent' | 'file';
+        /**
+         * Volume name (persistent only, required for persistent).
+         */
+        name?: string;
+        /**
+         * The container mount path.
+         */
+        mount_path: string;
+        /**
+         * The host path (persistent only, optional).
+         */
+        host_path?: string;
+        /**
+         * File content (file only, optional).
+         */
+        content?: string;
+        /**
+         * Whether this is a directory mount (file only, default false).
+         */
+        is_directory?: boolean;
+        /**
+         * Host directory path (required when is_directory is true).
+         */
+        fs_path?: string;
+    };
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/storages';
+};
+
+export type CreateStorageByDatabaseUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateStorageByDatabaseUuidError = CreateStorageByDatabaseUuidErrors[keyof CreateStorageByDatabaseUuidErrors];
+
+export type CreateStorageByDatabaseUuidResponses = {
+    /**
+     * Storage created.
+     */
+    201: {
+        [key: string]: unknown;
+    };
+};
+
+export type CreateStorageByDatabaseUuidResponse = CreateStorageByDatabaseUuidResponses[keyof CreateStorageByDatabaseUuidResponses];
+
+export type DeleteStorageByDatabaseUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the database.
+         */
+        uuid: string;
+        /**
+         * UUID of the storage.
+         */
+        storage_uuid: string;
+    };
+    query?: never;
+    url: '/databases/{uuid}/storages/{storage_uuid}';
+};
+
+export type DeleteStorageByDatabaseUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type DeleteStorageByDatabaseUuidError = DeleteStorageByDatabaseUuidErrors[keyof DeleteStorageByDatabaseUuidErrors];
+
+export type DeleteStorageByDatabaseUuidResponses = {
+    /**
+     * Storage deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteStorageByDatabaseUuidResponse = DeleteStorageByDatabaseUuidResponses[keyof DeleteStorageByDatabaseUuidResponses];
 
 export type ListDeploymentsData = {
     body?: never;
@@ -3565,6 +6676,110 @@ export type ListGithubAppsResponses = {
 };
 
 export type ListGithubAppsResponse = ListGithubAppsResponses[keyof ListGithubAppsResponses];
+
+export type LoadRepositoriesData = {
+    body?: never;
+    path: {
+        /**
+         * GitHub App ID
+         */
+        github_app_id: number;
+    };
+    query?: never;
+    url: '/github-apps/{github_app_id}/repositories';
+};
+
+export type LoadRepositoriesErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type LoadRepositoriesError = LoadRepositoriesErrors[keyof LoadRepositoriesErrors];
+
+export type LoadRepositoriesResponses = {
+    /**
+     * Repositories loaded successfully.
+     */
+    200: {
+        repositories?: Array<{
+            [key: string]: unknown;
+        }>;
+    };
+};
+
+export type LoadRepositoriesResponse = LoadRepositoriesResponses[keyof LoadRepositoriesResponses];
+
+export type LoadBranchesData = {
+    body?: never;
+    path: {
+        /**
+         * GitHub App ID
+         */
+        github_app_id: number;
+        /**
+         * Repository owner
+         */
+        owner: string;
+        /**
+         * Repository name
+         */
+        repo: string;
+    };
+    query?: never;
+    url: '/github-apps/{github_app_id}/repositories/{owner}/{repo}/branches';
+};
+
+export type LoadBranchesErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type LoadBranchesError = LoadBranchesErrors[keyof LoadBranchesErrors];
+
+export type LoadBranchesResponses = {
+    /**
+     * Branches loaded successfully.
+     */
+    200: {
+        branches?: Array<{
+            [key: string]: unknown;
+        }>;
+    };
+};
+
+export type LoadBranchesResponse = LoadBranchesResponses[keyof LoadBranchesResponses];
 
 export type VersionData = {
     body?: never;
@@ -4015,6 +7230,562 @@ export type ListResourcesResponses = {
 
 export type ListResourcesResponse = ListResourcesResponses[keyof ListResourcesResponses];
 
+export type ListScheduledTasksByApplicationUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/scheduled-tasks';
+};
+
+export type ListScheduledTasksByApplicationUuidErrors = {
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type ListScheduledTasksByApplicationUuidError = ListScheduledTasksByApplicationUuidErrors[keyof ListScheduledTasksByApplicationUuidErrors];
+
+export type ListScheduledTasksByApplicationUuidResponses = {
+    /**
+     * Get all scheduled tasks for an application.
+     */
+    200: Array<ScheduledTask>;
+};
+
+export type ListScheduledTasksByApplicationUuidResponse = ListScheduledTasksByApplicationUuidResponses[keyof ListScheduledTasksByApplicationUuidResponses];
+
+export type CreateScheduledTaskByApplicationUuidData = {
+    /**
+     * Scheduled task data
+     */
+    body: {
+        /**
+         * The name of the scheduled task.
+         */
+        name: string;
+        /**
+         * The command to execute.
+         */
+        command: string;
+        /**
+         * The frequency of the scheduled task.
+         */
+        frequency: string;
+        /**
+         * The container where the command should be executed.
+         */
+        container?: string;
+        /**
+         * The timeout of the scheduled task in seconds.
+         */
+        timeout?: number;
+        /**
+         * The flag to indicate if the scheduled task is enabled.
+         */
+        enabled?: boolean;
+    };
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/scheduled-tasks';
+};
+
+export type CreateScheduledTaskByApplicationUuidErrors = {
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateScheduledTaskByApplicationUuidError = CreateScheduledTaskByApplicationUuidErrors[keyof CreateScheduledTaskByApplicationUuidErrors];
+
+export type CreateScheduledTaskByApplicationUuidResponses = {
+    /**
+     * Scheduled task created.
+     */
+    201: ScheduledTask;
+};
+
+export type CreateScheduledTaskByApplicationUuidResponse = CreateScheduledTaskByApplicationUuidResponses[keyof CreateScheduledTaskByApplicationUuidResponses];
+
+export type DeleteScheduledTaskByApplicationUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+        /**
+         * UUID of the scheduled task.
+         */
+        task_uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/scheduled-tasks/{task_uuid}';
+};
+
+export type DeleteScheduledTaskByApplicationUuidErrors = {
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type DeleteScheduledTaskByApplicationUuidError = DeleteScheduledTaskByApplicationUuidErrors[keyof DeleteScheduledTaskByApplicationUuidErrors];
+
+export type DeleteScheduledTaskByApplicationUuidResponses = {
+    /**
+     * Scheduled task deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteScheduledTaskByApplicationUuidResponse = DeleteScheduledTaskByApplicationUuidResponses[keyof DeleteScheduledTaskByApplicationUuidResponses];
+
+export type UpdateScheduledTaskByApplicationUuidData = {
+    /**
+     * Scheduled task data
+     */
+    body: {
+        /**
+         * The name of the scheduled task.
+         */
+        name?: string;
+        /**
+         * The command to execute.
+         */
+        command?: string;
+        /**
+         * The frequency of the scheduled task.
+         */
+        frequency?: string;
+        /**
+         * The container where the command should be executed.
+         */
+        container?: string;
+        /**
+         * The timeout of the scheduled task in seconds.
+         */
+        timeout?: number;
+        /**
+         * The flag to indicate if the scheduled task is enabled.
+         */
+        enabled?: boolean;
+    };
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+        /**
+         * UUID of the scheduled task.
+         */
+        task_uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/scheduled-tasks/{task_uuid}';
+};
+
+export type UpdateScheduledTaskByApplicationUuidErrors = {
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateScheduledTaskByApplicationUuidError = UpdateScheduledTaskByApplicationUuidErrors[keyof UpdateScheduledTaskByApplicationUuidErrors];
+
+export type UpdateScheduledTaskByApplicationUuidResponses = {
+    /**
+     * Scheduled task updated.
+     */
+    200: ScheduledTask;
+};
+
+export type UpdateScheduledTaskByApplicationUuidResponse = UpdateScheduledTaskByApplicationUuidResponses[keyof UpdateScheduledTaskByApplicationUuidResponses];
+
+export type ListScheduledTaskExecutionsByApplicationUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+        /**
+         * UUID of the scheduled task.
+         */
+        task_uuid: string;
+    };
+    query?: never;
+    url: '/applications/{uuid}/scheduled-tasks/{task_uuid}/executions';
+};
+
+export type ListScheduledTaskExecutionsByApplicationUuidErrors = {
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type ListScheduledTaskExecutionsByApplicationUuidError = ListScheduledTaskExecutionsByApplicationUuidErrors[keyof ListScheduledTaskExecutionsByApplicationUuidErrors];
+
+export type ListScheduledTaskExecutionsByApplicationUuidResponses = {
+    /**
+     * Get all executions for a scheduled task.
+     */
+    200: Array<ScheduledTaskExecution>;
+};
+
+export type ListScheduledTaskExecutionsByApplicationUuidResponse = ListScheduledTaskExecutionsByApplicationUuidResponses[keyof ListScheduledTaskExecutionsByApplicationUuidResponses];
+
+export type ListScheduledTasksByServiceUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/scheduled-tasks';
+};
+
+export type ListScheduledTasksByServiceUuidErrors = {
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type ListScheduledTasksByServiceUuidError = ListScheduledTasksByServiceUuidErrors[keyof ListScheduledTasksByServiceUuidErrors];
+
+export type ListScheduledTasksByServiceUuidResponses = {
+    /**
+     * Get all scheduled tasks for a service.
+     */
+    200: Array<ScheduledTask>;
+};
+
+export type ListScheduledTasksByServiceUuidResponse = ListScheduledTasksByServiceUuidResponses[keyof ListScheduledTasksByServiceUuidResponses];
+
+export type CreateScheduledTaskByServiceUuidData = {
+    /**
+     * Scheduled task data
+     */
+    body: {
+        /**
+         * The name of the scheduled task.
+         */
+        name: string;
+        /**
+         * The command to execute.
+         */
+        command: string;
+        /**
+         * The frequency of the scheduled task.
+         */
+        frequency: string;
+        /**
+         * The container where the command should be executed.
+         */
+        container?: string;
+        /**
+         * The timeout of the scheduled task in seconds.
+         */
+        timeout?: number;
+        /**
+         * The flag to indicate if the scheduled task is enabled.
+         */
+        enabled?: boolean;
+    };
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/scheduled-tasks';
+};
+
+export type CreateScheduledTaskByServiceUuidErrors = {
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateScheduledTaskByServiceUuidError = CreateScheduledTaskByServiceUuidErrors[keyof CreateScheduledTaskByServiceUuidErrors];
+
+export type CreateScheduledTaskByServiceUuidResponses = {
+    /**
+     * Scheduled task created.
+     */
+    201: ScheduledTask;
+};
+
+export type CreateScheduledTaskByServiceUuidResponse = CreateScheduledTaskByServiceUuidResponses[keyof CreateScheduledTaskByServiceUuidResponses];
+
+export type DeleteScheduledTaskByServiceUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+        /**
+         * UUID of the scheduled task.
+         */
+        task_uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/scheduled-tasks/{task_uuid}';
+};
+
+export type DeleteScheduledTaskByServiceUuidErrors = {
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type DeleteScheduledTaskByServiceUuidError = DeleteScheduledTaskByServiceUuidErrors[keyof DeleteScheduledTaskByServiceUuidErrors];
+
+export type DeleteScheduledTaskByServiceUuidResponses = {
+    /**
+     * Scheduled task deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteScheduledTaskByServiceUuidResponse = DeleteScheduledTaskByServiceUuidResponses[keyof DeleteScheduledTaskByServiceUuidResponses];
+
+export type UpdateScheduledTaskByServiceUuidData = {
+    /**
+     * Scheduled task data
+     */
+    body: {
+        /**
+         * The name of the scheduled task.
+         */
+        name?: string;
+        /**
+         * The command to execute.
+         */
+        command?: string;
+        /**
+         * The frequency of the scheduled task.
+         */
+        frequency?: string;
+        /**
+         * The container where the command should be executed.
+         */
+        container?: string;
+        /**
+         * The timeout of the scheduled task in seconds.
+         */
+        timeout?: number;
+        /**
+         * The flag to indicate if the scheduled task is enabled.
+         */
+        enabled?: boolean;
+    };
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+        /**
+         * UUID of the scheduled task.
+         */
+        task_uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/scheduled-tasks/{task_uuid}';
+};
+
+export type UpdateScheduledTaskByServiceUuidErrors = {
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateScheduledTaskByServiceUuidError = UpdateScheduledTaskByServiceUuidErrors[keyof UpdateScheduledTaskByServiceUuidErrors];
+
+export type UpdateScheduledTaskByServiceUuidResponses = {
+    /**
+     * Scheduled task updated.
+     */
+    200: ScheduledTask;
+};
+
+export type UpdateScheduledTaskByServiceUuidResponse = UpdateScheduledTaskByServiceUuidResponses[keyof UpdateScheduledTaskByServiceUuidResponses];
+
+export type ListScheduledTaskExecutionsByServiceUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+        /**
+         * UUID of the scheduled task.
+         */
+        task_uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/scheduled-tasks/{task_uuid}/executions';
+};
+
+export type ListScheduledTaskExecutionsByServiceUuidErrors = {
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type ListScheduledTaskExecutionsByServiceUuidError = ListScheduledTaskExecutionsByServiceUuidErrors[keyof ListScheduledTaskExecutionsByServiceUuidErrors];
+
+export type ListScheduledTaskExecutionsByServiceUuidResponses = {
+    /**
+     * Get all executions for a scheduled task.
+     */
+    200: Array<ScheduledTaskExecution>;
+};
+
+export type ListScheduledTaskExecutionsByServiceUuidResponse = ListScheduledTaskExecutionsByServiceUuidResponses[keyof ListScheduledTaskExecutionsByServiceUuidResponses];
+
 export type ListPrivateKeysData = {
     body?: never;
     path?: never;
@@ -4047,6 +7818,54 @@ export type ListPrivateKeysResponses = {
 };
 
 export type ListPrivateKeysResponse = ListPrivateKeysResponses[keyof ListPrivateKeysResponses];
+
+export type UpdatePrivateKeyData = {
+    body: {
+        name?: string;
+        description?: string;
+        private_key: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/security/keys';
+};
+
+export type UpdatePrivateKeyErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdatePrivateKeyError = UpdatePrivateKeyErrors[keyof UpdatePrivateKeyErrors];
+
+export type UpdatePrivateKeyResponses = {
+    /**
+     * The updated private key's UUID.
+     */
+    201: {
+        uuid?: string;
+    };
+};
+
+export type UpdatePrivateKeyResponse = UpdatePrivateKeyResponses[keyof UpdatePrivateKeyResponses];
 
 export type CreatePrivateKeyData = {
     body: {
@@ -4095,6 +7914,98 @@ export type CreatePrivateKeyResponses = {
 };
 
 export type CreatePrivateKeyResponse = CreatePrivateKeyResponses[keyof CreatePrivateKeyResponses];
+
+export type DeletePrivateKeyByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * Private Key UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/security/keys/{uuid}';
+};
+
+export type DeletePrivateKeyByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Private Key not found.
+     */
+    404: unknown;
+    /**
+     * Private Key is in use and cannot be deleted.
+     */
+    422: {
+        message?: string;
+    };
+};
+
+export type DeletePrivateKeyByUuidError = DeletePrivateKeyByUuidErrors[keyof DeletePrivateKeyByUuidErrors];
+
+export type DeletePrivateKeyByUuidResponses = {
+    /**
+     * Private Key deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeletePrivateKeyByUuidResponse = DeletePrivateKeyByUuidResponses[keyof DeletePrivateKeyByUuidResponses];
+
+export type GetPrivateKeyByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * Private Key UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/security/keys/{uuid}';
+};
+
+export type GetPrivateKeyByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Private Key not found.
+     */
+    404: unknown;
+};
+
+export type GetPrivateKeyByUuidError = GetPrivateKeyByUuidErrors[keyof GetPrivateKeyByUuidErrors];
+
+export type GetPrivateKeyByUuidResponses = {
+    /**
+     * Get all private keys.
+     */
+    200: PrivateKey;
+};
+
+export type GetPrivateKeyByUuidResponse = GetPrivateKeyByUuidResponses[keyof GetPrivateKeyByUuidResponses];
 
 export type ListServersData = {
     body?: never;
@@ -4222,6 +8133,61 @@ export type CreateServerResponses = {
 
 export type CreateServerResponse = CreateServerResponses[keyof CreateServerResponses];
 
+export type DeleteServerByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the server.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/servers/{uuid}';
+};
+
+export type DeleteServerByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type DeleteServerByUuidError = DeleteServerByUuidErrors[keyof DeleteServerByUuidErrors];
+
+export type DeleteServerByUuidResponses = {
+    /**
+     * Server deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteServerByUuidResponse = DeleteServerByUuidResponses[keyof DeleteServerByUuidResponses];
+
 export type GetServerByUuidData = {
     body?: never;
     path: {
@@ -4265,6 +8231,210 @@ export type GetServerByUuidResponses = {
 };
 
 export type GetServerByUuidResponse = GetServerByUuidResponses[keyof GetServerByUuidResponses];
+
+export type UpdateServerByUuidData = {
+    /**
+     * Server updated.
+     */
+    body: {
+        /**
+         * The name of the server.
+         */
+        name?: string;
+        /**
+         * The description of the server.
+         */
+        description?: string;
+        /**
+         * The IP of the server.
+         */
+        ip?: string;
+        /**
+         * The port of the server.
+         */
+        port?: number;
+        /**
+         * The user of the server.
+         */
+        user?: string;
+        /**
+         * The UUID of the private key.
+         */
+        private_key_uuid?: string;
+        /**
+         * Is build server.
+         */
+        is_build_server?: boolean;
+        /**
+         * Instant validate.
+         */
+        instant_validate?: boolean;
+        /**
+         * The proxy type.
+         */
+        proxy_type?: 'traefik' | 'caddy' | 'none';
+        /**
+         * Number of concurrent builds.
+         */
+        concurrent_builds?: number;
+        /**
+         * Deployment timeout in seconds.
+         */
+        dynamic_timeout?: number;
+        /**
+         * Maximum number of queued deployments.
+         */
+        deployment_queue_limit?: number;
+        /**
+         * Server disk usage notification threshold (%).
+         */
+        server_disk_usage_notification_threshold?: number;
+        /**
+         * Cron expression for disk usage check frequency.
+         */
+        server_disk_usage_check_frequency?: string;
+        /**
+         * SSH connection timeout in seconds (1-300). Default: 10.
+         */
+        connection_timeout?: number;
+    };
+    path: {
+        /**
+         * Server UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/servers/{uuid}';
+};
+
+export type UpdateServerByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateServerByUuidError = UpdateServerByUuidErrors[keyof UpdateServerByUuidErrors];
+
+export type UpdateServerByUuidResponses = {
+    /**
+     * Server updated.
+     */
+    201: Server;
+};
+
+export type UpdateServerByUuidResponse = UpdateServerByUuidResponses[keyof UpdateServerByUuidResponses];
+
+export type GetResourcesByServerUuidData = {
+    body?: never;
+    path: {
+        /**
+         * Server's UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/servers/{uuid}/resources';
+};
+
+export type GetResourcesByServerUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+};
+
+export type GetResourcesByServerUuidError = GetResourcesByServerUuidErrors[keyof GetResourcesByServerUuidErrors];
+
+export type GetResourcesByServerUuidResponses = {
+    /**
+     * Get resources by server
+     */
+    200: Array<{
+        id?: number;
+        uuid?: string;
+        name?: string;
+        type?: string;
+        created_at?: string;
+        updated_at?: string;
+        status?: string;
+    }>;
+};
+
+export type GetResourcesByServerUuidResponse = GetResourcesByServerUuidResponses[keyof GetResourcesByServerUuidResponses];
+
+export type GetDomainsByServerUuidData = {
+    body?: never;
+    path: {
+        /**
+         * Server's UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/servers/{uuid}/domains';
+};
+
+export type GetDomainsByServerUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+};
+
+export type GetDomainsByServerUuidError = GetDomainsByServerUuidErrors[keyof GetDomainsByServerUuidErrors];
+
+export type GetDomainsByServerUuidResponses = {
+    /**
+     * Get domains by server
+     */
+    200: Array<{
+        ip?: string;
+        domains?: Array<string>;
+    }>;
+};
+
+export type GetDomainsByServerUuidResponse = GetDomainsByServerUuidResponses[keyof GetDomainsByServerUuidResponses];
 
 export type ValidateServerByUuidData = {
     body?: never;
@@ -4480,3 +8650,1216 @@ export type CreateServiceResponses = {
 };
 
 export type CreateServiceResponse = CreateServiceResponses[keyof CreateServiceResponses];
+
+export type DeleteServiceByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * Service UUID
+         */
+        uuid: string;
+    };
+    query?: {
+        /**
+         * Delete configurations.
+         */
+        delete_configurations?: boolean;
+        /**
+         * Delete volumes.
+         */
+        delete_volumes?: boolean;
+        /**
+         * Run docker cleanup.
+         */
+        docker_cleanup?: boolean;
+        /**
+         * Delete connected networks.
+         */
+        delete_connected_networks?: boolean;
+    };
+    url: '/services/{uuid}';
+};
+
+export type DeleteServiceByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type DeleteServiceByUuidError = DeleteServiceByUuidErrors[keyof DeleteServiceByUuidErrors];
+
+export type DeleteServiceByUuidResponses = {
+    /**
+     * Delete a service by UUID
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteServiceByUuidResponse = DeleteServiceByUuidResponses[keyof DeleteServiceByUuidResponses];
+
+export type GetServiceByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * Service UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}';
+};
+
+export type GetServiceByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type GetServiceByUuidError = GetServiceByUuidErrors[keyof GetServiceByUuidErrors];
+
+export type GetServiceByUuidResponses = {
+    /**
+     * Get a service by UUID.
+     */
+    200: Service;
+};
+
+export type GetServiceByUuidResponse = GetServiceByUuidResponses[keyof GetServiceByUuidResponses];
+
+export type UpdateServiceByUuidData = {
+    /**
+     * Service updated.
+     */
+    body: {
+        /**
+         * The service name.
+         */
+        name?: string;
+        /**
+         * The service description.
+         */
+        description?: string;
+        /**
+         * The project UUID.
+         */
+        project_uuid?: string;
+        /**
+         * The environment name.
+         */
+        environment_name?: string;
+        /**
+         * The environment UUID.
+         */
+        environment_uuid?: string;
+        /**
+         * The server UUID.
+         */
+        server_uuid?: string;
+        /**
+         * The destination UUID.
+         */
+        destination_uuid?: string;
+        /**
+         * The flag to indicate if the service should be deployed instantly.
+         */
+        instant_deploy?: boolean;
+        /**
+         * Connect the service to the predefined docker network.
+         */
+        connect_to_docker_network?: boolean;
+        /**
+         * The base64 encoded Docker Compose content.
+         */
+        docker_compose_raw?: string;
+        /**
+         * Array of URLs to be applied to containers of a service.
+         */
+        urls?: Array<{
+            /**
+             * The service name as defined in docker-compose.
+             */
+            name?: string;
+            /**
+             * Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io").
+             */
+            url?: string;
+        }>;
+        /**
+         * Force domain override even if conflicts are detected.
+         */
+        force_domain_override?: boolean;
+        /**
+         * Escape special characters in labels. By default, $ (and other chars) is escaped. If you want to use env variables inside the labels, turn this off.
+         */
+        is_container_label_escape_enabled?: boolean;
+    };
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}';
+};
+
+export type UpdateServiceByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Domain conflicts detected.
+     */
+    409: {
+        message?: string;
+        warning?: string;
+        conflicts?: Array<{
+            domain?: string;
+            resource_name?: string;
+            resource_uuid?: string;
+            resource_type?: 'application' | 'service' | 'instance';
+            message?: string;
+        }>;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateServiceByUuidError = UpdateServiceByUuidErrors[keyof UpdateServiceByUuidErrors];
+
+export type UpdateServiceByUuidResponses = {
+    /**
+     * Service updated.
+     */
+    200: {
+        /**
+         * Service UUID.
+         */
+        uuid?: string;
+        /**
+         * Service domains.
+         */
+        domains?: Array<string>;
+    };
+};
+
+export type UpdateServiceByUuidResponse = UpdateServiceByUuidResponses[keyof UpdateServiceByUuidResponses];
+
+export type ListEnvsByServiceUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/envs';
+};
+
+export type ListEnvsByServiceUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type ListEnvsByServiceUuidError = ListEnvsByServiceUuidErrors[keyof ListEnvsByServiceUuidErrors];
+
+export type ListEnvsByServiceUuidResponses = {
+    /**
+     * All environment variables by service UUID.
+     */
+    200: Array<EnvironmentVariable>;
+};
+
+export type ListEnvsByServiceUuidResponse = ListEnvsByServiceUuidResponses[keyof ListEnvsByServiceUuidResponses];
+
+export type UpdateEnvByServiceUuidData = {
+    /**
+     * Env updated.
+     */
+    body: {
+        /**
+         * The key of the environment variable.
+         */
+        key: string;
+        /**
+         * The value of the environment variable.
+         */
+        value: string;
+        /**
+         * The flag to indicate if the environment variable is used in preview deployments.
+         */
+        is_preview?: boolean;
+        /**
+         * The flag to indicate if the environment variable is a literal, nothing espaced.
+         */
+        is_literal?: boolean;
+        /**
+         * The flag to indicate if the environment variable is multiline.
+         */
+        is_multiline?: boolean;
+        /**
+         * The flag to indicate if the environment variable's value is shown on the UI.
+         */
+        is_shown_once?: boolean;
+    };
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/envs';
+};
+
+export type UpdateEnvByServiceUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateEnvByServiceUuidError = UpdateEnvByServiceUuidErrors[keyof UpdateEnvByServiceUuidErrors];
+
+export type UpdateEnvByServiceUuidResponses = {
+    /**
+     * Environment variable updated.
+     */
+    201: EnvironmentVariable;
+};
+
+export type UpdateEnvByServiceUuidResponse = UpdateEnvByServiceUuidResponses[keyof UpdateEnvByServiceUuidResponses];
+
+export type CreateEnvByServiceUuidData = {
+    /**
+     * Env created.
+     */
+    body: {
+        /**
+         * The key of the environment variable.
+         */
+        key?: string;
+        /**
+         * The value of the environment variable.
+         */
+        value?: string;
+        /**
+         * The flag to indicate if the environment variable is used in preview deployments.
+         */
+        is_preview?: boolean;
+        /**
+         * The flag to indicate if the environment variable is a literal, nothing espaced.
+         */
+        is_literal?: boolean;
+        /**
+         * The flag to indicate if the environment variable is multiline.
+         */
+        is_multiline?: boolean;
+        /**
+         * The flag to indicate if the environment variable's value is shown on the UI.
+         */
+        is_shown_once?: boolean;
+    };
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/envs';
+};
+
+export type CreateEnvByServiceUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateEnvByServiceUuidError = CreateEnvByServiceUuidErrors[keyof CreateEnvByServiceUuidErrors];
+
+export type CreateEnvByServiceUuidResponses = {
+    /**
+     * Environment variable created.
+     */
+    201: {
+        uuid?: string;
+    };
+};
+
+export type CreateEnvByServiceUuidResponse = CreateEnvByServiceUuidResponses[keyof CreateEnvByServiceUuidResponses];
+
+export type UpdateEnvsByServiceUuidData = {
+    /**
+     * Bulk envs updated.
+     */
+    body: {
+        data: Array<{
+            /**
+             * The key of the environment variable.
+             */
+            key?: string;
+            /**
+             * The value of the environment variable.
+             */
+            value?: string;
+            /**
+             * The flag to indicate if the environment variable is used in preview deployments.
+             */
+            is_preview?: boolean;
+            /**
+             * The flag to indicate if the environment variable is a literal, nothing espaced.
+             */
+            is_literal?: boolean;
+            /**
+             * The flag to indicate if the environment variable is multiline.
+             */
+            is_multiline?: boolean;
+            /**
+             * The flag to indicate if the environment variable's value is shown on the UI.
+             */
+            is_shown_once?: boolean;
+        }>;
+    };
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/envs/bulk';
+};
+
+export type UpdateEnvsByServiceUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateEnvsByServiceUuidError = UpdateEnvsByServiceUuidErrors[keyof UpdateEnvsByServiceUuidErrors];
+
+export type UpdateEnvsByServiceUuidResponses = {
+    /**
+     * Environment variables updated.
+     */
+    201: Array<EnvironmentVariable>;
+};
+
+export type UpdateEnvsByServiceUuidResponse = UpdateEnvsByServiceUuidResponses[keyof UpdateEnvsByServiceUuidResponses];
+
+export type DeleteEnvByServiceUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+        /**
+         * UUID of the environment variable.
+         */
+        env_uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/envs/{env_uuid}';
+};
+
+export type DeleteEnvByServiceUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type DeleteEnvByServiceUuidError = DeleteEnvByServiceUuidErrors[keyof DeleteEnvByServiceUuidErrors];
+
+export type DeleteEnvByServiceUuidResponses = {
+    /**
+     * Environment variable deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteEnvByServiceUuidResponse = DeleteEnvByServiceUuidResponses[keyof DeleteEnvByServiceUuidResponses];
+
+export type StartServiceByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/start';
+};
+
+export type StartServiceByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type StartServiceByUuidError = StartServiceByUuidErrors[keyof StartServiceByUuidErrors];
+
+export type StartServiceByUuidResponses = {
+    /**
+     * Start service.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type StartServiceByUuidResponse = StartServiceByUuidResponses[keyof StartServiceByUuidResponses];
+
+export type StopServiceByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: {
+        /**
+         * Perform docker cleanup (prune networks, volumes, etc.).
+         */
+        docker_cleanup?: boolean;
+    };
+    url: '/services/{uuid}/stop';
+};
+
+export type StopServiceByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type StopServiceByUuidError = StopServiceByUuidErrors[keyof StopServiceByUuidErrors];
+
+export type StopServiceByUuidResponses = {
+    /**
+     * Stop service.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type StopServiceByUuidResponse = StopServiceByUuidResponses[keyof StopServiceByUuidResponses];
+
+export type RestartServiceByUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: {
+        /**
+         * Pull latest images.
+         */
+        latest?: boolean;
+    };
+    url: '/services/{uuid}/restart';
+};
+
+export type RestartServiceByUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type RestartServiceByUuidError = RestartServiceByUuidErrors[keyof RestartServiceByUuidErrors];
+
+export type RestartServiceByUuidResponses = {
+    /**
+     * Restart service.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type RestartServiceByUuidResponse = RestartServiceByUuidResponses[keyof RestartServiceByUuidResponses];
+
+export type ListStoragesByServiceUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/storages';
+};
+
+export type ListStoragesByServiceUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type ListStoragesByServiceUuidError = ListStoragesByServiceUuidErrors[keyof ListStoragesByServiceUuidErrors];
+
+export type ListStoragesByServiceUuidResponses = {
+    /**
+     * All storages by service UUID.
+     */
+    200: {
+        persistent_storages?: Array<{
+            [key: string]: unknown;
+        }>;
+        file_storages?: Array<{
+            [key: string]: unknown;
+        }>;
+    };
+};
+
+export type ListStoragesByServiceUuidResponse = ListStoragesByServiceUuidResponses[keyof ListStoragesByServiceUuidResponses];
+
+export type UpdateStorageByServiceUuidData = {
+    /**
+     * Storage updated. For read-only storages (from docker-compose or services), only is_preview_suffix_enabled can be updated.
+     */
+    body: {
+        /**
+         * The UUID of the storage (preferred).
+         */
+        uuid?: string;
+        /**
+         * The ID of the storage (deprecated, use uuid instead).
+         */
+        id?: number;
+        /**
+         * The type of storage: persistent or file.
+         */
+        type: 'persistent' | 'file';
+        /**
+         * Whether to add -pr-N suffix for preview deployments.
+         */
+        is_preview_suffix_enabled?: boolean;
+        /**
+         * The volume name (persistent only, not allowed for read-only storages).
+         */
+        name?: string;
+        /**
+         * The container mount path (not allowed for read-only storages).
+         */
+        mount_path?: string;
+        /**
+         * The host path (persistent only, not allowed for read-only storages).
+         */
+        host_path?: string;
+        /**
+         * The file content (file only, not allowed for read-only storages).
+         */
+        content?: string;
+    };
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/storages';
+};
+
+export type UpdateStorageByServiceUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdateStorageByServiceUuidError = UpdateStorageByServiceUuidErrors[keyof UpdateStorageByServiceUuidErrors];
+
+export type UpdateStorageByServiceUuidResponses = {
+    /**
+     * Storage updated.
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type UpdateStorageByServiceUuidResponse = UpdateStorageByServiceUuidResponses[keyof UpdateStorageByServiceUuidResponses];
+
+export type CreateStorageByServiceUuidData = {
+    body: {
+        /**
+         * The type of storage.
+         */
+        type: 'persistent' | 'file';
+        /**
+         * UUID of the service application or database sub-resource.
+         */
+        resource_uuid: string;
+        /**
+         * Volume name (persistent only, required for persistent).
+         */
+        name?: string;
+        /**
+         * The container mount path.
+         */
+        mount_path: string;
+        /**
+         * The host path (persistent only, optional).
+         */
+        host_path?: string;
+        /**
+         * File content (file only, optional).
+         */
+        content?: string;
+        /**
+         * Whether this is a directory mount (file only, default false).
+         */
+        is_directory?: boolean;
+        /**
+         * Host directory path (required when is_directory is true).
+         */
+        fs_path?: string;
+    };
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/storages';
+};
+
+export type CreateStorageByServiceUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type CreateStorageByServiceUuidError = CreateStorageByServiceUuidErrors[keyof CreateStorageByServiceUuidErrors];
+
+export type CreateStorageByServiceUuidResponses = {
+    /**
+     * Storage created.
+     */
+    201: {
+        [key: string]: unknown;
+    };
+};
+
+export type CreateStorageByServiceUuidResponse = CreateStorageByServiceUuidResponses[keyof CreateStorageByServiceUuidResponses];
+
+export type DeleteStorageByServiceUuidData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the service.
+         */
+        uuid: string;
+        /**
+         * UUID of the storage.
+         */
+        storage_uuid: string;
+    };
+    query?: never;
+    url: '/services/{uuid}/storages/{storage_uuid}';
+};
+
+export type DeleteStorageByServiceUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type DeleteStorageByServiceUuidError = DeleteStorageByServiceUuidErrors[keyof DeleteStorageByServiceUuidErrors];
+
+export type DeleteStorageByServiceUuidResponses = {
+    /**
+     * Storage deleted.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeleteStorageByServiceUuidResponse = DeleteStorageByServiceUuidResponses[keyof DeleteStorageByServiceUuidResponses];
+
+export type ListTeamsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/teams';
+};
+
+export type ListTeamsErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+};
+
+export type ListTeamsError = ListTeamsErrors[keyof ListTeamsErrors];
+
+export type ListTeamsResponses = {
+    /**
+     * List of teams.
+     */
+    200: Array<Team>;
+};
+
+export type ListTeamsResponse = ListTeamsResponses[keyof ListTeamsResponses];
+
+export type GetTeamByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Team ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/teams/{id}';
+};
+
+export type GetTeamByIdErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type GetTeamByIdError = GetTeamByIdErrors[keyof GetTeamByIdErrors];
+
+export type GetTeamByIdResponses = {
+    /**
+     * List of teams.
+     */
+    200: Team;
+};
+
+export type GetTeamByIdResponse = GetTeamByIdResponses[keyof GetTeamByIdResponses];
+
+export type GetMembersByTeamIdData = {
+    body?: never;
+    path: {
+        /**
+         * Team ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/teams/{id}/members';
+};
+
+export type GetMembersByTeamIdErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+};
+
+export type GetMembersByTeamIdError = GetMembersByTeamIdErrors[keyof GetMembersByTeamIdErrors];
+
+export type GetMembersByTeamIdResponses = {
+    /**
+     * List of members.
+     */
+    200: Array<User>;
+};
+
+export type GetMembersByTeamIdResponse = GetMembersByTeamIdResponses[keyof GetMembersByTeamIdResponses];
+
+export type GetCurrentTeamData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/teams/current';
+};
+
+export type GetCurrentTeamErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+};
+
+export type GetCurrentTeamError = GetCurrentTeamErrors[keyof GetCurrentTeamErrors];
+
+export type GetCurrentTeamResponses = {
+    /**
+     * Current Team.
+     */
+    200: Team;
+};
+
+export type GetCurrentTeamResponse = GetCurrentTeamResponses[keyof GetCurrentTeamResponses];
+
+export type GetCurrentTeamMembersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/teams/current/members';
+};
+
+export type GetCurrentTeamMembersErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+};
+
+export type GetCurrentTeamMembersError = GetCurrentTeamMembersErrors[keyof GetCurrentTeamMembersErrors];
+
+export type GetCurrentTeamMembersResponses = {
+    /**
+     * Currently authenticated team members.
+     */
+    200: Array<User>;
+};
+
+export type GetCurrentTeamMembersResponse = GetCurrentTeamMembersResponses[keyof GetCurrentTeamMembersResponses];
