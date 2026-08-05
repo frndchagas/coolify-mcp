@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.3.0...coolify-mcp-v1.4.0) (2026-08-05)
+
+
+### Features
+
+* bundled Coolify docs search and one-click MCPB bundle ([7ab9837](https://github.com/frndchagas/coolify-mcp/commit/7ab9837e525d24709dca1441573e0c683fd006e0))
+* bundled Coolify docs search and one-click MCPB bundle ([05bb7d6](https://github.com/frndchagas/coolify-mcp/commit/05bb7d60b8d7eda3db212b8ecf5555f98b704171))
+
 ## [1.3.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.2.1...coolify-mcp-v1.3.0) (2026-08-05)
 
 
