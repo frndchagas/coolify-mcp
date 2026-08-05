@@ -1,0 +1,43 @@
+name: MCPB Bundle
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Stamp manifest version from release tag
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="${TAG#coolify-mcp-v}"
+          node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));m.version=process.argv[1];fs.writeFileSync('manifest.json', JSON.stringify(m,null,2)+'\n');" "$version"
+
+      - name: Prune to production dependencies
+        run: npm prune --omit=dev
+
+      - name: Pack bundle
+        run: npx --yes @anthropic-ai/mcpb pack . coolify-mcp.mcpb
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" coolify-mcp.mcpb --clobber

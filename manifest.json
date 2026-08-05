@@ -1,0 +1,45 @@
+{
+  "manifest_version": "0.2",
+  "name": "coolify-mcp",
+  "display_name": "Coolify MCP",
+  "version": "0.0.0",
+  "description": "Deploy, diagnose, and manage applications, databases, and services on your self-hosted Coolify instance.",
+  "author": {
+    "name": "Fernando Chagas",
+    "url": "https://github.com/frndchagas"
+  },
+  "homepage": "https://github.com/frndchagas/coolify-mcp",
+  "license": "MIT",
+  "server": {
+    "type": "node",
+    "entry_point": "dist/server.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/server.js"],
+      "env": {
+        "COOLIFY_BASE_URL": "${user_config.coolify_base_url}",
+        "COOLIFY_TOKEN": "${user_config.coolify_token}"
+      }
+    }
+  },
+  "user_config": {
+    "coolify_base_url": {
+      "type": "string",
+      "title": "Coolify API URL",
+      "description": "Your Coolify instance API URL, e.g. https://coolify.example.com/api/v1",
+      "required": true
+    },
+    "coolify_token": {
+      "type": "string",
+      "title": "Coolify API Token",
+      "description": "Token from Coolify → Settings → API",
+      "sensitive": true,
+      "required": true
+    }
+  },
+  "compatibility": {
+    "runtimes": {
+      "node": ">=18"
+    }
+  }
+}
