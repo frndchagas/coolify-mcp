@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.2.1...coolify-mcp-v1.3.0) (2026-08-05)
+
+
+### Features
+
+* ask the human before destructive deletes via MCP elicitation ([656edfe](https://github.com/frndchagas/coolify-mcp/commit/656edfe339835dea3e7438cce67e8228d5ebecff))
+* ask the human before destructive deletes via MCP elicitation ([e81d702](https://github.com/frndchagas/coolify-mcp/commit/e81d7020fe95a14af2e0ba22f8221351ac0c4afb))
+
 ## [1.2.1](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.2.0...coolify-mcp-v1.2.1) (2026-08-05)
 
 
