@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.0.0...coolify-mcp-v1.1.0) (2026-08-05)
+
+
+### Features
+
+* cover databases, services, backups, storages, scheduled tasks, teams and infra endpoints ([3105785](https://github.com/frndchagas/coolify-mcp/commit/31057857397a034a2f854ada653af27f67f0504d))
+* cover databases, services, backups, storages, scheduled tasks, teams and infra endpoints ([84ac978](https://github.com/frndchagas/coolify-mcp/commit/84ac978b217b3eab99e1bb44608955ce33b073c9))
+
 ## [1.0.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v0.2.0...coolify-mcp-v1.0.0) (2026-08-05)
 
 
