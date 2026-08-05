@@ -85,6 +85,7 @@ const USED_OPERATIONS = [
 	// Environments
 	'GET /projects/{uuid}/environments',
 	'POST /projects/{uuid}/environments',
+	'GET /projects/{uuid}/{environment_name_or_uuid}',
 	// Servers
 	'GET /servers',
 	'POST /servers',
@@ -207,8 +208,9 @@ const USED_OPERATIONS = [
 	'POST /deployments/{uuid}/cancel',
 	'GET /deployments/applications/{uuid}',
 	'GET /deploy',
-	// Version
+	// Version & health
 	'GET /version',
+	'GET /health',
 ];
 
 export default defineConfig({

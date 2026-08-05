@@ -7,6 +7,7 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import { registerCoolifyTools } from './tools/coolify.js';
 import { registerDatabaseTools } from './tools/databases.js';
 import { registerDiagnosticsTools } from './tools/diagnostics.js';
+import { registerBatchTools } from './tools/batch.js';
 import { registerDocsTools } from './tools/docs.js';
 import { registerInfraTools } from './tools/infra.js';
 import { registerResourceTools } from './tools/resources.js';
@@ -39,6 +40,7 @@ registerResourceTools(server);
 registerInfraTools(server);
 registerDiagnosticsTools(server);
 registerDocsTools(server);
+registerBatchTools(server);
 
 function normalizeVersion(value: string) {
 	return value.replace(/^v/i, '');

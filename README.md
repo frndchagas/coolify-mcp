@@ -21,7 +21,7 @@ Targets the **Coolify v4.1.2** API. Types and schemas are generated directly fro
 - **Docs Search**: `searchDocs` runs full-text search across the official Coolify documentation from a bundled local index — no network needed
 - **Security**: Write protection, secret redaction
 - **Near-full API coverage**: databases (8 engines, backups, envs), services, storages, scheduled tasks, teams, previews, servers, SSH keys, and GitHub Apps
-- **Token-efficient**: 64 tools whose definitions cost ~9k tokens of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
+- **Token-efficient**: 70 tools whose definitions cost ~10k tokens (dropping to ~7k after the 2.0 schema diet) of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
 
 ## Requirements
 
@@ -183,6 +183,7 @@ With this MCP, you can deploy an application from scratch:
 |------|-------------|-------|
 | `deploy` | Trigger a deployment; `wait: true` polls to the terminal status and returns a log tail on failure | ✓ |
 | `diagnoseApp` | Diagnose an app by UUID, name, or domain: status, recent deployments, failure log tail, runtime logs, hints | |
+| `diagnoseServer` | Diagnose a server by UUID, name, or IP: resource status breakdown, domains, hints | |
 | `listDeployments` | List running deployments | |
 | `getDeployment` | Get deployment status and logs | |
 | `listAppDeployments` | List deployments for an application | |
@@ -237,12 +238,22 @@ With this MCP, you can deploy an application from scratch:
 | `getGithubAppRepositories` | List repositories accessible to a GitHub App | |
 | `getGithubAppBranches` | List branches of a repository | |
 
+### Batch Operations
+
+| Tool | Description | Write |
+|------|-------------|-------|
+| `getInfrastructureOverview` | One-call summary of servers, projects, applications (status breakdown), databases, services, and running deployments | |
+| `restartProjectApps` | Restart every application in a project or environment (asks for confirmation) | ✓ |
+| `redeployProject` | Trigger a deployment for every application in a project or environment (asks for confirmation) | ✓ |
+| `stopAllApplications` | Emergency stop of all running applications, optionally per project (asks for confirmation, stating the blast radius) | ✓ |
+
 ### Other
 
 | Tool | Description |
 |------|-------------|
 | `listResources` | List all resources with filtering |
 | `searchDocs` | Full-text search across the official Coolify docs (bundled index, no network) |
+| `getHealth` | Check that the Coolify API is up |
 
 ## Security Features
 
