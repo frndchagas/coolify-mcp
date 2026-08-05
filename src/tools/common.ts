@@ -76,6 +76,19 @@ export async function confirmDestructive(
   }
 }
 
+// The Coolify API accepts environment_name OR environment_uuid on create
+// endpoints; fail early with a clear message when neither is given.
+export function requireEnvironmentRef(
+  payload: Record<string, unknown>,
+  context: string
+): void {
+  if (!payload.environment_name && !payload.environment_uuid) {
+    throw new Error(
+      `${context}: provide environment_name or environment_uuid (one is enough).`
+    );
+  }
+}
+
 // Validate a payload against an OpenAPI-generated zod schema, surfacing
 // field-level issues in the error message.
 export function parseBody<T>(

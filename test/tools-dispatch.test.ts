@@ -68,9 +68,30 @@ describe("database tools dispatch", () => {
     expect(call.body.postgres_user).toBe("admin");
   });
 
+  it("createDatabase accepts environment_name alone but rejects neither", async () => {
+    await tools.get("createDatabase")!.handler({
+      type: "redis",
+      project_uuid: "p",
+      server_uuid: "s",
+      environment_name: "prod",
+    });
+    expect(sdkFn("createDatabaseRedis")).toHaveBeenCalledTimes(1);
+    await expect(
+      tools.get("createDatabase")!.handler({
+        type: "redis",
+        project_uuid: "p",
+        server_uuid: "s",
+      })
+    ).rejects.toThrow(/environment_name or environment_uuid/);
+  });
+
   it("createDatabase rejects payloads missing required fields with field-level context", async () => {
     await expect(
-      tools.get("createDatabase")!.handler({ type: "redis", project_uuid: "p" })
+      tools.get("createDatabase")!.handler({
+        type: "redis",
+        project_uuid: "p",
+        environment_name: "prod",
+      })
     ).rejects.toThrow(/createDatabase\(redis\).*server_uuid/s);
     expect(sdkCalls.get("createDatabaseRedis")?.mock.calls ?? []).toHaveLength(0);
   });

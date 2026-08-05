@@ -875,11 +875,11 @@ export type CreatePublicApplicationData = {
         /**
          * The environment name. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * The git repository URL.
          */
@@ -1229,11 +1229,11 @@ export type CreatePrivateGithubAppApplicationData = {
         /**
          * The environment name. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * The Github App UUID.
          */
@@ -1587,11 +1587,11 @@ export type CreatePrivateDeployKeyApplicationData = {
         /**
          * The environment name. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * The private key UUID.
          */
@@ -1945,11 +1945,11 @@ export type CreateDockerfileApplicationData = {
         /**
          * The environment name. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * The Dockerfile content.
          */
@@ -2218,11 +2218,11 @@ export type CreateDockerimageApplicationData = {
         /**
          * The environment name. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * The environment UUID. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * The docker registry image name.
          */
@@ -4496,11 +4496,11 @@ export type CreateDatabasePostgresqlData = {
         /**
          * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * PostgreSQL user
          */
@@ -4640,11 +4640,11 @@ export type CreateDatabaseClickhouseData = {
         /**
          * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * UUID of the destination if the server has multiple destinations
          */
@@ -4768,11 +4768,11 @@ export type CreateDatabaseDragonflyData = {
         /**
          * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * UUID of the destination if the server has multiple destinations
          */
@@ -4892,11 +4892,11 @@ export type CreateDatabaseRedisData = {
         /**
          * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * UUID of the destination if the server has multiple destinations
          */
@@ -5020,11 +5020,11 @@ export type CreateDatabaseKeydbData = {
         /**
          * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * UUID of the destination if the server has multiple destinations
          */
@@ -5148,11 +5148,11 @@ export type CreateDatabaseMariadbData = {
         /**
          * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * UUID of the destination if the server has multiple destinations
          */
@@ -5288,11 +5288,11 @@ export type CreateDatabaseMysqlData = {
         /**
          * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * UUID of the destination if the server has multiple destinations
          */
@@ -5428,11 +5428,11 @@ export type CreateDatabaseMongodbData = {
         /**
          * Name of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * UUID of the environment. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * UUID of the destination if the server has multiple destinations
          */
@@ -8635,11 +8635,11 @@ export type CreateServiceData = {
         /**
          * Environment name. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_name: string;
+        environment_name?: string;
         /**
          * Environment UUID. You need to provide at least one of environment_name or environment_uuid.
          */
-        environment_uuid: string;
+        environment_uuid?: string;
         /**
          * Server UUID.
          */

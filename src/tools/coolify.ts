@@ -8,6 +8,7 @@ import {
   listWithMeta,
   ok,
   parseBody,
+  requireEnvironmentRef,
   requireWrite,
   unwrap,
 } from "./common.js";
@@ -938,13 +939,19 @@ export function registerCoolifyTools(server: McpServer) {
     {
       title: "Create application",
       description:
-        "Create a new application. `type` selects the source: 'public' (public git repo), 'private-github-app' (private repo via GitHub App, needs github_app_uuid), 'private-deploy-key' (private repo via SSH deploy key, needs private_key_uuid), 'dockerfile' (raw Dockerfile content in `dockerfile`), 'dockerimage' (prebuilt image, needs docker_registry_image_name and ports_exposes). Git-based types also need git_repository, git_branch, and build_pack. All types need project_uuid, server_uuid, environment_name, and environment_uuid. Any other Coolify application field (install/build/start commands, base_directory, health checks, resource limits, ...) can be passed in `extra`; fields not valid for the chosen type are ignored.",
+        "Create a new application. `type` selects the source: 'public' (public git repo), 'private-github-app' (private repo via GitHub App, needs github_app_uuid), 'private-deploy-key' (private repo via SSH deploy key, needs private_key_uuid), 'dockerfile' (raw Dockerfile content in `dockerfile`), 'dockerimage' (prebuilt image, needs docker_registry_image_name and ports_exposes). Git-based types also need git_repository, git_branch, and build_pack. All types need project_uuid, server_uuid, and environment_name or environment_uuid (one is enough). Any other Coolify application field (install/build/start commands, base_directory, health checks, resource limits, ...) can be passed in `extra`; fields not valid for the chosen type are ignored.",
       inputSchema: {
         type: zod.enum(APPLICATION_TYPES).describe("Application source type"),
         project_uuid: zod.string(),
         server_uuid: zod.string(),
-        environment_name: zod.string(),
-        environment_uuid: zod.string(),
+        environment_name: zod
+          .string()
+          .optional()
+          .describe("Environment name (or pass environment_uuid)"),
+        environment_uuid: zod
+          .string()
+          .optional()
+          .describe("Environment UUID (or pass environment_name)"),
         name: zod.string().optional(),
         description: zod.string().optional(),
         git_repository: zod.string().optional(),
@@ -971,6 +978,7 @@ export function registerCoolifyTools(server: McpServer) {
     async ({ type, extra, ...fields }) => {
       requireWrite();
       const payload: Record<string, unknown> = { ...fields, ...(extra ?? {}) };
+      requireEnvironmentRef(payload, `createApplication(${type})`);
       const data = await createApplicationByType(type, payload);
       const uuid = isRecord(data) ? data.uuid : undefined;
       return ok(
@@ -1150,6 +1158,7 @@ export function registerCoolifyTools(server: McpServer) {
     },
     async (body) => {
       requireWrite();
+      requireEnvironmentRef(body, "createService");
       const data = await unwrap(
         sdk.createService({ body }),
         "createService"
