@@ -815,111 +815,135 @@ export function registerCoolifyTools(server: McpServer) {
   );
 
   // ============================================
-  // Application Creation Tools
+  // Application Creation
   // ============================================
 
-  server.registerTool(
-    "createPublicApplication",
-    {
-      title: "Create public git application",
-      description:
-        "Create a new application based on a public git repository. Requires project_uuid, server_uuid, environment_name (or environment_uuid), git_repository, git_branch, build_pack, and ports_exposes.",
-      inputSchema: z.zCreatePublicApplicationData.shape.body.shape,
-    },
-    async (body) => {
-      requireWrite();
-      const data = await unwrap(
-        sdk.createPublicApplication({ body }),
-        "createPublicApplication"
-      );
-      const uuid = isRecord(data) ? data.uuid : undefined;
-      return ok(
-        uuid ? `Application created with UUID: ${uuid}` : "Application created.",
-        data
-      );
+  function parseBody<T>(
+    schema: zod.ZodType<T>,
+    payload: unknown,
+    context: string
+  ): T {
+    const result = schema.safeParse(payload);
+    if (!result.success) {
+      const issues = result.error.issues
+        .map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`)
+        .join("; ");
+      throw new Error(`createApplication(${context}): ${issues}`);
     }
-  );
+    return result.data;
+  }
+
+  const APPLICATION_TYPES = [
+    "public",
+    "private-github-app",
+    "private-deploy-key",
+    "dockerfile",
+    "dockerimage",
+  ] as const;
+  type ApplicationType = (typeof APPLICATION_TYPES)[number];
+
+  async function createApplicationByType(
+    type: ApplicationType,
+    payload: Record<string, unknown>
+  ) {
+    switch (type) {
+      case "public":
+        return unwrap(
+          sdk.createPublicApplication({
+            body: parseBody(
+              z.zCreatePublicApplicationData.shape.body,
+              payload,
+              type
+            ),
+          }),
+          "createApplication"
+        );
+      case "private-github-app":
+        return unwrap(
+          sdk.createPrivateGithubAppApplication({
+            body: parseBody(
+              z.zCreatePrivateGithubAppApplicationData.shape.body,
+              payload,
+              type
+            ),
+          }),
+          "createApplication"
+        );
+      case "private-deploy-key":
+        return unwrap(
+          sdk.createPrivateDeployKeyApplication({
+            body: parseBody(
+              z.zCreatePrivateDeployKeyApplicationData.shape.body,
+              payload,
+              type
+            ),
+          }),
+          "createApplication"
+        );
+      case "dockerfile":
+        return unwrap(
+          sdk.createDockerfileApplication({
+            body: parseBody(
+              z.zCreateDockerfileApplicationData.shape.body,
+              payload,
+              type
+            ),
+          }),
+          "createApplication"
+        );
+      case "dockerimage":
+        return unwrap(
+          sdk.createDockerimageApplication({
+            body: parseBody(
+              z.zCreateDockerimageApplicationData.shape.body,
+              payload,
+              type
+            ),
+          }),
+          "createApplication"
+        );
+    }
+  }
 
   server.registerTool(
-    "createPrivateGithubAppApplication",
+    "createApplication",
     {
-      title: "Create private GitHub App application",
+      title: "Create application",
       description:
-        "Create a new application using a private GitHub App. Requires project_uuid, server_uuid, environment_name (or environment_uuid), github_app_uuid, git_repository, git_branch, build_pack, and ports_exposes.",
-      inputSchema: z.zCreatePrivateGithubAppApplicationData.shape.body.shape,
+        "Create a new application. `type` selects the source: 'public' (public git repo), 'private-github-app' (private repo via GitHub App, needs github_app_uuid), 'private-deploy-key' (private repo via SSH deploy key, needs private_key_uuid), 'dockerfile' (raw Dockerfile content in `dockerfile`), 'dockerimage' (prebuilt image, needs docker_registry_image_name and ports_exposes). Git-based types also need git_repository, git_branch, and build_pack. All types need project_uuid, server_uuid, environment_name, and environment_uuid. Any other Coolify application field (install/build/start commands, base_directory, health checks, resource limits, ...) can be passed in `extra`; fields not valid for the chosen type are ignored.",
+      inputSchema: {
+        type: zod.enum(APPLICATION_TYPES).describe("Application source type"),
+        project_uuid: zod.string(),
+        server_uuid: zod.string(),
+        environment_name: zod.string(),
+        environment_uuid: zod.string(),
+        name: zod.string().optional(),
+        description: zod.string().optional(),
+        git_repository: zod.string().optional(),
+        git_branch: zod.string().optional(),
+        build_pack: zod
+          .enum(["nixpacks", "railpack", "static", "dockerfile", "dockercompose"])
+          .optional(),
+        ports_exposes: zod.string().optional(),
+        github_app_uuid: zod.string().optional(),
+        private_key_uuid: zod.string().optional(),
+        dockerfile: zod.string().optional(),
+        docker_registry_image_name: zod.string().optional(),
+        docker_registry_image_tag: zod.string().optional(),
+        domains: zod.string().optional(),
+        instant_deploy: zod.boolean().optional(),
+        extra: zod
+          .record(zod.string(), zod.unknown())
+          .optional()
+          .describe(
+            "Additional Coolify application fields for the chosen type"
+          ),
+      },
     },
-    async (body) => {
+    async ({ type, extra, ...fields }) => {
       requireWrite();
-      const data = await unwrap(
-        sdk.createPrivateGithubAppApplication({ body }),
-        "createPrivateGithubAppApplication"
-      );
-      const uuid = isRecord(data) ? data.uuid : undefined;
-      return ok(
-        uuid ? `Application created with UUID: ${uuid}` : "Application created.",
-        data
-      );
-    }
-  );
-
-  server.registerTool(
-    "createPrivateDeployKeyApplication",
-    {
-      title: "Create private deploy key application",
-      description:
-        "Create a new application using a private SSH deploy key. Requires project_uuid, server_uuid, environment_name (or environment_uuid), private_key_uuid, git_repository, git_branch, build_pack, and ports_exposes.",
-      inputSchema: z.zCreatePrivateDeployKeyApplicationData.shape.body.shape,
-    },
-    async (body) => {
-      requireWrite();
-      const data = await unwrap(
-        sdk.createPrivateDeployKeyApplication({ body }),
-        "createPrivateDeployKeyApplication"
-      );
-      const uuid = isRecord(data) ? data.uuid : undefined;
-      return ok(
-        uuid ? `Application created with UUID: ${uuid}` : "Application created.",
-        data
-      );
-    }
-  );
-
-  server.registerTool(
-    "createDockerfileApplication",
-    {
-      title: "Create Dockerfile application",
-      description:
-        "Create a new application from a Dockerfile. Requires project_uuid, server_uuid, environment_name (or environment_uuid), and dockerfile content.",
-      inputSchema: z.zCreateDockerfileApplicationData.shape.body.shape,
-    },
-    async (body) => {
-      requireWrite();
-      const data = await unwrap(
-        sdk.createDockerfileApplication({ body }),
-        "createDockerfileApplication"
-      );
-      const uuid = isRecord(data) ? data.uuid : undefined;
-      return ok(
-        uuid ? `Application created with UUID: ${uuid}` : "Application created.",
-        data
-      );
-    }
-  );
-
-  server.registerTool(
-    "createDockerImageApplication",
-    {
-      title: "Create Docker image application",
-      description:
-        "Create a new application from a prebuilt Docker image. Requires project_uuid, server_uuid, environment_name (or environment_uuid), docker_registry_image_name, and ports_exposes.",
-      inputSchema: z.zCreateDockerimageApplicationData.shape.body.shape,
-    },
-    async (body) => {
-      requireWrite();
-      const data = await unwrap(
-        sdk.createDockerimageApplication({ body }),
-        "createDockerImageApplication"
-      );
+      const payload: Record<string, unknown> = { ...fields, ...(extra ?? {}) };
+      const data = await createApplicationByType(type, payload);
       const uuid = isRecord(data) ? data.uuid : undefined;
       return ok(
         uuid ? `Application created with UUID: ${uuid}` : "Application created.",
