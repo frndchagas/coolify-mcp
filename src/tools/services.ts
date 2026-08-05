@@ -2,7 +2,15 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z as zod } from "zod";
 import * as sdk from "../generated/sdk.gen.js";
 import * as z from "../generated/zod.gen.js";
-import { list, listWithMeta, ok, parseBody, requireWrite, unwrap } from "./common.js";
+import {
+  confirmDestructive,
+  list,
+  listWithMeta,
+  ok,
+  parseBody,
+  requireWrite,
+  unwrap,
+} from "./common.js";
 import { maskEnvVar, redactSecrets } from "./helpers.js";
 
 export function registerServiceTools(server: McpServer) {
@@ -77,6 +85,11 @@ export function registerServiceTools(server: McpServer) {
     },
     async ({ uuid, ...query }) => {
       requireWrite();
+      await confirmDestructive(
+        server,
+        `Delete service ${uuid}`,
+        "All service containers and their volumes are deleted too unless the delete_* flags were passed as false. Not recoverable."
+      );
       const data = await unwrap(
         sdk.deleteServiceByUuid({ path: { uuid }, query }),
         "deleteService"

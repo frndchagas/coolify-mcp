@@ -91,6 +91,7 @@ env = { COOLIFY_BASE_URL = "https://coolify.example.com/api/v1", COOLIFY_TOKEN =
 | `COOLIFY_TOKEN` | required | API token from Coolify Settings > API |
 | `COOLIFY_ALLOW_WRITE` | `true` | Enable write operations (create, update, delete, deploy) |
 | `COOLIFY_STRICT_VERSION` | `false` | Fail on API version mismatch |
+| `COOLIFY_MCP_ELICITATION` | `on` | Set to `off` to skip human confirmation on destructive deletes (escape hatch for clients that advertise elicitation but do not implement it) |
 | `MCP_TRANSPORT` | `stdio` | Transport: `stdio`, `http`, `both` |
 | `PORT` | `7331` | HTTP port (when using http transport) |
 
@@ -250,6 +251,10 @@ COOLIFY_ALLOW_WRITE=false
 - Environment variable values are masked by default
 - Database credentials are redacted
 - Use `showSecrets: true` only when necessary
+
+### Human Confirmation on Destructive Deletes
+
+On MCP clients that support [elicitation](https://modelcontextprotocol.io/specification/2025-06-18/changelog) (Claude Code, VS Code Copilot), deleting a project, application, database, service, server, or private key asks **you** to confirm first, stating what will be lost. Clients without elicitation behave exactly as before. A decline, cancel, or timeout aborts the call; set `COOLIFY_MCP_ELICITATION=off` to disable the prompts entirely.
 
 ## Development
 
