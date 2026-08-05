@@ -1,8 +1,14 @@
 name: MCPB Bundle
 
+# Manual rebuild of the bundle for an existing release. The automatic path
+# lives in release-please.yml (chained job), because releases created with
+# GITHUB_TOKEN never fire the `release` event for other workflows.
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. coolify-mcp-v1.4.0)"
+        required: true
 
 permissions:
   contents: write
@@ -25,7 +31,7 @@ jobs:
 
       - name: Stamp manifest version from release tag
         env:
-          TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ inputs.tag }}
         run: |
           version="${TAG#coolify-mcp-v}"
           node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));m.version=process.argv[1];fs.writeFileSync('manifest.json', JSON.stringify(m,null,2)+'\n');" "$version"
@@ -39,5 +45,5 @@ jobs:
       - name: Upload to release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ inputs.tag }}
         run: gh release upload "$TAG" coolify-mcp.mcpb --clobber
