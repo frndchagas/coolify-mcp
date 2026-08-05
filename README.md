@@ -14,11 +14,11 @@ Targets the **Coolify v4.1.2** API. Types and schemas are generated directly fro
 ## Features
 
 - **Full Deployment Workflow**: Create projects, environments, servers, and applications from scratch
-- **5 Application Types**: Public git, GitHub App, Deploy Key, Dockerfile, Docker Image — plus Docker Compose deployments via `createService` (since Coolify v4.1, compose deployments are services)
+- **5 Application Types**: one `createApplication` tool covers public git, GitHub App, Deploy Key, Dockerfile, and Docker Image sources — plus Docker Compose deployments via `createService` (since Coolify v4.1, compose deployments are services)
 - **Environment Management**: Full CRUD for environment variables with secret masking
 - **Deployment Control**: Deploy, start, stop, restart applications
 - **Security**: Write protection, secret redaction
-- **41 Tools**: generated from Coolify's OpenAPI spec
+- **Token-efficient**: 37 tools whose definitions cost ~5k tokens of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
 
 ## Requirements
 
@@ -101,7 +101,7 @@ With this MCP, you can deploy an application from scratch:
 2. listEnvironments / createEnvironment → Get or create an environment
 3. listServers / createServer         → Get or create a server
 4. listPrivateKeys / createPrivateKey → Get or create SSH keys (if needed)
-5. createPublicApplication            → Create the application
+5. createApplication (type: public)   → Create the application
 6. upsertEnv                          → Configure environment variables
 7. deploy                             → Trigger deployment
 ```
@@ -143,11 +143,7 @@ With this MCP, you can deploy an application from scratch:
 
 | Tool | Description | Write |
 |------|-------------|-------|
-| `createPublicApplication` | Create from public git repository | ✓ |
-| `createPrivateGithubAppApplication` | Create using GitHub App | ✓ |
-| `createPrivateDeployKeyApplication` | Create using SSH deploy key | ✓ |
-| `createDockerfileApplication` | Create from Dockerfile content | ✓ |
-| `createDockerImageApplication` | Create from Docker image | ✓ |
+| `createApplication` | Create an application; `type` selects the source: `public`, `private-github-app`, `private-deploy-key`, `dockerfile`, or `dockerimage`. Long-tail fields go in `extra` and are validated per type. | ✓ |
 
 > Docker Compose deployments are created with `createService` passing `docker_compose_raw` — since Coolify v4.1 they are services, not applications.
 
