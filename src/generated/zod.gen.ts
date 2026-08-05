@@ -2021,6 +2021,17 @@ export const zVersionData = z.object({
  */
 export const zVersionResponse = z.string();
 
+export const zHealthcheckData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * Healthcheck endpoint.
+ */
+export const zHealthcheckResponse = z.string();
+
 export const zListProjectsData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
@@ -2095,6 +2106,20 @@ export const zUpdateProjectByUuidResponse = z.object({
     name: z.optional(z.string()),
     description: z.optional(z.string())
 });
+
+export const zGetEnvironmentByNameOrUuidData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        environment_name_or_uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Environment details
+ */
+export const zGetEnvironmentByNameOrUuidResponse = zEnvironment;
 
 export const zGetEnvironmentsData = z.object({
     body: z.optional(z.never()),

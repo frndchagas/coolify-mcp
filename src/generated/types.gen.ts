@@ -6814,6 +6814,39 @@ export type VersionResponses = {
 
 export type VersionResponse = VersionResponses[keyof VersionResponses];
 
+export type HealthcheckData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/health';
+};
+
+export type HealthcheckErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+};
+
+export type HealthcheckError = HealthcheckErrors[keyof HealthcheckErrors];
+
+export type HealthcheckResponses = {
+    /**
+     * Healthcheck endpoint.
+     */
+    200: string;
+};
+
+export type HealthcheckResponse = HealthcheckResponses[keyof HealthcheckResponses];
+
 export type ListProjectsData = {
     body?: never;
     path?: never;
@@ -7077,6 +7110,63 @@ export type UpdateProjectByUuidResponses = {
 };
 
 export type UpdateProjectByUuidResponse = UpdateProjectByUuidResponses[keyof UpdateProjectByUuidResponses];
+
+export type GetEnvironmentByNameOrUuidData = {
+    body?: never;
+    path: {
+        /**
+         * Project UUID
+         */
+        uuid: string;
+        /**
+         * Environment name or UUID
+         */
+        environment_name_or_uuid: string;
+    };
+    query?: never;
+    url: '/projects/{uuid}/{environment_name_or_uuid}';
+};
+
+export type GetEnvironmentByNameOrUuidErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type GetEnvironmentByNameOrUuidError = GetEnvironmentByNameOrUuidErrors[keyof GetEnvironmentByNameOrUuidErrors];
+
+export type GetEnvironmentByNameOrUuidResponses = {
+    /**
+     * Environment details
+     */
+    200: Environment;
+};
+
+export type GetEnvironmentByNameOrUuidResponse = GetEnvironmentByNameOrUuidResponses[keyof GetEnvironmentByNameOrUuidResponses];
 
 export type GetEnvironmentsData = {
     body?: never;

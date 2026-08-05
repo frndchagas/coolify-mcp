@@ -14,6 +14,46 @@ function asString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
+// Match a server by uuid, name, or IP (case-insensitive, exact).
+export function matchServer(
+  servers: unknown[],
+  identifier: string
+): Record<string, unknown>[] {
+  const ident = identifier.trim().toLowerCase();
+  return servers.filter((srv): srv is Record<string, unknown> => {
+    if (!isRecord(srv)) return false;
+    return (
+      asString(srv.uuid).toLowerCase() === ident ||
+      asString(srv.name).toLowerCase() === ident ||
+      asString(srv.ip).toLowerCase() === ident
+    );
+  });
+}
+
+export function buildServerHints(input: {
+  total: number;
+  unhealthy: { name: string; status: string }[];
+}): string[] {
+  const hints: string[] = [];
+  if (input.total === 0) {
+    hints.push("No resources on this server yet.");
+  }
+  if (input.unhealthy.length > 0) {
+    hints.push(
+      `${input.unhealthy.length} resource(s) not running (${input.unhealthy
+        .slice(0, 5)
+        .map((r) => `${r.name}: ${r.status}`)
+        .join(", ")}) — inspect with diagnoseApp or getLogs, or start them.`
+    );
+  }
+  if (hints.length === 0) {
+    hints.push(
+      "All resources report a running status. If the server itself seems unreachable, run validateServer."
+    );
+  }
+  return hints;
+}
+
 // Match an application by uuid, name, or domain (case-insensitive; domains
 // match on substring so "app.example.com" finds "https://app.example.com").
 export function matchApplication(
@@ -67,6 +107,86 @@ export function buildHints(input: {
 }
 
 export function registerDiagnosticsTools(server: McpServer) {
+  server.registerTool(
+    "diagnoseServer",
+    {
+      title: "Diagnose server",
+      description:
+        "Diagnose a server by UUID, name, or IP: lists the resources running on it with a status breakdown, configured domains, and suggested next actions.",
+      inputSchema: {
+        identifier: zod.string().describe("Server UUID, name, or IP"),
+      },
+    },
+    async ({ identifier }) => {
+      const servers = await unwrap(sdk.listServers(), "diagnoseServer");
+      const matches = matchServer(
+        Array.isArray(servers) ? servers : [],
+        identifier
+      );
+      if (matches.length === 0) {
+        const known = (Array.isArray(servers) ? servers : [])
+          .filter(isRecord)
+          .map((srv) => `${asString(srv.name)} (${asString(srv.ip)})`)
+          .slice(0, 20);
+        throw new Error(
+          `diagnoseServer: no server matches "${identifier}". Known servers: ${known.join(", ") || "none"}`
+        );
+      }
+      if (matches.length > 1) {
+        return ok(
+          `Identifier "${identifier}" matches ${matches.length} servers — pick one by uuid.`,
+          {
+            candidates: matches.map((srv) =>
+              pickFields(srv, ["uuid", "name", "ip"])
+            ),
+          }
+        );
+      }
+
+      const srv = matches[0];
+      const uuid = asString(srv.uuid);
+      const [resourcesRaw, domainsRaw] = await Promise.all([
+        unwrap(
+          sdk.getResourcesByServerUuid({ path: { uuid } }),
+          "diagnoseServer"
+        ),
+        unwrap(sdk.getDomainsByServerUuid({ path: { uuid } }), "diagnoseServer"),
+      ]);
+
+      const resources = (normalizeItems(resourcesRaw) ?? [])
+        .filter(isRecord)
+        .map((r) => pickFields(r, ["uuid", "name", "type", "status"]));
+      const statusBreakdown: Record<string, number> = {};
+      const unhealthy: { name: string; status: string }[] = [];
+      for (const resource of resources) {
+        const status = asString(resource.status).split(":")[0] || "unknown";
+        statusBreakdown[status] = (statusBreakdown[status] ?? 0) + 1;
+        if (status !== "running") {
+          unhealthy.push({
+            name: asString(resource.name) || asString(resource.uuid),
+            status: asString(resource.status),
+          });
+        }
+      }
+
+      const hints = buildServerHints({ total: resources.length, unhealthy });
+      return ok(
+        `Diagnosis for server ${asString(srv.name) || uuid}: ${resources.length} resources (${Object.entries(statusBreakdown)
+          .map(([s, n]) => `${n} ${s}`)
+          .join(", ") || "none"}).`,
+        {
+          server: redactSecrets(
+            pickFields(srv, ["uuid", "name", "ip", "user", "port", "proxy_type"])
+          ),
+          resources,
+          status_breakdown: statusBreakdown,
+          domains: domainsRaw,
+          hints,
+        }
+      );
+    }
+  );
+
   server.registerTool(
     "diagnoseApp",
     {
