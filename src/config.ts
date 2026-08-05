@@ -6,6 +6,11 @@ export const COOLIFY_OPENAPI_REF = process.env.COOLIFY_OPENAPI_REF ?? COOLIFY_VE
 
 export const MCP_TRANSPORT = process.env.MCP_TRANSPORT ?? 'stdio';
 export const MCP_HTTP_PORT = Number(process.env.PORT ?? '7331');
+export const MCP_HTTP_TOKEN = process.env.MCP_HTTP_TOKEN;
+// Without a bearer token the HTTP transport only listens on loopback —
+// anyone who can reach the port controls the Coolify instance behind it.
+export const MCP_HTTP_HOST =
+	process.env.MCP_HTTP_HOST ?? (MCP_HTTP_TOKEN ? '0.0.0.0' : '127.0.0.1');
 
 export const COOLIFY_STRICT_VERSION = process.env.COOLIFY_STRICT_VERSION === 'true';
 export const COOLIFY_ALLOW_WRITE = process.env.COOLIFY_ALLOW_WRITE !== 'false';

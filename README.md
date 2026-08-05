@@ -99,6 +99,8 @@ env = { COOLIFY_BASE_URL = "https://coolify.example.com/api/v1", COOLIFY_TOKEN =
 | `COOLIFY_MCP_ELICITATION` | `on` | Set to `off` to skip human confirmation on destructive deletes (escape hatch for clients that advertise elicitation but do not implement it) |
 | `MCP_TRANSPORT` | `stdio` | Transport: `stdio`, `http`, `both` |
 | `PORT` | `7331` | HTTP port (when using http transport) |
+| `MCP_HTTP_TOKEN` | unset | Bearer token required on `/mcp` requests (HTTP transport). Setting it also switches the default bind to `0.0.0.0` |
+| `MCP_HTTP_HOST` | `127.0.0.1` (`0.0.0.0` with token) | Interface the HTTP transport binds to. Binding beyond loopback without a token logs a loud warning |
 
 ## Deploy from Zero
 
@@ -257,6 +259,10 @@ COOLIFY_ALLOW_WRITE=false
 - Environment variable values are masked by default
 - Database credentials are redacted
 - Use `showSecrets: true` only when necessary
+
+### HTTP Transport Hardening
+
+The HTTP transport binds to `127.0.0.1` by default. To expose it beyond loopback, set `MCP_HTTP_TOKEN` — every request to `/mcp` must then carry `Authorization: Bearer <token>` (checked in constant time) — and the bind switches to `0.0.0.0` (override with `MCP_HTTP_HOST`). Binding to a non-loopback host without a token logs a loud warning: anyone who can reach the port controls your Coolify instance.
 
 ### Human Confirmation on Destructive Deletes
 
