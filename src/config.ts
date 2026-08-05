@@ -9,3 +9,6 @@ export const MCP_HTTP_PORT = Number(process.env.PORT ?? '7331');
 
 export const COOLIFY_STRICT_VERSION = process.env.COOLIFY_STRICT_VERSION === 'true';
 export const COOLIFY_ALLOW_WRITE = process.env.COOLIFY_ALLOW_WRITE !== 'false';
+// Escape hatch for clients that advertise elicitation support but do not
+// actually implement it; without this, every guarded delete would fail.
+export const COOLIFY_ELICITATION = process.env.COOLIFY_MCP_ELICITATION !== 'off';

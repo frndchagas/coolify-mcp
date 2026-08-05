@@ -2,7 +2,14 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z as zod } from "zod";
 import * as sdk from "../generated/sdk.gen.js";
 import * as z from "../generated/zod.gen.js";
-import { list, ok, parseBody, requireWrite, unwrap } from "./common.js";
+import {
+  confirmDestructive,
+  list,
+  ok,
+  parseBody,
+  requireWrite,
+  unwrap,
+} from "./common.js";
 import { redactSecrets } from "./helpers.js";
 
 export function registerInfraTools(server: McpServer) {
@@ -50,6 +57,11 @@ export function registerInfraTools(server: McpServer) {
     },
     async ({ uuid }) => {
       requireWrite();
+      await confirmDestructive(
+        server,
+        `Delete server ${uuid}`,
+        "Removes the server from Coolify. Resources on it stop being managed. Not recoverable."
+      );
       const data = await unwrap(
         sdk.deleteServerByUuid({ path: { uuid } }),
         "deleteServer"
@@ -142,6 +154,11 @@ export function registerInfraTools(server: McpServer) {
     },
     async ({ uuid }) => {
       requireWrite();
+      await confirmDestructive(
+        server,
+        `Delete private key ${uuid}`,
+        "The SSH key is not recoverable from Coolify once gone; servers using it lose access."
+      );
       const data = await unwrap(
         sdk.deletePrivateKeyByUuid({ path: { uuid } }),
         "deletePrivateKey"

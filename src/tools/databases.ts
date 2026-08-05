@@ -2,7 +2,15 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z as zod } from "zod";
 import * as sdk from "../generated/sdk.gen.js";
 import * as z from "../generated/zod.gen.js";
-import { list, listWithMeta, ok, parseBody, requireWrite, unwrap } from "./common.js";
+import {
+  confirmDestructive,
+  list,
+  listWithMeta,
+  ok,
+  parseBody,
+  requireWrite,
+  unwrap,
+} from "./common.js";
 import { isRecord, maskEnvVar, redactSecrets } from "./helpers.js";
 
 const DATABASE_ENGINES = [
@@ -186,6 +194,11 @@ export function registerDatabaseTools(server: McpServer) {
     },
     async ({ uuid, ...query }) => {
       requireWrite();
+      await confirmDestructive(
+        server,
+        `Delete database ${uuid}`,
+        "Data volumes are deleted too unless delete_volumes=false was passed. Not recoverable."
+      );
       const data = await unwrap(
         sdk.deleteDatabaseByUuid({ path: { uuid }, query }),
         "deleteDatabase"

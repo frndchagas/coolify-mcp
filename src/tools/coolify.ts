@@ -2,7 +2,15 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z as zod } from "zod";
 import * as sdk from "../generated/sdk.gen.js";
 import * as z from "../generated/zod.gen.js";
-import { list, listWithMeta, ok, parseBody, requireWrite, unwrap } from "./common.js";
+import {
+  confirmDestructive,
+  list,
+  listWithMeta,
+  ok,
+  parseBody,
+  requireWrite,
+  unwrap,
+} from "./common.js";
 import {
   DATABASE_TYPE_KEYS,
   RESOURCE_STATUS_KEYS,
@@ -230,6 +238,11 @@ export function registerCoolifyTools(server: McpServer) {
     },
     async ({ uuid }) => {
       requireWrite();
+      await confirmDestructive(
+        server,
+        `Delete project ${uuid}`,
+        "This deletes the project with all its environments and resources. Not recoverable."
+      );
       const data = await unwrap(
         sdk.deleteProjectByUuid({ path: { uuid } }),
         "deleteProject"
@@ -1024,6 +1037,11 @@ export function registerCoolifyTools(server: McpServer) {
     },
     async ({ uuid, ...query }) => {
       requireWrite();
+      await confirmDestructive(
+        server,
+        `Delete application ${uuid}`,
+        "Volumes, configurations, and connected networks are deleted too unless the delete_* flags were passed as false. Not recoverable."
+      );
       const data = await unwrap(
         sdk.deleteApplicationByUuid({ path: { uuid }, query }),
         "deleteApplication"
