@@ -18,7 +18,12 @@ jobs:
       - name: Resolve pinned OpenAPI URL
         id: pinned
         run: |
-          node -e "const fs=require('fs');const text=fs.readFileSync('src/coolify/constants.ts','utf8');const m=text.match(/COOLIFY_OPENAPI_RAW_URL\\s*=\\s*`([^`]+)`/);if(!m){throw new Error('COOLIFY_OPENAPI_RAW_URL not found');}console.log('url='+m[1]);" >> $GITHUB_OUTPUT
+          version=$(grep -oE 'COOLIFY_VERSION = "[^"]+"' src/coolify/constants.ts | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ -z "$version" ]; then
+            echo "COOLIFY_VERSION not found in src/coolify/constants.ts" >&2
+            exit 1
+          fi
+          echo "url=https://raw.githubusercontent.com/coollabsio/coolify/${version}/openapi.json" >> $GITHUB_OUTPUT
 
       - name: Download specs
         run: |
@@ -36,22 +41,31 @@ jobs:
 
       - name: Prepare issue body
         if: steps.diff.outputs.changed == 'true'
+        env:
+          PINNED_URL: ${{ steps.pinned.outputs.url }}
         run: |
-          cat <<'EOF' > /tmp/openapi-drift.md
-          The Coolify OpenAPI spec on `v4.x` differs from the pinned version in this repo.
+          cat <<EOF > /tmp/openapi-drift.md
+          The Coolify OpenAPI spec on \`v4.x\` differs from the pinned version in this repo.
 
-          - Pinned: `${{ steps.pinned.outputs.url }}`
-          - Latest: `https://raw.githubusercontent.com/coollabsio/coolify/v4.x/openapi.json`
+          - Pinned: \`${PINNED_URL}\`
+          - Latest: \`https://raw.githubusercontent.com/coollabsio/coolify/v4.x/openapi.json\`
 
           Recommended action:
           1) Review the diff
-          2) Update `COOLIFY_VERSION` if appropriate
+          2) Update \`COOLIFY_VERSION\` if appropriate
           3) Regenerate types
           EOF
 
-      - name: Create issue
+      - name: Create or update issue
         if: steps.diff.outputs.changed == 'true'
-        uses: peter-evans/create-issue-from-file@v5
-        with:
-          title: "Coolify OpenAPI drift detected"
-          content-filepath: /tmp/openapi-drift.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Coolify OpenAPI drift detected"
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body-file /tmp/openapi-drift.md
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file /tmp/openapi-drift.md
+          fi
