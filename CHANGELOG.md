@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.0.0...coolify-mcp-v2.1.0) (2026-08-05)
+
+
+### Features
+
+* accept environment_name or environment_uuid on create tools ([0440c6c](https://github.com/frndchagas/coolify-mcp/commit/0440c6c49f450e788dde7f60ef0312140136233c))
+* accept environment_name or environment_uuid on create tools ([4dc964f](https://github.com/frndchagas/coolify-mcp/commit/4dc964ff946d7e056d07b8625e5761330aab33ed))
+
 ## [2.0.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v1.4.0...coolify-mcp-v2.0.0) (2026-08-05)
 
 
