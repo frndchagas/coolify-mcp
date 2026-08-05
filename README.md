@@ -21,7 +21,7 @@ Targets the **Coolify v4.1.2** API. Types and schemas are generated directly fro
 - **Docs Search**: `searchDocs` runs full-text search across the official Coolify documentation from a bundled local index — no network needed
 - **Security**: Write protection, secret redaction
 - **Near-full API coverage**: databases (8 engines, backups, envs), services, storages, scheduled tasks, teams, previews, servers, SSH keys, and GitHub Apps
-- **Token-efficient**: 70 tools whose definitions cost ~10k tokens (dropping to ~7k after the 2.0 schema diet) of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
+- **Token-efficient**: 65 tools whose definitions cost ~9k tokens of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
 
 ## Requirements
 
@@ -112,7 +112,7 @@ With this MCP, you can deploy an application from scratch:
 3. listServers / createServer         → Get or create a server
 4. listPrivateKeys / createPrivateKey → Get or create SSH keys (if needed)
 5. createApplication (type: public)   → Create the application
-6. upsertEnv                          → Configure environment variables
+6. applicationEnvs (action: upsert)   → Configure environment variables
 7. deploy                             → Trigger deployment
 ```
 
@@ -171,11 +171,9 @@ With this MCP, you can deploy an application from scratch:
 
 | Tool | Description | Write |
 |------|-------------|-------|
-| `listEnvs` | List env vars (secrets masked by default) | |
-| `createEnv` | Create a new env var | ✓ |
-| `upsertEnv` | Create or update env var by key | ✓ |
-| `updateEnv` | Update an existing env var | ✓ |
-| `deleteEnv` | Delete an env var | ✓ |
+| `applicationEnvs` | Manage application env vars: list (masked by default), create, update, upsert by key, bulk_update, delete | ✓ |
+
+> Database and service env vars have their own tools: `databaseEnvs` and `serviceEnvs`.
 
 ### Deployments
 
@@ -221,7 +219,6 @@ With this MCP, you can deploy an application from scratch:
 | `storages` | Manage persistent volumes and file mounts for applications, databases, and services | ✓ |
 | `scheduledTasks` | Manage cron tasks for applications and services, including execution history | ✓ |
 | `deletePreview` | Delete a preview deployment by pull request id | ✓ |
-| `bulkUpdateEnvs` | Apply a list of env vars to an application in one call | ✓ |
 
 ### Teams, Servers & Git
 

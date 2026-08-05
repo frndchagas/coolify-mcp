@@ -277,38 +277,4 @@ export function registerResourceTools(server: McpServer) {
     }
   );
 
-  server.registerTool(
-    "bulkUpdateEnvs",
-    {
-      title: "Bulk update application env vars",
-      description:
-        "Apply a list of environment variables to an application in one call.",
-      inputSchema: {
-        uuid: zod.string().describe("Application UUID"),
-        envs: zod
-          .array(
-            zod.object({
-              key: zod.string(),
-              value: zod.string(),
-              is_preview: zod.boolean().optional(),
-              is_literal: zod.boolean().optional(),
-            })
-          )
-          .min(1),
-      },
-    },
-    async ({ uuid, envs }) => {
-      requireWrite();
-      const body = parseBody(
-        z.zUpdateEnvsByApplicationUuidData.shape.body,
-        { data: envs },
-        "bulkUpdateEnvs"
-      );
-      const data = await unwrap(
-        sdk.updateEnvsByApplicationUuid({ path: { uuid }, body }),
-        "bulkUpdateEnvs"
-      );
-      return ok(`${envs.length} env vars applied to application ${uuid}.`, data);
-    }
-  );
 }
