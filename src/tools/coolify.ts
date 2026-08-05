@@ -1,14 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z as zod } from "zod";
-import { COOLIFY_ALLOW_WRITE } from "../config.js";
 import * as sdk from "../generated/sdk.gen.js";
 import * as z from "../generated/zod.gen.js";
+import { list, listWithMeta, ok, parseBody, requireWrite, unwrap } from "./common.js";
 import {
   DATABASE_TYPE_KEYS,
   RESOURCE_STATUS_KEYS,
   RESOURCE_TYPE_KEYS,
-  extractErrorMessage,
-  isHtmlResponse,
   isRecord,
   maskEnvVar,
   matchesAnyField,
@@ -20,47 +18,7 @@ import {
   summarizeApplication,
   summarizeDatabase,
   summarizeResource,
-  toRecord,
 } from "./helpers.js";
-
-async function unwrap<T>(
-  promise: Promise<{ data?: T; error?: unknown }>,
-  context?: string
-): Promise<T> {
-  const result = await promise;
-  if (result.error) {
-    const msg = extractErrorMessage(result.error);
-    const prefix = context ? `${context}: ` : "";
-    throw new Error(`${prefix}${msg}`);
-  }
-  if (isHtmlResponse(result.data)) {
-    const prefix = context ? `${context}: ` : "";
-    throw new Error(
-      `${prefix}Authentication failed. API returned HTML instead of JSON. Please check COOLIFY_TOKEN and COOLIFY_BASE_URL.`
-    );
-  }
-  return result.data as T;
-}
-
-const ok = (text: string, data: unknown) => ({
-  content: [{ type: "text" as const, text }],
-  structuredContent: toRecord(data),
-});
-
-const list = (text: string, items: unknown) => ok(text, { items });
-const listWithMeta = (
-  text: string,
-  items: unknown,
-  meta?: Record<string, unknown>
-) => ok(text, meta ? { items, meta } : { items });
-
-function requireWrite() {
-  if (!COOLIFY_ALLOW_WRITE) {
-    throw new Error(
-      "Write operations are disabled (COOLIFY_ALLOW_WRITE=false)."
-    );
-  }
-}
 
 export function registerCoolifyTools(server: McpServer) {
   server.registerTool(
@@ -818,21 +776,6 @@ export function registerCoolifyTools(server: McpServer) {
   // Application Creation
   // ============================================
 
-  function parseBody<T>(
-    schema: zod.ZodType<T>,
-    payload: unknown,
-    context: string
-  ): T {
-    const result = schema.safeParse(payload);
-    if (!result.success) {
-      const issues = result.error.issues
-        .map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`)
-        .join("; ");
-      throw new Error(`createApplication(${context}): ${issues}`);
-    }
-    return result.data;
-  }
-
   const APPLICATION_TYPES = [
     "public",
     "private-github-app",
@@ -853,7 +796,7 @@ export function registerCoolifyTools(server: McpServer) {
             body: parseBody(
               z.zCreatePublicApplicationData.shape.body,
               payload,
-              type
+              `createApplication(${type})`
             ),
           }),
           "createApplication"
@@ -864,7 +807,7 @@ export function registerCoolifyTools(server: McpServer) {
             body: parseBody(
               z.zCreatePrivateGithubAppApplicationData.shape.body,
               payload,
-              type
+              `createApplication(${type})`
             ),
           }),
           "createApplication"
@@ -875,7 +818,7 @@ export function registerCoolifyTools(server: McpServer) {
             body: parseBody(
               z.zCreatePrivateDeployKeyApplicationData.shape.body,
               payload,
-              type
+              `createApplication(${type})`
             ),
           }),
           "createApplication"
@@ -886,7 +829,7 @@ export function registerCoolifyTools(server: McpServer) {
             body: parseBody(
               z.zCreateDockerfileApplicationData.shape.body,
               payload,
-              type
+              `createApplication(${type})`
             ),
           }),
           "createApplication"
@@ -897,7 +840,7 @@ export function registerCoolifyTools(server: McpServer) {
             body: parseBody(
               z.zCreateDockerimageApplicationData.shape.body,
               payload,
-              type
+              `createApplication(${type})`
             ),
           }),
           "createApplication"
