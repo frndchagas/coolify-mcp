@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.1](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.1.0...coolify-mcp-v2.1.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* unwrap Coolify's {count, deployments} list envelope ([d53c338](https://github.com/frndchagas/coolify-mcp/commit/d53c338a028a8df780f709fba07e7e4e27a6894b))
+* unwrap Coolify's {count, deployments} list envelope ([287eeee](https://github.com/frndchagas/coolify-mcp/commit/287eeeeff62e8a8873400e4b4f592a5ba5090745))
+
 ## [2.1.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.0.0...coolify-mcp-v2.1.0) (2026-08-05)
 
 
