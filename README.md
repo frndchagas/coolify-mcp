@@ -6,6 +6,7 @@
 [![node version](https://img.shields.io/node/v/@fndchagas/coolify-mcp.svg)](package.json)
 [![typescript](https://img.shields.io/badge/TypeScript-5.9.3-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![CI](https://github.com/frndchagas/coolify-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/frndchagas/coolify-mcp/actions/workflows/ci.yml)
+[![Glama score](https://glama.ai/mcp/servers/frndchagas/coolify-mcp/badges/score.svg)](https://glama.ai/mcp/servers/frndchagas/coolify-mcp)
 
 MCP server for Coolify API - enables full deployment workflows from zero to production.
 
