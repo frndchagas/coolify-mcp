@@ -90,12 +90,16 @@ export function buildHints(input: {
       "A deployment is currently running — follow it with getDeployment or deploy({ uuid, wait: true }) next time."
     );
   }
-  if (status.includes("exited") || status.includes("stopped")) {
+  // Coolify statuses combine state and health ("exited:unhealthy",
+  // "running:healthy"), so check the state first and only mention health
+  // when the container is actually up — otherwise both hints fire and
+  // contradict each other.
+  const state = status.split(":")[0];
+  if (state.includes("exited") || state.includes("stopped")) {
     hints.push(
       "The application container is not running — startApplication({ uuid }) or check the runtime log tail for the crash reason."
     );
-  }
-  if (status.includes("unhealthy") || status.includes("degraded")) {
+  } else if (status.includes("unhealthy") || status.includes("degraded")) {
     hints.push(
       "The application is running but unhealthy — inspect the runtime logs and health check configuration."
     );
