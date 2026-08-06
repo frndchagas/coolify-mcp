@@ -73,11 +73,24 @@ export function parseMaybeJson(value: unknown): unknown {
   }
 }
 
+// Coolify wraps some list responses in an envelope even where the OpenAPI
+// spec declares a bare array — e.g. GET /deployments/applications/{uuid}
+// returns {count, deployments: [...]}. Unwrap known envelope keys first,
+// then fall back to any envelope with exactly one array-valued property.
+const ENVELOPE_ARRAY_KEYS = ["items", "deployments", "data", "resources"];
+
 export function normalizeItems(value: unknown): unknown[] | null {
   const parsed = parseMaybeJson(value);
   if (Array.isArray(parsed)) return parsed;
-  if (isRecord(parsed) && Array.isArray(parsed.items)) return parsed.items;
-  return null;
+  if (!isRecord(parsed)) return null;
+  for (const key of ENVELOPE_ARRAY_KEYS) {
+    const candidate = parsed[key];
+    if (Array.isArray(candidate)) return candidate;
+  }
+  const arrayValues = Object.values(parsed).filter((v): v is unknown[] =>
+    Array.isArray(v)
+  );
+  return arrayValues.length === 1 ? arrayValues[0] : null;
 }
 
 function normalizeString(value: string): string {

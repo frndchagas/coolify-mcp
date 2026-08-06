@@ -185,8 +185,28 @@ describe("parseMaybeJson / normalizeItems", () => {
     expect(normalizeItems({ items: [1] })).toEqual([1]);
     expect(normalizeItems("[1,2]")).toEqual([1, 2]);
     expect(normalizeItems('{"items":[3]}')).toEqual([3]);
-    expect(normalizeItems({ data: [] })).toBeNull();
     expect(normalizeItems("plain")).toBeNull();
+  });
+
+  it("unwraps Coolify's {count, deployments} envelope", () => {
+    // Real shape of GET /deployments/applications/{uuid}, which the spec
+    // wrongly declares as a bare array.
+    const real = {
+      count: 45,
+      deployments: [
+        { id: 11555, status: "finished" },
+        { id: 11553, status: "failed" },
+      ],
+    };
+    expect(normalizeItems(real)).toHaveLength(2);
+    expect((normalizeItems(real) as { id: number }[])[0].id).toBe(11555);
+  });
+
+  it("unwraps other single-array envelopes and stays null when ambiguous", () => {
+    expect(normalizeItems({ data: [7] })).toEqual([7]);
+    expect(normalizeItems({ total: 1, records: ["a"] })).toEqual(["a"]);
+    expect(normalizeItems({ a: [1], b: [2] })).toBeNull();
+    expect(normalizeItems({ total: 0 })).toBeNull();
   });
 });
 
