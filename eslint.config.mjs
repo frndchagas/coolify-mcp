@@ -3,7 +3,16 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["dist/", "src/generated/", "node_modules/", "scripts/", "*.mjs"],
+    // Generated output, build tooling, and the demo harness are plain Node
+    // scripts, not part of the linted TypeScript sources.
+    ignores: [
+      "dist/",
+      "src/generated/",
+      "node_modules/",
+      "scripts/",
+      "demo/",
+      "**/*.mjs",
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
