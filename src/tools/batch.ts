@@ -90,6 +90,7 @@ export function registerBatchTools(server: McpServer) {
     "getInfrastructureOverview",
     {
       title: "Infrastructure overview",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description:
         "One-call summary of the whole Coolify estate: servers, projects, applications (with status breakdown), databases, services, and currently running deployments.",
       inputSchema: {},
@@ -141,6 +142,7 @@ export function registerBatchTools(server: McpServer) {
     "getHealth",
     {
       title: "Coolify health check",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "Check that the Coolify API is up (GET /health).",
       inputSchema: {},
     },
@@ -154,6 +156,7 @@ export function registerBatchTools(server: McpServer) {
     "restartProjectApps",
     {
       title: "Restart all project applications",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description:
         "Restart every application in a project (optionally a single environment). Asks for confirmation on clients that support elicitation.",
       inputSchema: {
@@ -207,6 +210,7 @@ export function registerBatchTools(server: McpServer) {
     "redeployProject",
     {
       title: "Redeploy all project applications",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description:
         "Trigger a deployment for every application in a project (optionally a single environment). Asks for confirmation on clients that support elicitation.",
       inputSchema: {
@@ -242,6 +246,7 @@ export function registerBatchTools(server: McpServer) {
     "stopAllApplications",
     {
       title: "Emergency stop applications",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description:
         "Stop every running application, optionally restricted to one project. Asks for confirmation on clients that support elicitation, stating the blast radius.",
       inputSchema: {

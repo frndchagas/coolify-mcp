@@ -17,6 +17,7 @@ export function registerInfraTools(server: McpServer) {
     "updateServer",
     {
       title: "Update server",
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
       description:
         "Update a server by UUID. Common fields are exposed; any other Coolify server field can go in `extra`.",
       inputSchema: {
@@ -52,6 +53,7 @@ export function registerInfraTools(server: McpServer) {
     "deleteServer",
     {
       title: "Delete server",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description: "Delete a server by UUID.",
       inputSchema: { uuid: zod.string() },
     },
@@ -74,6 +76,7 @@ export function registerInfraTools(server: McpServer) {
     "getServerResources",
     {
       title: "Get server resources",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description:
         "List all resources (applications, databases, services) running on a server.",
       inputSchema: { uuid: zod.string() },
@@ -91,6 +94,7 @@ export function registerInfraTools(server: McpServer) {
     "getServerDomains",
     {
       title: "Get server domains",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List all domains configured on a server.",
       inputSchema: { uuid: zod.string() },
     },
@@ -107,6 +111,7 @@ export function registerInfraTools(server: McpServer) {
     "getPrivateKey",
     {
       title: "Get private key",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description:
         "Get an SSH private key's metadata by UUID. The key material is masked unless showSecrets is true.",
       inputSchema: {
@@ -133,6 +138,7 @@ export function registerInfraTools(server: McpServer) {
     "updatePrivateKey",
     {
       title: "Update private key",
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
       description:
         "Update an SSH private key. The Coolify API identifies the key by its private_key content (required); name and description are optional.",
       inputSchema: z.zUpdatePrivateKeyData.shape.body.shape,
@@ -148,6 +154,7 @@ export function registerInfraTools(server: McpServer) {
     "deletePrivateKey",
     {
       title: "Delete private key",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description:
         "Delete an SSH private key by UUID. Not recoverable from Coolify once gone.",
       inputSchema: { uuid: zod.string() },
@@ -171,6 +178,7 @@ export function registerInfraTools(server: McpServer) {
     "getGithubAppRepositories",
     {
       title: "List GitHub App repositories",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List repositories accessible to a GitHub App.",
       inputSchema: { github_app_id: zod.number().int() },
     },
@@ -187,6 +195,7 @@ export function registerInfraTools(server: McpServer) {
     "getGithubAppBranches",
     {
       title: "List repository branches",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List branches of a repository accessible to a GitHub App.",
       inputSchema: {
         github_app_id: zod.number().int(),

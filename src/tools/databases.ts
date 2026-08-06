@@ -116,6 +116,7 @@ export function registerDatabaseTools(server: McpServer) {
     "createDatabase",
     {
       title: "Create database",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description:
         "Create a database. `type` selects the engine: postgresql, mysql, mariadb, mongodb, redis, keydb, dragonfly, or clickhouse. Requires project_uuid, server_uuid, and environment_name or environment_uuid (one is enough). Engine-specific fields (versions, credentials, memory limits, ...) can be passed in `extra` and are validated per engine.",
       inputSchema: {
@@ -159,6 +160,7 @@ export function registerDatabaseTools(server: McpServer) {
     "updateDatabase",
     {
       title: "Update database",
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
       description:
         "Update a database's configuration by UUID. Common fields are exposed; any other Coolify database field can go in `extra`.",
       inputSchema: {
@@ -193,6 +195,7 @@ export function registerDatabaseTools(server: McpServer) {
     "deleteDatabase",
     {
       title: "Delete database",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description:
         "Delete a database by UUID. By default Coolify also deletes configurations, volumes, and connected networks and runs docker cleanup; pass the flags as false to keep them.",
       inputSchema: {
@@ -219,6 +222,7 @@ export function registerDatabaseTools(server: McpServer) {
     "controlDatabase",
     {
       title: "Start/stop/restart database",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description: "Start, stop, or restart a database by UUID.",
       inputSchema: {
         uuid: zod.string(),
@@ -244,6 +248,7 @@ export function registerDatabaseTools(server: McpServer) {
     "databaseBackups",
     {
       title: "Manage database backups",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description:
         "Manage scheduled backups for a database. Actions: list, create, update, delete (backup schedules), list_executions, delete_execution. create/update take frequency (cron expression) plus optional fields (enabled, save_s3, s3_storage_uuid, databases_to_backup, dump_all, retention settings via extra).",
       inputSchema: {
@@ -385,6 +390,7 @@ export function registerDatabaseTools(server: McpServer) {
     "databaseEnvs",
     {
       title: "Manage database env vars",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description:
         "Manage environment variables for a database. Actions: list (secrets masked unless showSecrets), create, update, bulk_update (pass envs array), delete (needs env_uuid).",
       inputSchema: {

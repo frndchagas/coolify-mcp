@@ -19,7 +19,7 @@ Targets the **Coolify v4.1.2** API. Types and schemas are generated directly fro
 - **Deployment Control**: Deploy (optionally waiting for the terminal status, with a log tail on failure), start, stop, restart applications
 - **Diagnostics**: `diagnoseApp` finds an app by UUID, name, or domain and aggregates status, recent deployments, failure log tails, runtime logs, and suggested next actions
 - **Docs Search**: `searchDocs` runs full-text search across the official Coolify documentation from a bundled local index — no network needed
-- **Security**: Write protection, secret redaction
+- **Security**: Write protection, secret redaction, and MCP annotations (`readOnlyHint`/`destructiveHint`) so clients can auto-approve reads and gate destructive calls
 - **Near-full API coverage**: databases (8 engines, backups, envs), services, storages, scheduled tasks, teams, previews, servers, SSH keys, and GitHub Apps
 - **Token-efficient**: 65 tools whose definitions cost ~9k tokens of context, with strict runtime validation against schemas generated from Coolify's OpenAPI spec
 

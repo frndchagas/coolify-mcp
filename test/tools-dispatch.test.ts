@@ -24,7 +24,16 @@ import { registerServiceTools } from "../src/tools/services.js";
 type Handler = (args: Record<string, unknown>, extra?: unknown) => Promise<unknown>;
 
 interface CollectedTool {
-  config: { description?: string; inputSchema?: Record<string, unknown> };
+  config: {
+    description?: string;
+    inputSchema?: Record<string, unknown>;
+    annotations?: {
+      readOnlyHint?: boolean;
+      destructiveHint?: boolean;
+      idempotentHint?: boolean;
+      openWorldHint?: boolean;
+    };
+  };
   handler: Handler;
 }
 
@@ -261,6 +270,28 @@ describe("tool catalog smoke test", () => {
     for (const [name, tool] of all) {
       expect(tool.config.description, `${name} needs a description`).toBeTruthy();
       expect(tool.config.inputSchema, `${name} needs an inputSchema`).toBeTruthy();
+    }
+  });
+
+  it("every tool declares coherent MCP annotations", () => {
+    for (const register of [
+      registerDatabaseTools,
+      registerServiceTools,
+      registerResourceTools,
+      registerInfraTools,
+    ]) {
+      for (const [name, tool] of collectTools(register)) {
+        const annotations = tool.config.annotations;
+        expect(annotations, `${name} needs annotations`).toBeTruthy();
+        expect(
+          annotations?.openWorldHint,
+          `${name} talks to the Coolify API, so openWorldHint should be true`
+        ).toBe(true);
+        expect(
+          annotations?.readOnlyHint && annotations?.destructiveHint,
+          `${name} cannot be both read-only and destructive`
+        ).toBeFalsy();
+      }
     }
   });
 });
