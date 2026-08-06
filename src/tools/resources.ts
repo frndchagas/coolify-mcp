@@ -9,6 +9,7 @@ export function registerResourceTools(server: McpServer) {
     "storages",
     {
       title: "Manage persistent/file storages",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description:
         "Manage persistent volumes and file mounts for an application, database, or service. Actions: list, create, update, delete. create needs storage type ('persistent' or 'file') and mount_path; update targets storage_uuid; delete needs storage_uuid.",
       inputSchema: {
@@ -111,6 +112,7 @@ export function registerResourceTools(server: McpServer) {
     "scheduledTasks",
     {
       title: "Manage scheduled tasks",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description:
         "Manage scheduled tasks (cron jobs) for an application or service. Actions: list, create (name, command, frequency), update, delete, list_executions (all but list/create need task_uuid).",
       inputSchema: {
@@ -212,6 +214,7 @@ export function registerResourceTools(server: McpServer) {
     "teams",
     {
       title: "Teams",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description:
         "Read Coolify teams. Actions: list, current, current_members, get (needs id), members (needs id).",
       inputSchema: {
@@ -258,6 +261,7 @@ export function registerResourceTools(server: McpServer) {
     "deletePreview",
     {
       title: "Delete preview deployment",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description:
         "Delete a preview deployment of an application by pull request id.",
       inputSchema: {

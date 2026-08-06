@@ -95,6 +95,7 @@ export function registerDocsTools(server: McpServer) {
     "searchDocs",
     {
       title: "Search Coolify docs",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description:
         "Full-text search across the official Coolify documentation using a local index bundled with this server (no network). Returns page titles, canonical coolify.io/docs URLs, and snippets.",
       inputSchema: {

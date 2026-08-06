@@ -17,6 +17,7 @@ export function registerServiceTools(server: McpServer) {
     "getService",
     {
       title: "Get service",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description:
         "Get service details by UUID (secrets masked by default; pass showSecrets to reveal).",
       inputSchema: {
@@ -43,6 +44,7 @@ export function registerServiceTools(server: McpServer) {
     "updateService",
     {
       title: "Update service",
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
       description:
         "Update a service by UUID. Common fields are exposed; any other Coolify service field (docker_compose_raw, connect_to_docker_network, ...) can go in `extra`.",
       inputSchema: {
@@ -75,6 +77,7 @@ export function registerServiceTools(server: McpServer) {
     "deleteService",
     {
       title: "Delete service",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description:
         "Delete a service by UUID. By default Coolify also deletes configurations, volumes, and connected networks and runs docker cleanup; pass the flags as false to keep them.",
       inputSchema: {
@@ -101,6 +104,7 @@ export function registerServiceTools(server: McpServer) {
     "controlService",
     {
       title: "Start/stop/restart service",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description: "Start, stop, or restart a service by UUID.",
       inputSchema: {
         uuid: zod.string(),
@@ -126,6 +130,7 @@ export function registerServiceTools(server: McpServer) {
     "serviceEnvs",
     {
       title: "Manage service env vars",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description:
         "Manage environment variables for a service. Actions: list (secrets masked unless showSecrets), create, update, bulk_update (pass envs array), delete (needs env_uuid).",
       inputSchema: {

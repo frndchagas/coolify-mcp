@@ -111,6 +111,7 @@ export function registerDiagnosticsTools(server: McpServer) {
     "diagnoseServer",
     {
       title: "Diagnose server",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description:
         "Diagnose a server by UUID, name, or IP: lists the resources running on it with a status breakdown, configured domains, and suggested next actions.",
       inputSchema: {
@@ -191,6 +192,7 @@ export function registerDiagnosticsTools(server: McpServer) {
     "diagnoseApp",
     {
       title: "Diagnose application",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description:
         "Diagnose an application by UUID, name, or domain. Aggregates current status, the latest deployments, a log tail from the most recent failed deployment, recent runtime logs, and suggested next actions in one call.",
       inputSchema: {

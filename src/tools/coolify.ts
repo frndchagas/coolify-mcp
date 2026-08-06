@@ -36,6 +36,7 @@ export function registerCoolifyTools(server: McpServer) {
     "listResources",
     {
       title: "List resources",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description:
         "List Coolify resources with optional pagination, summary, and filters.",
       inputSchema: zod.object({
@@ -78,6 +79,7 @@ export function registerCoolifyTools(server: McpServer) {
     "listProjects",
     {
       title: "List projects",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List all Coolify projects. Returns project UUID, name, description, and environments.",
       inputSchema: zod.object({
         limit: zod.number().int().min(1).optional(),
@@ -101,6 +103,7 @@ export function registerCoolifyTools(server: McpServer) {
     "createProject",
     {
       title: "Create project",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description: "Create a new Coolify project. Returns the project UUID.",
       inputSchema: z.zCreateProjectData.shape.body.shape,
     },
@@ -122,6 +125,7 @@ export function registerCoolifyTools(server: McpServer) {
     "listServers",
     {
       title: "List servers",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List all Coolify servers. Returns server UUID, name, IP, user, port, and proxy type.",
       inputSchema: zod.object({
         limit: zod.number().int().min(1).optional(),
@@ -153,6 +157,7 @@ export function registerCoolifyTools(server: McpServer) {
     "getServer",
     {
       title: "Get server",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "Get server details by UUID.",
       inputSchema: z.zGetServerByUuidData.shape.path.shape,
     },
@@ -169,6 +174,7 @@ export function registerCoolifyTools(server: McpServer) {
     "listEnvironments",
     {
       title: "List environments",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List all environments for a project. Requires the project UUID.",
       inputSchema: z.zGetEnvironmentsData.shape.path.shape,
     },
@@ -188,6 +194,7 @@ export function registerCoolifyTools(server: McpServer) {
     "createEnvironment",
     {
       title: "Create environment",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description: "Create a new environment in a project. Requires the project UUID.",
       inputSchema: {
         ...z.zCreateEnvironmentData.shape.path.shape,
@@ -214,6 +221,7 @@ export function registerCoolifyTools(server: McpServer) {
     "updateProject",
     {
       title: "Update project",
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
       description: "Update a project's name or description.",
       inputSchema: {
         ...z.zUpdateProjectByUuidData.shape.path.shape,
@@ -234,6 +242,7 @@ export function registerCoolifyTools(server: McpServer) {
     "deleteProject",
     {
       title: "Delete project",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description: "Delete a project by UUID. This will delete all environments and resources in the project.",
       inputSchema: z.zDeleteProjectByUuidData.shape.path.shape,
     },
@@ -256,6 +265,7 @@ export function registerCoolifyTools(server: McpServer) {
     "createServer",
     {
       title: "Create server",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description: "Create a new server. Requires a private key UUID for SSH access.",
       inputSchema: z.zCreateServerData.shape.body.shape,
     },
@@ -277,6 +287,7 @@ export function registerCoolifyTools(server: McpServer) {
     "validateServer",
     {
       title: "Validate server",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "Validate server connection and configuration by UUID.",
       inputSchema: z.zValidateServerByUuidData.shape.path.shape,
     },
@@ -297,6 +308,7 @@ export function registerCoolifyTools(server: McpServer) {
     "listPrivateKeys",
     {
       title: "List private keys",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List all SSH private keys. Keys are used for server authentication and deploy keys.",
       inputSchema: zod.object({
         limit: zod.number().int().min(1).optional(),
@@ -324,6 +336,7 @@ export function registerCoolifyTools(server: McpServer) {
     "createPrivateKey",
     {
       title: "Create private key",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description: "Create a new SSH private key. The private_key field should contain the full PEM-encoded key.",
       inputSchema: z.zCreatePrivateKeyData.shape.body.shape,
     },
@@ -349,6 +362,7 @@ export function registerCoolifyTools(server: McpServer) {
     "listGithubApps",
     {
       title: "List GitHub Apps",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List all configured GitHub Apps. Used for private repository access.",
       inputSchema: zod.object({
         limit: zod.number().int().min(1).optional(),
@@ -376,6 +390,7 @@ export function registerCoolifyTools(server: McpServer) {
     "listApplications",
     {
       title: "List applications",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List all Coolify applications.",
       inputSchema: zod.object({
         limit: zod.number().int().min(1).optional(),
@@ -410,6 +425,7 @@ export function registerCoolifyTools(server: McpServer) {
     "listDatabases",
     {
       title: "List databases",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List databases with optional pagination and filters.",
       inputSchema: zod.object({
         limit: zod.number().int().min(1).optional(),
@@ -450,6 +466,7 @@ export function registerCoolifyTools(server: McpServer) {
     "listDeployments",
     {
       title: "List deployments",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List currently running deployments.",
       inputSchema: zod.object({
         limit: zod.number().int().min(1).optional(),
@@ -476,6 +493,7 @@ export function registerCoolifyTools(server: McpServer) {
     "listAppDeployments",
     {
       title: "List app deployments",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description:
         "List deployments for an application with pagination (skip/take).",
       inputSchema: {
@@ -497,6 +515,7 @@ export function registerCoolifyTools(server: McpServer) {
     "getApplication",
     {
       title: "Get application",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "Get application details by UUID (optional field selection).",
       inputSchema: z.zGetApplicationByUuidData.shape.path.extend({
         fields: zod.array(zod.string().min(1)).min(1).optional(),
@@ -530,6 +549,7 @@ export function registerCoolifyTools(server: McpServer) {
     "getDatabase",
     {
       title: "Get database",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "Get database details by UUID.",
       inputSchema: z.zGetDatabaseByUuidData.shape.path.extend({
         showSecrets: zod.boolean().optional(),
@@ -554,6 +574,7 @@ export function registerCoolifyTools(server: McpServer) {
     "getDeployment",
     {
       title: "Get deployment",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "Get deployment status and logs by UUID.",
       inputSchema: z.zGetDeploymentByUuidData.shape.path.shape,
     },
@@ -570,6 +591,7 @@ export function registerCoolifyTools(server: McpServer) {
     "getLogs",
     {
       title: "Get logs",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "Fetch runtime logs for an application.",
       inputSchema: {
         ...z.zGetApplicationLogsByUuidData.shape.path.shape,
@@ -589,6 +611,7 @@ export function registerCoolifyTools(server: McpServer) {
     "applicationEnvs",
     {
       title: "Manage application env vars",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description:
         "Manage environment variables for an application. Actions: list (secrets masked unless showSecrets), create, update, upsert (create or update by key), bulk_update (pass envs array), delete (needs env_uuid).",
       inputSchema: {
@@ -739,6 +762,7 @@ export function registerCoolifyTools(server: McpServer) {
     "deploy",
     {
       title: "Trigger deploy",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description:
         "Trigger a deployment for an application by UUID or tag. With wait=true, polls until every triggered deployment reaches a terminal status (finished/failed/cancelled) and returns a log tail for failures — raise your MCP client's tool timeout when waiting on long builds.",
       inputSchema: {
@@ -846,6 +870,7 @@ export function registerCoolifyTools(server: McpServer) {
     "cancelDeployment",
     {
       title: "Cancel deployment",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description: "Cancel a running deployment by UUID.",
       inputSchema: z.zCancelDeploymentByUuidData.shape.path.shape,
     },
@@ -938,6 +963,7 @@ export function registerCoolifyTools(server: McpServer) {
     "createApplication",
     {
       title: "Create application",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description:
         "Create a new application. `type` selects the source: 'public' (public git repo), 'private-github-app' (private repo via GitHub App, needs github_app_uuid), 'private-deploy-key' (private repo via SSH deploy key, needs private_key_uuid), 'dockerfile' (raw Dockerfile content in `dockerfile`), 'dockerimage' (prebuilt image, needs docker_registry_image_name and ports_exposes). Git-based types also need git_repository, git_branch, and build_pack. All types need project_uuid, server_uuid, and environment_name or environment_uuid (one is enough). Any other Coolify application field (install/build/start commands, base_directory, health checks, resource limits, ...) can be passed in `extra`; fields not valid for the chosen type are ignored.",
       inputSchema: {
@@ -996,6 +1022,7 @@ export function registerCoolifyTools(server: McpServer) {
     "updateApplication",
     {
       title: "Update application",
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
       description:
         "Update an application's configuration by UUID. Common fields are exposed; any other Coolify application field (install/build/start commands, health checks, resource limits, static flags, ...) can go in `extra` and is validated against the OpenAPI schema.",
       inputSchema: {
@@ -1037,6 +1064,7 @@ export function registerCoolifyTools(server: McpServer) {
     "deleteApplication",
     {
       title: "Delete application",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description: "Delete an application by UUID. Optionally delete volumes, configurations, and connected networks.",
       inputSchema: {
         ...z.zDeleteApplicationByUuidData.shape.path.shape,
@@ -1062,6 +1090,7 @@ export function registerCoolifyTools(server: McpServer) {
     "startApplication",
     {
       title: "Start application",
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
       description: "Start an application by UUID. Optionally force rebuild.",
       inputSchema: {
         ...z.zStartApplicationByUuidData.shape.path.shape,
@@ -1082,6 +1111,7 @@ export function registerCoolifyTools(server: McpServer) {
     "stopApplication",
     {
       title: "Stop application",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description: "Stop an application by UUID.",
       inputSchema: z.zStopApplicationByUuidData.shape.path.shape,
     },
@@ -1099,6 +1129,7 @@ export function registerCoolifyTools(server: McpServer) {
     "restartApplication",
     {
       title: "Restart application",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       description: "Restart an application by UUID.",
       inputSchema: z.zRestartApplicationByUuidData.shape.path.shape,
     },
@@ -1120,6 +1151,7 @@ export function registerCoolifyTools(server: McpServer) {
     "listServices",
     {
       title: "List services",
+      annotations: { readOnlyHint: true, openWorldHint: true },
       description: "List all Coolify services (one-click apps like databases, caches, etc.).",
       inputSchema: zod.object({
         limit: zod.number().int().min(1).optional(),
@@ -1152,6 +1184,7 @@ export function registerCoolifyTools(server: McpServer) {
     "createService",
     {
       title: "Create service",
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       description:
         "Create a one-click service (database, cache, etc.) or a Docker Compose deployment (pass docker_compose_raw with the YAML content). Requires project_uuid, server_uuid, and environment_name (or environment_uuid). Since Coolify v4.1, Docker Compose deployments are services, not applications.",
       inputSchema: z.zCreateServiceData.shape.body.shape,
