@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.1.1...coolify-mcp-v2.2.0) (2026-08-06)
+
+
+### Features
+
+* declare MCP annotations on every tool and add glama.json ([ead911e](https://github.com/frndchagas/coolify-mcp/commit/ead911e26419f02e3f06293d85a8c9ef2061c422))
+* declare MCP annotations on every tool and add glama.json ([80aa1ed](https://github.com/frndchagas/coolify-mcp/commit/80aa1ed8bddadb41a8e25065b2bc451faac5f64f))
+
 ## [2.1.1](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.1.0...coolify-mcp-v2.1.1) (2026-08-06)
 
 
