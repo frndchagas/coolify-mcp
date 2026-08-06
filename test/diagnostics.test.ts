@@ -41,6 +41,21 @@ describe("buildHints", () => {
     expect(hints.join(" ")).toContain("failed");
   });
 
+  it("never emits contradictory state hints for exited:unhealthy", () => {
+    const hints = buildHints({
+      status: "exited:unhealthy",
+      hasDeployments: true,
+    }).join(" ");
+    expect(hints).toContain("not running");
+    expect(hints).not.toContain("running but unhealthy");
+  });
+
+  it("flags an unhealthy container that is actually up", () => {
+    expect(
+      buildHints({ status: "running:unhealthy", hasDeployments: true }).join(" ")
+    ).toContain("running but unhealthy");
+  });
+
   it("flags stopped containers and missing deployments", () => {
     expect(
       buildHints({ status: "exited", hasDeployments: true }).join(" ")
