@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.1](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.2.0...coolify-mcp-v2.2.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* never emit contradictory status hints in diagnoseApp ([1a7a1c9](https://github.com/frndchagas/coolify-mcp/commit/1a7a1c9adca4acd1b0a795a819289d88d10a7ed4))
+* never emit contradictory status hints in diagnoseApp ([b8d3f43](https://github.com/frndchagas/coolify-mcp/commit/b8d3f4394d96ef8b52468d83b56ae536601559a0))
+
 ## [2.2.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.1.1...coolify-mcp-v2.2.0) (2026-08-06)
 
 
