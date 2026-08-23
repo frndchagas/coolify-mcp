@@ -1,17 +1,5 @@
 #!/usr/bin/env node
-import { createRequire } from 'node:module';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import express, { type NextFunction, type Request, type Response } from 'express';
-import { registerCoolifyTools } from './tools/coolify.js';
-import { registerDatabaseTools } from './tools/databases.js';
-import { registerDiagnosticsTools } from './tools/diagnostics.js';
-import { registerBatchTools } from './tools/batch.js';
-import { registerDocsTools } from './tools/docs.js';
-import { registerInfraTools } from './tools/infra.js';
-import { registerResourceTools } from './tools/resources.js';
-import { registerServiceTools } from './tools/services.js';
 import {
 	COOLIFY_OPENAPI_REF,
 	COOLIFY_STRICT_VERSION,
@@ -20,27 +8,12 @@ import {
 	MCP_HTTP_TOKEN,
 	MCP_TRANSPORT,
 } from './config.js';
-import { checkBearerAuth } from './tools/helpers.js';
 import { initializeClient } from './coolify/client.js';
 import { version } from './generated/sdk.gen.js';
-
-const require = createRequire(import.meta.url);
-const { version: MCP_VERSION } = require('../package.json') as { version: string };
-
-const server = new McpServer({
-	name: 'coolify-mcp',
-	version: MCP_VERSION,
-});
+import { createHttpApp } from './http-server.js';
+import { createMcpServer } from './mcp-server.js';
 
 initializeClient();
-registerCoolifyTools(server);
-registerDatabaseTools(server);
-registerServiceTools(server);
-registerResourceTools(server);
-registerInfraTools(server);
-registerDiagnosticsTools(server);
-registerDocsTools(server);
-registerBatchTools(server);
 
 function normalizeVersion(value: string) {
 	return value.replace(/^v/i, '');
@@ -78,6 +51,7 @@ async function checkVersion() {
 }
 
 async function startStdio() {
+	const server = createMcpServer();
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
 }
@@ -85,34 +59,13 @@ async function startStdio() {
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
 
 async function startHttp() {
-	const app = express();
-	app.use(express.json());
-
-	if (MCP_HTTP_TOKEN) {
-		const httpToken = MCP_HTTP_TOKEN;
-		app.use('/mcp', (req: Request, res: Response, next: NextFunction) => {
-			if (checkBearerAuth(req.headers.authorization, httpToken)) {
-				next();
-				return;
-			}
-			res.status(401).json({ error: 'Unauthorized' });
-		});
-	} else if (!LOOPBACK_HOSTS.has(MCP_HTTP_HOST)) {
+	if (!MCP_HTTP_TOKEN && !LOOPBACK_HOSTS.has(MCP_HTTP_HOST)) {
 		console.warn(
 			`WARNING: HTTP transport bound to ${MCP_HTTP_HOST} without MCP_HTTP_TOKEN — anyone who can reach port ${MCP_HTTP_PORT} controls the Coolify instance behind this server.`
 		);
 	}
 
-	app.post('/mcp', async (req: Request, res: Response) => {
-		const transport = new StreamableHTTPServerTransport({
-			sessionIdGenerator: undefined,
-			enableJsonResponse: true,
-		});
-		res.on('close', () => transport.close());
-		await server.connect(transport);
-		await transport.handleRequest(req, res, req.body);
-	});
-
+	const app = createHttpApp();
 	app.listen(MCP_HTTP_PORT, MCP_HTTP_HOST, () => {
 		console.log(`MCP HTTP server listening on ${MCP_HTTP_HOST}:${MCP_HTTP_PORT}/mcp`);
 	});
