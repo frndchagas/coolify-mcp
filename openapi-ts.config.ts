@@ -103,7 +103,7 @@ async function fetchAndFixSpec(): Promise<OpenAPISpec> {
 	return spec;
 }
 
-// Only include operations we actually use (48 of 107)
+// Only include operations surfaced by the hand-written MCP tools.
 const USED_OPERATIONS = [
 	// Resources
 	'GET /resources',
@@ -123,7 +123,7 @@ const USED_OPERATIONS = [
 	'GET /servers/{uuid}',
 	'PATCH /servers/{uuid}',
 	'DELETE /servers/{uuid}',
-	'GET /servers/{uuid}/validate',
+	'POST /servers/{uuid}/validate',
 	'GET /servers/{uuid}/domains',
 	'GET /servers/{uuid}/resources',
 	// Private Keys (Security)
@@ -155,17 +155,17 @@ const USED_OPERATIONS = [
 	// Applications - manage
 	'PATCH /applications/{uuid}',
 	'DELETE /applications/{uuid}',
-	'GET /applications/{uuid}/start',
-	'GET /applications/{uuid}/stop',
-	'GET /applications/{uuid}/restart',
+	'POST /applications/{uuid}/start',
+	'POST /applications/{uuid}/stop',
+	'POST /applications/{uuid}/restart',
 	// Databases
 	'GET /databases',
 	'GET /databases/{uuid}',
 	'PATCH /databases/{uuid}',
 	'DELETE /databases/{uuid}',
-	'GET /databases/{uuid}/start',
-	'GET /databases/{uuid}/stop',
-	'GET /databases/{uuid}/restart',
+	'POST /databases/{uuid}/start',
+	'POST /databases/{uuid}/stop',
+	'POST /databases/{uuid}/restart',
 	// Databases - create (one endpoint per engine)
 	'POST /databases/postgresql',
 	'POST /databases/mysql',
@@ -194,9 +194,9 @@ const USED_OPERATIONS = [
 	'GET /services/{uuid}',
 	'PATCH /services/{uuid}',
 	'DELETE /services/{uuid}',
-	'GET /services/{uuid}/start',
-	'GET /services/{uuid}/stop',
-	'GET /services/{uuid}/restart',
+	'POST /services/{uuid}/start',
+	'POST /services/{uuid}/stop',
+	'POST /services/{uuid}/restart',
 	// Service envs
 	'GET /services/{uuid}/envs',
 	'POST /services/{uuid}/envs',
@@ -229,8 +229,8 @@ const USED_OPERATIONS = [
 	'GET /services/{uuid}/scheduled-tasks/{task_uuid}/executions',
 	// Teams
 	'GET /teams',
-	'GET /teams/current',
-	'GET /teams/current/members',
+	'GET /team',
+	'GET /team/members',
 	'GET /teams/{id}',
 	'GET /teams/{id}/members',
 	// Deployments
@@ -238,7 +238,7 @@ const USED_OPERATIONS = [
 	'GET /deployments/{uuid}',
 	'POST /deployments/{uuid}/cancel',
 	'GET /deployments/applications/{uuid}',
-	'GET /deploy',
+	'POST /deploy',
 	// Version & health
 	'GET /version',
 	'GET /health',

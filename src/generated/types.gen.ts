@@ -447,6 +447,47 @@ export type Environment = {
 };
 
 /**
+ * Application settings.
+ */
+export type ApplicationSetting = {
+    is_static?: boolean;
+    is_git_submodules_enabled?: boolean;
+    is_git_lfs_enabled?: boolean;
+    is_auto_deploy_enabled?: boolean;
+    is_force_https_enabled?: boolean;
+    is_debug_enabled?: boolean;
+    is_preview_deployments_enabled?: boolean;
+    is_log_drain_enabled?: boolean;
+    is_gpu_enabled?: boolean;
+    gpu_driver?: string;
+    gpu_count?: string;
+    gpu_device_ids?: string;
+    gpu_options?: string;
+    is_include_timestamps?: boolean;
+    is_swarm_only_worker_nodes?: boolean;
+    is_raw_compose_deployment_enabled?: boolean;
+    is_build_server_enabled?: boolean;
+    is_consistent_container_name_enabled?: boolean;
+    is_gzip_enabled?: boolean;
+    is_stripprefix_enabled?: boolean;
+    connect_to_docker_network?: boolean;
+    custom_internal_name?: string;
+    is_container_label_escape_enabled?: boolean;
+    is_env_sorting_enabled?: boolean;
+    is_container_label_readonly_enabled?: boolean;
+    is_preserve_repository_enabled?: boolean;
+    disable_build_cache?: boolean;
+    is_spa?: boolean;
+    is_git_shallow_clone_enabled?: boolean;
+    is_pr_deployments_public_enabled?: boolean;
+    use_build_secrets?: boolean;
+    inject_build_args_to_dockerfile?: boolean;
+    include_source_commit_in_build?: boolean;
+    docker_images_to_keep?: number;
+    stop_grace_period?: number;
+};
+
+/**
  * Project model
  */
 export type ApplicationDeploymentQueue = {
@@ -511,6 +552,10 @@ export type Application = {
      * The application domains.
      */
     fqdn?: string;
+    /**
+     * The subset of the application domains served with an X-Robots-Tag: noindex, nofollow response header.
+     */
+    noindex_domains?: Array<string>;
     /**
      * Configuration hash.
      */
@@ -672,6 +717,10 @@ export type Application = {
      */
     preview_url_template?: string;
     /**
+     * Maximum container restart count before stopping.
+     */
+    max_restart_count?: number;
+    /**
      * Destination type.
      */
     destination_type?: string;
@@ -819,6 +868,7 @@ export type Application = {
      * Password for HTTP Basic Authentication
      */
     http_basic_auth_password?: string;
+    settings?: ApplicationSetting;
 };
 
 export type ListApplicationsData = {
@@ -913,6 +963,10 @@ export type CreatePublicApplicationData = {
          */
         domains?: string;
         /**
+         * The subset of the application domains served with an X-Robots-Tag: noindex, nofollow response header, keeping them out of search engines. Entries that are not among the application domains are ignored.
+         */
+        noindex_domains?: Array<string>;
+        /**
          * The git commit SHA.
          */
         git_commit_sha?: string;
@@ -940,6 +994,10 @@ export type CreatePublicApplicationData = {
          * The flag to indicate if HTTPS is forced. Defaults to true.
          */
         is_force_https_enabled?: boolean;
+        /**
+         * Enable preview deployments for pull requests.
+         */
+        is_preview_deployments_enabled?: boolean;
         /**
          * The static image.
          */
@@ -1124,6 +1182,10 @@ export type CreatePublicApplicationData = {
              * Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")
              */
             domain?: string;
+            /**
+             * Per-service www/non-www redirect for this compose service.
+             */
+            redirect?: 'www' | 'non-www' | 'both';
         }>;
         /**
          * The watch paths.
@@ -1133,6 +1195,102 @@ export type CreatePublicApplicationData = {
          * Use build server.
          */
         use_build_server?: boolean;
+        /**
+         * Use Docker Build Secrets for build-time environment variables.
+         */
+        use_build_secrets?: boolean;
+        /**
+         * Clone Git submodules.
+         */
+        is_git_submodules_enabled?: boolean;
+        /**
+         * Enable Git LFS.
+         */
+        is_git_lfs_enabled?: boolean;
+        /**
+         * Use a shallow Git clone.
+         */
+        is_git_shallow_clone_enabled?: boolean;
+        /**
+         * Disable the build cache.
+         */
+        disable_build_cache?: boolean;
+        /**
+         * Inject build arguments into the Dockerfile build.
+         */
+        inject_build_args_to_dockerfile?: boolean;
+        /**
+         * Include the source commit in the build.
+         */
+        include_source_commit_in_build?: boolean;
+        /**
+         * Sort environment variables.
+         */
+        is_env_sorting_enabled?: boolean;
+        /**
+         * Make pull request deployments public.
+         */
+        is_pr_deployments_public_enabled?: boolean;
+        /**
+         * Container stop grace period in seconds.
+         */
+        stop_grace_period?: number;
+        /**
+         * Number of Docker images to retain.
+         */
+        docker_images_to_keep?: number;
+        /**
+         * Enable gzip compression.
+         */
+        is_gzip_enabled?: boolean;
+        /**
+         * Enable path prefix stripping.
+         */
+        is_stripprefix_enabled?: boolean;
+        /**
+         * Deploy the raw Docker Compose definition.
+         */
+        is_raw_compose_deployment_enabled?: boolean;
+        /**
+         * Enable log drain for the application.
+         */
+        is_log_drain_enabled?: boolean;
+        /**
+         * Enable GPU support.
+         */
+        is_gpu_enabled?: boolean;
+        /**
+         * GPU driver name.
+         */
+        gpu_driver?: string;
+        /**
+         * Number of GPUs to allocate.
+         */
+        gpu_count?: string;
+        /**
+         * Comma-separated GPU device IDs.
+         */
+        gpu_device_ids?: string;
+        /**
+         * Additional GPU options.
+         */
+        gpu_options?: string;
+        /**
+         * Use a consistent container name across deployments.
+         */
+        is_consistent_container_name_enabled?: boolean;
+        /**
+         * Custom internal container name.
+         */
+        custom_internal_name?: string;
+        /**
+         * Preview URL template.
+         */
+        preview_url_template?: string;
+        /**
+         * Maximum container restart count before stopping.
+         */
+        max_restart_count?: number;
         /**
          * HTTP Basic Authentication enabled.
          */
@@ -1161,6 +1319,10 @@ export type CreatePublicApplicationData = {
          * Escape special characters in labels. By default, $ (and other chars) is escaped. So if you write $ in the labels, it will be saved as $$. If you want to use env variables inside the labels, turn this off.
          */
         is_container_label_escape_enabled?: boolean;
+        /**
+         * Tags to assign to the application.
+         */
+        tags?: Array<string>;
         /**
          * Preserve repository during deployment.
          */
@@ -1271,6 +1433,10 @@ export type CreatePrivateGithubAppApplicationData = {
          */
         domains?: string;
         /**
+         * The subset of the application domains served with an X-Robots-Tag: noindex, nofollow response header, keeping them out of search engines. Entries that are not among the application domains are ignored.
+         */
+        noindex_domains?: Array<string>;
+        /**
          * The git commit SHA.
          */
         git_commit_sha?: string;
@@ -1298,6 +1464,10 @@ export type CreatePrivateGithubAppApplicationData = {
          * The flag to indicate if HTTPS is forced. Defaults to true.
          */
         is_force_https_enabled?: boolean;
+        /**
+         * Enable preview deployments for pull requests.
+         */
+        is_preview_deployments_enabled?: boolean;
         /**
          * The static image.
          */
@@ -1482,6 +1652,10 @@ export type CreatePrivateGithubAppApplicationData = {
              * Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")
              */
             domain?: string;
+            /**
+             * Per-service www/non-www redirect for this compose service.
+             */
+            redirect?: 'www' | 'non-www' | 'both';
         }>;
         /**
          * The watch paths.
@@ -1491,6 +1665,102 @@ export type CreatePrivateGithubAppApplicationData = {
          * Use build server.
          */
         use_build_server?: boolean;
+        /**
+         * Use Docker Build Secrets for build-time environment variables.
+         */
+        use_build_secrets?: boolean;
+        /**
+         * Clone Git submodules.
+         */
+        is_git_submodules_enabled?: boolean;
+        /**
+         * Enable Git LFS.
+         */
+        is_git_lfs_enabled?: boolean;
+        /**
+         * Use a shallow Git clone.
+         */
+        is_git_shallow_clone_enabled?: boolean;
+        /**
+         * Disable the build cache.
+         */
+        disable_build_cache?: boolean;
+        /**
+         * Inject build arguments into the Dockerfile build.
+         */
+        inject_build_args_to_dockerfile?: boolean;
+        /**
+         * Include the source commit in the build.
+         */
+        include_source_commit_in_build?: boolean;
+        /**
+         * Sort environment variables.
+         */
+        is_env_sorting_enabled?: boolean;
+        /**
+         * Make pull request deployments public.
+         */
+        is_pr_deployments_public_enabled?: boolean;
+        /**
+         * Container stop grace period in seconds.
+         */
+        stop_grace_period?: number;
+        /**
+         * Number of Docker images to retain.
+         */
+        docker_images_to_keep?: number;
+        /**
+         * Enable gzip compression.
+         */
+        is_gzip_enabled?: boolean;
+        /**
+         * Enable path prefix stripping.
+         */
+        is_stripprefix_enabled?: boolean;
+        /**
+         * Deploy the raw Docker Compose definition.
+         */
+        is_raw_compose_deployment_enabled?: boolean;
+        /**
+         * Enable log drain for the application.
+         */
+        is_log_drain_enabled?: boolean;
+        /**
+         * Enable GPU support.
+         */
+        is_gpu_enabled?: boolean;
+        /**
+         * GPU driver name.
+         */
+        gpu_driver?: string;
+        /**
+         * Number of GPUs to allocate.
+         */
+        gpu_count?: string;
+        /**
+         * Comma-separated GPU device IDs.
+         */
+        gpu_device_ids?: string;
+        /**
+         * Additional GPU options.
+         */
+        gpu_options?: string;
+        /**
+         * Use a consistent container name across deployments.
+         */
+        is_consistent_container_name_enabled?: boolean;
+        /**
+         * Custom internal container name.
+         */
+        custom_internal_name?: string;
+        /**
+         * Preview URL template.
+         */
+        preview_url_template?: string;
+        /**
+         * Maximum container restart count before stopping.
+         */
+        max_restart_count?: number;
         /**
          * HTTP Basic Authentication enabled.
          */
@@ -1519,6 +1789,10 @@ export type CreatePrivateGithubAppApplicationData = {
          * Escape special characters in labels. By default, $ (and other chars) is escaped. So if you write $ in the labels, it will be saved as $$. If you want to use env variables inside the labels, turn this off.
          */
         is_container_label_escape_enabled?: boolean;
+        /**
+         * Tags to assign to the application.
+         */
+        tags?: Array<string>;
         /**
          * Preserve repository during deployment.
          */
@@ -1629,6 +1903,10 @@ export type CreatePrivateDeployKeyApplicationData = {
          */
         domains?: string;
         /**
+         * The subset of the application domains served with an X-Robots-Tag: noindex, nofollow response header, keeping them out of search engines. Entries that are not among the application domains are ignored.
+         */
+        noindex_domains?: Array<string>;
+        /**
          * The git commit SHA.
          */
         git_commit_sha?: string;
@@ -1656,6 +1934,10 @@ export type CreatePrivateDeployKeyApplicationData = {
          * The flag to indicate if HTTPS is forced. Defaults to true.
          */
         is_force_https_enabled?: boolean;
+        /**
+         * Enable preview deployments for pull requests.
+         */
+        is_preview_deployments_enabled?: boolean;
         /**
          * The static image.
          */
@@ -1840,6 +2122,10 @@ export type CreatePrivateDeployKeyApplicationData = {
              * Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")
              */
             domain?: string;
+            /**
+             * Per-service www/non-www redirect for this compose service.
+             */
+            redirect?: 'www' | 'non-www' | 'both';
         }>;
         /**
          * The watch paths.
@@ -1849,6 +2135,102 @@ export type CreatePrivateDeployKeyApplicationData = {
          * Use build server.
          */
         use_build_server?: boolean;
+        /**
+         * Use Docker Build Secrets for build-time environment variables.
+         */
+        use_build_secrets?: boolean;
+        /**
+         * Clone Git submodules.
+         */
+        is_git_submodules_enabled?: boolean;
+        /**
+         * Enable Git LFS.
+         */
+        is_git_lfs_enabled?: boolean;
+        /**
+         * Use a shallow Git clone.
+         */
+        is_git_shallow_clone_enabled?: boolean;
+        /**
+         * Disable the build cache.
+         */
+        disable_build_cache?: boolean;
+        /**
+         * Inject build arguments into the Dockerfile build.
+         */
+        inject_build_args_to_dockerfile?: boolean;
+        /**
+         * Include the source commit in the build.
+         */
+        include_source_commit_in_build?: boolean;
+        /**
+         * Sort environment variables.
+         */
+        is_env_sorting_enabled?: boolean;
+        /**
+         * Make pull request deployments public.
+         */
+        is_pr_deployments_public_enabled?: boolean;
+        /**
+         * Container stop grace period in seconds.
+         */
+        stop_grace_period?: number;
+        /**
+         * Number of Docker images to retain.
+         */
+        docker_images_to_keep?: number;
+        /**
+         * Enable gzip compression.
+         */
+        is_gzip_enabled?: boolean;
+        /**
+         * Enable path prefix stripping.
+         */
+        is_stripprefix_enabled?: boolean;
+        /**
+         * Deploy the raw Docker Compose definition.
+         */
+        is_raw_compose_deployment_enabled?: boolean;
+        /**
+         * Enable log drain for the application.
+         */
+        is_log_drain_enabled?: boolean;
+        /**
+         * Enable GPU support.
+         */
+        is_gpu_enabled?: boolean;
+        /**
+         * GPU driver name.
+         */
+        gpu_driver?: string;
+        /**
+         * Number of GPUs to allocate.
+         */
+        gpu_count?: string;
+        /**
+         * Comma-separated GPU device IDs.
+         */
+        gpu_device_ids?: string;
+        /**
+         * Additional GPU options.
+         */
+        gpu_options?: string;
+        /**
+         * Use a consistent container name across deployments.
+         */
+        is_consistent_container_name_enabled?: boolean;
+        /**
+         * Custom internal container name.
+         */
+        custom_internal_name?: string;
+        /**
+         * Preview URL template.
+         */
+        preview_url_template?: string;
+        /**
+         * Maximum container restart count before stopping.
+         */
+        max_restart_count?: number;
         /**
          * HTTP Basic Authentication enabled.
          */
@@ -1877,6 +2259,10 @@ export type CreatePrivateDeployKeyApplicationData = {
          * Escape special characters in labels. By default, $ (and other chars) is escaped. So if you write $ in the labels, it will be saved as $$. If you want to use env variables inside the labels, turn this off.
          */
         is_container_label_escape_enabled?: boolean;
+        /**
+         * Tags to assign to the application.
+         */
+        tags?: Array<string>;
         /**
          * Preserve repository during deployment.
          */
@@ -1978,6 +2364,10 @@ export type CreateDockerfileApplicationData = {
          * The application URLs in a comma-separated list.
          */
         domains?: string;
+        /**
+         * The subset of the application domains served with an X-Robots-Tag: noindex, nofollow response header, keeping them out of search engines. Entries that are not among the application domains are ignored.
+         */
+        noindex_domains?: Array<string>;
         /**
          * The docker registry image name.
          */
@@ -2123,9 +2513,109 @@ export type CreateDockerfileApplicationData = {
          */
         is_force_https_enabled?: boolean;
         /**
+         * Enable preview deployments for pull requests.
+         */
+        is_preview_deployments_enabled?: boolean;
+        /**
          * Use build server.
          */
         use_build_server?: boolean;
+        /**
+         * Use Docker Build Secrets for build-time environment variables.
+         */
+        use_build_secrets?: boolean;
+        /**
+         * Clone Git submodules.
+         */
+        is_git_submodules_enabled?: boolean;
+        /**
+         * Enable Git LFS.
+         */
+        is_git_lfs_enabled?: boolean;
+        /**
+         * Use a shallow Git clone.
+         */
+        is_git_shallow_clone_enabled?: boolean;
+        /**
+         * Disable the build cache.
+         */
+        disable_build_cache?: boolean;
+        /**
+         * Inject build arguments into the Dockerfile build.
+         */
+        inject_build_args_to_dockerfile?: boolean;
+        /**
+         * Include the source commit in the build.
+         */
+        include_source_commit_in_build?: boolean;
+        /**
+         * Sort environment variables.
+         */
+        is_env_sorting_enabled?: boolean;
+        /**
+         * Make pull request deployments public.
+         */
+        is_pr_deployments_public_enabled?: boolean;
+        /**
+         * Container stop grace period in seconds.
+         */
+        stop_grace_period?: number;
+        /**
+         * Number of Docker images to retain.
+         */
+        docker_images_to_keep?: number;
+        /**
+         * Enable gzip compression.
+         */
+        is_gzip_enabled?: boolean;
+        /**
+         * Enable path prefix stripping.
+         */
+        is_stripprefix_enabled?: boolean;
+        /**
+         * Deploy the raw Docker Compose definition.
+         */
+        is_raw_compose_deployment_enabled?: boolean;
+        /**
+         * Enable log drain for the application.
+         */
+        is_log_drain_enabled?: boolean;
+        /**
+         * Enable GPU support.
+         */
+        is_gpu_enabled?: boolean;
+        /**
+         * GPU driver name.
+         */
+        gpu_driver?: string;
+        /**
+         * Number of GPUs to allocate.
+         */
+        gpu_count?: string;
+        /**
+         * Comma-separated GPU device IDs.
+         */
+        gpu_device_ids?: string;
+        /**
+         * Additional GPU options.
+         */
+        gpu_options?: string;
+        /**
+         * Use a consistent container name across deployments.
+         */
+        is_consistent_container_name_enabled?: boolean;
+        /**
+         * Custom internal container name.
+         */
+        custom_internal_name?: string;
+        /**
+         * Preview URL template.
+         */
+        preview_url_template?: string;
+        /**
+         * Maximum container restart count before stopping.
+         */
+        max_restart_count?: number;
         /**
          * HTTP Basic Authentication enabled.
          */
@@ -2154,6 +2644,10 @@ export type CreateDockerfileApplicationData = {
          * Escape special characters in labels. By default, $ (and other chars) is escaped. So if you write $ in the labels, it will be saved as $$. If you want to use env variables inside the labels, turn this off.
          */
         is_container_label_escape_enabled?: boolean;
+        /**
+         * Tags to assign to the application.
+         */
+        tags?: Array<string>;
     };
     path?: never;
     query?: never;
@@ -2251,6 +2745,10 @@ export type CreateDockerimageApplicationData = {
          * The application URLs in a comma-separated list.
          */
         domains?: string;
+        /**
+         * The subset of the application domains served with an X-Robots-Tag: noindex, nofollow response header, keeping them out of search engines. Entries that are not among the application domains are ignored.
+         */
+        noindex_domains?: Array<string>;
         /**
          * The ports mappings.
          */
@@ -2384,9 +2882,109 @@ export type CreateDockerimageApplicationData = {
          */
         is_force_https_enabled?: boolean;
         /**
+         * Enable preview deployments for pull requests.
+         */
+        is_preview_deployments_enabled?: boolean;
+        /**
          * Use build server.
          */
         use_build_server?: boolean;
+        /**
+         * Use Docker Build Secrets for build-time environment variables.
+         */
+        use_build_secrets?: boolean;
+        /**
+         * Clone Git submodules.
+         */
+        is_git_submodules_enabled?: boolean;
+        /**
+         * Enable Git LFS.
+         */
+        is_git_lfs_enabled?: boolean;
+        /**
+         * Use a shallow Git clone.
+         */
+        is_git_shallow_clone_enabled?: boolean;
+        /**
+         * Disable the build cache.
+         */
+        disable_build_cache?: boolean;
+        /**
+         * Inject build arguments into the Dockerfile build.
+         */
+        inject_build_args_to_dockerfile?: boolean;
+        /**
+         * Include the source commit in the build.
+         */
+        include_source_commit_in_build?: boolean;
+        /**
+         * Sort environment variables.
+         */
+        is_env_sorting_enabled?: boolean;
+        /**
+         * Make pull request deployments public.
+         */
+        is_pr_deployments_public_enabled?: boolean;
+        /**
+         * Container stop grace period in seconds.
+         */
+        stop_grace_period?: number;
+        /**
+         * Number of Docker images to retain.
+         */
+        docker_images_to_keep?: number;
+        /**
+         * Enable gzip compression.
+         */
+        is_gzip_enabled?: boolean;
+        /**
+         * Enable path prefix stripping.
+         */
+        is_stripprefix_enabled?: boolean;
+        /**
+         * Deploy the raw Docker Compose definition.
+         */
+        is_raw_compose_deployment_enabled?: boolean;
+        /**
+         * Enable log drain for the application.
+         */
+        is_log_drain_enabled?: boolean;
+        /**
+         * Enable GPU support.
+         */
+        is_gpu_enabled?: boolean;
+        /**
+         * GPU driver name.
+         */
+        gpu_driver?: string;
+        /**
+         * Number of GPUs to allocate.
+         */
+        gpu_count?: string;
+        /**
+         * Comma-separated GPU device IDs.
+         */
+        gpu_device_ids?: string;
+        /**
+         * Additional GPU options.
+         */
+        gpu_options?: string;
+        /**
+         * Use a consistent container name across deployments.
+         */
+        is_consistent_container_name_enabled?: boolean;
+        /**
+         * Custom internal container name.
+         */
+        custom_internal_name?: string;
+        /**
+         * Preview URL template.
+         */
+        preview_url_template?: string;
+        /**
+         * Maximum container restart count before stopping.
+         */
+        max_restart_count?: number;
         /**
          * HTTP Basic Authentication enabled.
          */
@@ -2415,6 +3013,10 @@ export type CreateDockerimageApplicationData = {
          * Escape special characters in labels. By default, $ (and other chars) is escaped. So if you write $ in the labels, it will be saved as $$. If you want to use env variables inside the labels, turn this off.
          */
         is_container_label_escape_enabled?: boolean;
+        /**
+         * Tags to assign to the application.
+         */
+        tags?: Array<string>;
     };
     path?: never;
     query?: never;
@@ -2624,6 +3226,10 @@ export type UpdateApplicationByUuidData = {
          */
         domains?: string;
         /**
+         * The subset of the application domains served with an X-Robots-Tag: noindex, nofollow response header, keeping them out of search engines. Entries that are not among the application domains are ignored.
+         */
+        noindex_domains?: Array<string>;
+        /**
          * The git commit SHA.
          */
         git_commit_sha?: string;
@@ -2651,6 +3257,10 @@ export type UpdateApplicationByUuidData = {
          * The flag to indicate if HTTPS is forced. Defaults to true.
          */
         is_force_https_enabled?: boolean;
+        /**
+         * Enable preview deployments for pull requests.
+         */
+        is_preview_deployments_enabled?: boolean;
         /**
          * The install command.
          */
@@ -2831,6 +3441,10 @@ export type UpdateApplicationByUuidData = {
              * Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")
              */
             domain?: string;
+            /**
+             * Per-service www/non-www redirect for this compose service.
+             */
+            redirect?: 'www' | 'non-www' | 'both';
         }>;
         /**
          * The watch paths.
@@ -2840,6 +3454,102 @@ export type UpdateApplicationByUuidData = {
          * Use build server.
          */
         use_build_server?: boolean;
+        /**
+         * Use Docker Build Secrets for build-time environment variables.
+         */
+        use_build_secrets?: boolean;
+        /**
+         * Clone Git submodules.
+         */
+        is_git_submodules_enabled?: boolean;
+        /**
+         * Enable Git LFS.
+         */
+        is_git_lfs_enabled?: boolean;
+        /**
+         * Use a shallow Git clone.
+         */
+        is_git_shallow_clone_enabled?: boolean;
+        /**
+         * Disable the build cache.
+         */
+        disable_build_cache?: boolean;
+        /**
+         * Inject build arguments into the Dockerfile build.
+         */
+        inject_build_args_to_dockerfile?: boolean;
+        /**
+         * Include the source commit in the build.
+         */
+        include_source_commit_in_build?: boolean;
+        /**
+         * Sort environment variables.
+         */
+        is_env_sorting_enabled?: boolean;
+        /**
+         * Make pull request deployments public.
+         */
+        is_pr_deployments_public_enabled?: boolean;
+        /**
+         * Container stop grace period in seconds.
+         */
+        stop_grace_period?: number;
+        /**
+         * Number of Docker images to retain.
+         */
+        docker_images_to_keep?: number;
+        /**
+         * Enable gzip compression.
+         */
+        is_gzip_enabled?: boolean;
+        /**
+         * Enable path prefix stripping.
+         */
+        is_stripprefix_enabled?: boolean;
+        /**
+         * Deploy the raw Docker Compose definition.
+         */
+        is_raw_compose_deployment_enabled?: boolean;
+        /**
+         * Enable log drain for the application.
+         */
+        is_log_drain_enabled?: boolean;
+        /**
+         * Enable GPU support.
+         */
+        is_gpu_enabled?: boolean;
+        /**
+         * GPU driver name.
+         */
+        gpu_driver?: string;
+        /**
+         * Number of GPUs to allocate.
+         */
+        gpu_count?: string;
+        /**
+         * Comma-separated GPU device IDs.
+         */
+        gpu_device_ids?: string;
+        /**
+         * Additional GPU options.
+         */
+        gpu_options?: string;
+        /**
+         * Use a consistent container name across deployments.
+         */
+        is_consistent_container_name_enabled?: boolean;
+        /**
+         * Custom internal container name.
+         */
+        custom_internal_name?: string;
+        /**
+         * Preview URL template.
+         */
+        preview_url_template?: string;
+        /**
+         * Maximum container restart count before stopping.
+         */
+        max_restart_count?: number;
         /**
          * The flag to connect the service to the predefined Docker network.
          */
@@ -2928,6 +3638,10 @@ export type GetApplicationLogsByUuidData = {
          * Number of lines to show from the end of the logs.
          */
         lines?: number;
+        /**
+         * Show timestamps in the logs.
+         */
+        show_timestamps?: boolean;
     };
     url: '/applications/{uuid}/logs';
 };
@@ -4585,6 +5299,10 @@ export type CreateDatabasePostgresqlData = {
          * Instant deploy the database
          */
         instant_deploy?: boolean;
+        /**
+         * Tags to assign to the database.
+         */
+        tags?: Array<string>;
     };
     path?: never;
     query?: never;
@@ -4713,6 +5431,10 @@ export type CreateDatabaseClickhouseData = {
          * Instant deploy the database
          */
         instant_deploy?: boolean;
+        /**
+         * Tags to assign to the database.
+         */
+        tags?: Array<string>;
     };
     path?: never;
     query?: never;
@@ -4837,6 +5559,10 @@ export type CreateDatabaseDragonflyData = {
          * Instant deploy the database
          */
         instant_deploy?: boolean;
+        /**
+         * Tags to assign to the database.
+         */
+        tags?: Array<string>;
     };
     path?: never;
     query?: never;
@@ -4965,6 +5691,10 @@ export type CreateDatabaseRedisData = {
          * Instant deploy the database
          */
         instant_deploy?: boolean;
+        /**
+         * Tags to assign to the database.
+         */
+        tags?: Array<string>;
     };
     path?: never;
     query?: never;
@@ -5093,6 +5823,10 @@ export type CreateDatabaseKeydbData = {
          * Instant deploy the database
          */
         instant_deploy?: boolean;
+        /**
+         * Tags to assign to the database.
+         */
+        tags?: Array<string>;
     };
     path?: never;
     query?: never;
@@ -5233,6 +5967,10 @@ export type CreateDatabaseMariadbData = {
          * Instant deploy the database
          */
         instant_deploy?: boolean;
+        /**
+         * Tags to assign to the database.
+         */
+        tags?: Array<string>;
     };
     path?: never;
     query?: never;
@@ -5373,6 +6111,10 @@ export type CreateDatabaseMysqlData = {
          * Instant deploy the database
          */
         instant_deploy?: boolean;
+        /**
+         * Tags to assign to the database.
+         */
+        tags?: Array<string>;
     };
     path?: never;
     query?: never;
@@ -5501,6 +6243,10 @@ export type CreateDatabaseMongodbData = {
          * Instant deploy the database
          */
         instant_deploy?: boolean;
+        /**
+         * Tags to assign to the database.
+         */
+        tags?: Array<string>;
     };
     path?: never;
     query?: never;
@@ -8527,7 +9273,12 @@ export type GetDomainsByServerUuidResponses = {
 export type GetDomainsByServerUuidResponse = GetDomainsByServerUuidResponses[keyof GetDomainsByServerUuidResponses];
 
 export type ValidateServerByUuidData = {
-    body?: never;
+    body?: {
+        /**
+         * Install missing prerequisites and Docker. This can restart the Docker daemon.
+         */
+        install?: boolean;
+    };
     path: {
         /**
          * Server UUID
@@ -8677,6 +9428,10 @@ export type CreateServiceData = {
          * Escape special characters in labels. By default, $ (and other chars) is escaped. If you want to use env variables inside the labels, turn this off.
          */
         is_container_label_escape_enabled?: boolean;
+        /**
+         * Tags to assign to the service.
+         */
+        tags?: Array<string>;
     };
     path?: never;
     query?: never;
@@ -8861,26 +9616,6 @@ export type UpdateServiceByUuidData = {
          * The service description.
          */
         description?: string;
-        /**
-         * The project UUID.
-         */
-        project_uuid?: string;
-        /**
-         * The environment name.
-         */
-        environment_name?: string;
-        /**
-         * The environment UUID.
-         */
-        environment_uuid?: string;
-        /**
-         * The server UUID.
-         */
-        server_uuid?: string;
-        /**
-         * The destination UUID.
-         */
-        destination_uuid?: string;
         /**
          * The flag to indicate if the service should be deployed instantly.
          */
@@ -9888,14 +10623,14 @@ export type GetMembersByTeamIdResponses = {
 
 export type GetMembersByTeamIdResponse = GetMembersByTeamIdResponses[keyof GetMembersByTeamIdResponses];
 
-export type GetCurrentTeamData = {
+export type GetTokenTeamData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/teams/current';
+    url: '/team';
 };
 
-export type GetCurrentTeamErrors = {
+export type GetTokenTeamErrors = {
     /**
      * Invalid token.
      */
@@ -9910,25 +10645,25 @@ export type GetCurrentTeamErrors = {
     };
 };
 
-export type GetCurrentTeamError = GetCurrentTeamErrors[keyof GetCurrentTeamErrors];
+export type GetTokenTeamError = GetTokenTeamErrors[keyof GetTokenTeamErrors];
 
-export type GetCurrentTeamResponses = {
+export type GetTokenTeamResponses = {
     /**
-     * Current Team.
+     * Team bound to the API token.
      */
     200: Team;
 };
 
-export type GetCurrentTeamResponse = GetCurrentTeamResponses[keyof GetCurrentTeamResponses];
+export type GetTokenTeamResponse = GetTokenTeamResponses[keyof GetTokenTeamResponses];
 
-export type GetCurrentTeamMembersData = {
+export type GetTokenTeamMembersData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/teams/current/members';
+    url: '/team/members';
 };
 
-export type GetCurrentTeamMembersErrors = {
+export type GetTokenTeamMembersErrors = {
     /**
      * Invalid token.
      */
@@ -9943,13 +10678,13 @@ export type GetCurrentTeamMembersErrors = {
     };
 };
 
-export type GetCurrentTeamMembersError = GetCurrentTeamMembersErrors[keyof GetCurrentTeamMembersErrors];
+export type GetTokenTeamMembersError = GetTokenTeamMembersErrors[keyof GetTokenTeamMembersErrors];
 
-export type GetCurrentTeamMembersResponses = {
+export type GetTokenTeamMembersResponses = {
     /**
-     * Currently authenticated team members.
+     * Members of the team bound to the API token.
      */
     200: Array<User>;
 };
 
-export type GetCurrentTeamMembersResponse = GetCurrentTeamMembersResponses[keyof GetCurrentTeamMembersResponses];
+export type GetTokenTeamMembersResponse = GetTokenTeamMembersResponses[keyof GetTokenTeamMembersResponses];

@@ -226,6 +226,47 @@ export const zEnvironment = z.object({
 });
 
 /**
+ * Application settings.
+ */
+export const zApplicationSetting = z.object({
+    is_static: z.optional(z.boolean()),
+    is_git_submodules_enabled: z.optional(z.boolean()),
+    is_git_lfs_enabled: z.optional(z.boolean()),
+    is_auto_deploy_enabled: z.optional(z.boolean()),
+    is_force_https_enabled: z.optional(z.boolean()),
+    is_debug_enabled: z.optional(z.boolean()),
+    is_preview_deployments_enabled: z.optional(z.boolean()),
+    is_log_drain_enabled: z.optional(z.boolean()),
+    is_gpu_enabled: z.optional(z.boolean()),
+    gpu_driver: z.optional(z.string()),
+    gpu_count: z.optional(z.string()),
+    gpu_device_ids: z.optional(z.string()),
+    gpu_options: z.optional(z.string()),
+    is_include_timestamps: z.optional(z.boolean()),
+    is_swarm_only_worker_nodes: z.optional(z.boolean()),
+    is_raw_compose_deployment_enabled: z.optional(z.boolean()),
+    is_build_server_enabled: z.optional(z.boolean()),
+    is_consistent_container_name_enabled: z.optional(z.boolean()),
+    is_gzip_enabled: z.optional(z.boolean()),
+    is_stripprefix_enabled: z.optional(z.boolean()),
+    connect_to_docker_network: z.optional(z.boolean()),
+    custom_internal_name: z.optional(z.string()),
+    is_container_label_escape_enabled: z.optional(z.boolean()),
+    is_env_sorting_enabled: z.optional(z.boolean()),
+    is_container_label_readonly_enabled: z.optional(z.boolean()),
+    is_preserve_repository_enabled: z.optional(z.boolean()),
+    disable_build_cache: z.optional(z.boolean()),
+    is_spa: z.optional(z.boolean()),
+    is_git_shallow_clone_enabled: z.optional(z.boolean()),
+    is_pr_deployments_public_enabled: z.optional(z.boolean()),
+    use_build_secrets: z.optional(z.boolean()),
+    inject_build_args_to_dockerfile: z.optional(z.boolean()),
+    include_source_commit_in_build: z.optional(z.boolean()),
+    docker_images_to_keep: z.optional(z.int()),
+    stop_grace_period: z.optional(z.int())
+});
+
+/**
  * Project model
  */
 export const zApplicationDeploymentQueue = z.object({
@@ -268,6 +309,7 @@ export const zApplication = z.object({
     uuid: z.optional(z.string()),
     name: z.optional(z.string()),
     fqdn: z.optional(z.string()),
+    noindex_domains: z.optional(z.array(z.string())),
     config_hash: z.optional(z.string()),
     git_repository: z.optional(z.string()),
     git_branch: z.optional(z.string()),
@@ -314,6 +356,7 @@ export const zApplication = z.object({
     limits_cpu_shares: z.optional(z.int()),
     status: z.optional(z.string()),
     preview_url_template: z.optional(z.string()),
+    max_restart_count: z.optional(z.int()),
     destination_type: z.optional(z.string()),
     destination_id: z.optional(z.int()),
     source_id: z.optional(z.int()),
@@ -354,7 +397,8 @@ export const zApplication = z.object({
     custom_nginx_configuration: z.optional(z.string()),
     is_http_basic_auth_enabled: z.optional(z.boolean()),
     http_basic_auth_username: z.optional(z.string()),
-    http_basic_auth_password: z.optional(z.string())
+    http_basic_auth_password: z.optional(z.string()),
+    settings: z.optional(zApplicationSetting)
 });
 
 export const zListApplicationsData = z.object({
@@ -390,6 +434,7 @@ export const zCreatePublicApplicationData = z.object({
         name: z.optional(z.string()),
         description: z.optional(z.string()),
         domains: z.optional(z.string()),
+        noindex_domains: z.optional(z.array(z.string())),
         git_commit_sha: z.optional(z.string()),
         docker_registry_image_name: z.optional(z.string()),
         docker_registry_image_tag: z.optional(z.string()),
@@ -397,6 +442,7 @@ export const zCreatePublicApplicationData = z.object({
         is_spa: z.optional(z.boolean()),
         is_auto_deploy_enabled: z.optional(z.boolean()),
         is_force_https_enabled: z.optional(z.boolean()),
+        is_preview_deployments_enabled: z.optional(z.boolean()),
         static_image: z.optional(z.enum(['nginx:alpine'])),
         install_command: z.optional(z.string()),
         build_command: z.optional(z.string()),
@@ -446,10 +492,39 @@ export const zCreatePublicApplicationData = z.object({
         docker_compose_custom_build_command: z.optional(z.string()),
         docker_compose_domains: z.optional(z.array(z.object({
             name: z.optional(z.string()),
-            domain: z.optional(z.string())
+            domain: z.optional(z.string()),
+            redirect: z.optional(z.enum([
+                'www',
+                'non-www',
+                'both'
+            ]))
         }))),
         watch_paths: z.optional(z.string()),
         use_build_server: z.optional(z.boolean()),
+        use_build_secrets: z.optional(z.boolean()).default(false),
+        is_git_submodules_enabled: z.optional(z.boolean()),
+        is_git_lfs_enabled: z.optional(z.boolean()),
+        is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        disable_build_cache: z.optional(z.boolean()),
+        inject_build_args_to_dockerfile: z.optional(z.boolean()),
+        include_source_commit_in_build: z.optional(z.boolean()),
+        is_env_sorting_enabled: z.optional(z.boolean()),
+        is_pr_deployments_public_enabled: z.optional(z.boolean()),
+        stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
+        is_gzip_enabled: z.optional(z.boolean()),
+        is_stripprefix_enabled: z.optional(z.boolean()),
+        is_raw_compose_deployment_enabled: z.optional(z.boolean()),
+        is_log_drain_enabled: z.optional(z.boolean()),
+        is_gpu_enabled: z.optional(z.boolean()),
+        gpu_driver: z.optional(z.string()),
+        gpu_count: z.optional(z.string()),
+        gpu_device_ids: z.optional(z.string()),
+        gpu_options: z.optional(z.string()),
+        is_consistent_container_name_enabled: z.optional(z.boolean()),
+        custom_internal_name: z.optional(z.string()),
+        preview_url_template: z.optional(z.string()),
+        max_restart_count: z.optional(z.int().gte(0)),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
@@ -457,6 +532,7 @@ export const zCreatePublicApplicationData = z.object({
         force_domain_override: z.optional(z.boolean()),
         autogenerate_domain: z.optional(z.boolean()).default(true),
         is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        tags: z.optional(z.array(z.string())),
         is_preserve_repository_enabled: z.optional(z.boolean()).default(false)
     }),
     path: z.optional(z.never()),
@@ -491,6 +567,7 @@ export const zCreatePrivateGithubAppApplicationData = z.object({
         name: z.optional(z.string()),
         description: z.optional(z.string()),
         domains: z.optional(z.string()),
+        noindex_domains: z.optional(z.array(z.string())),
         git_commit_sha: z.optional(z.string()),
         docker_registry_image_name: z.optional(z.string()),
         docker_registry_image_tag: z.optional(z.string()),
@@ -498,6 +575,7 @@ export const zCreatePrivateGithubAppApplicationData = z.object({
         is_spa: z.optional(z.boolean()),
         is_auto_deploy_enabled: z.optional(z.boolean()),
         is_force_https_enabled: z.optional(z.boolean()),
+        is_preview_deployments_enabled: z.optional(z.boolean()),
         static_image: z.optional(z.enum(['nginx:alpine'])),
         install_command: z.optional(z.string()),
         build_command: z.optional(z.string()),
@@ -547,10 +625,39 @@ export const zCreatePrivateGithubAppApplicationData = z.object({
         docker_compose_custom_build_command: z.optional(z.string()),
         docker_compose_domains: z.optional(z.array(z.object({
             name: z.optional(z.string()),
-            domain: z.optional(z.string())
+            domain: z.optional(z.string()),
+            redirect: z.optional(z.enum([
+                'www',
+                'non-www',
+                'both'
+            ]))
         }))),
         watch_paths: z.optional(z.string()),
         use_build_server: z.optional(z.boolean()),
+        use_build_secrets: z.optional(z.boolean()).default(false),
+        is_git_submodules_enabled: z.optional(z.boolean()),
+        is_git_lfs_enabled: z.optional(z.boolean()),
+        is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        disable_build_cache: z.optional(z.boolean()),
+        inject_build_args_to_dockerfile: z.optional(z.boolean()),
+        include_source_commit_in_build: z.optional(z.boolean()),
+        is_env_sorting_enabled: z.optional(z.boolean()),
+        is_pr_deployments_public_enabled: z.optional(z.boolean()),
+        stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
+        is_gzip_enabled: z.optional(z.boolean()),
+        is_stripprefix_enabled: z.optional(z.boolean()),
+        is_raw_compose_deployment_enabled: z.optional(z.boolean()),
+        is_log_drain_enabled: z.optional(z.boolean()),
+        is_gpu_enabled: z.optional(z.boolean()),
+        gpu_driver: z.optional(z.string()),
+        gpu_count: z.optional(z.string()),
+        gpu_device_ids: z.optional(z.string()),
+        gpu_options: z.optional(z.string()),
+        is_consistent_container_name_enabled: z.optional(z.boolean()),
+        custom_internal_name: z.optional(z.string()),
+        preview_url_template: z.optional(z.string()),
+        max_restart_count: z.optional(z.int().gte(0)),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
@@ -558,6 +665,7 @@ export const zCreatePrivateGithubAppApplicationData = z.object({
         force_domain_override: z.optional(z.boolean()),
         autogenerate_domain: z.optional(z.boolean()).default(true),
         is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        tags: z.optional(z.array(z.string())),
         is_preserve_repository_enabled: z.optional(z.boolean()).default(false)
     }),
     path: z.optional(z.never()),
@@ -592,6 +700,7 @@ export const zCreatePrivateDeployKeyApplicationData = z.object({
         name: z.optional(z.string()),
         description: z.optional(z.string()),
         domains: z.optional(z.string()),
+        noindex_domains: z.optional(z.array(z.string())),
         git_commit_sha: z.optional(z.string()),
         docker_registry_image_name: z.optional(z.string()),
         docker_registry_image_tag: z.optional(z.string()),
@@ -599,6 +708,7 @@ export const zCreatePrivateDeployKeyApplicationData = z.object({
         is_spa: z.optional(z.boolean()),
         is_auto_deploy_enabled: z.optional(z.boolean()),
         is_force_https_enabled: z.optional(z.boolean()),
+        is_preview_deployments_enabled: z.optional(z.boolean()),
         static_image: z.optional(z.enum(['nginx:alpine'])),
         install_command: z.optional(z.string()),
         build_command: z.optional(z.string()),
@@ -648,10 +758,39 @@ export const zCreatePrivateDeployKeyApplicationData = z.object({
         docker_compose_custom_build_command: z.optional(z.string()),
         docker_compose_domains: z.optional(z.array(z.object({
             name: z.optional(z.string()),
-            domain: z.optional(z.string())
+            domain: z.optional(z.string()),
+            redirect: z.optional(z.enum([
+                'www',
+                'non-www',
+                'both'
+            ]))
         }))),
         watch_paths: z.optional(z.string()),
         use_build_server: z.optional(z.boolean()),
+        use_build_secrets: z.optional(z.boolean()).default(false),
+        is_git_submodules_enabled: z.optional(z.boolean()),
+        is_git_lfs_enabled: z.optional(z.boolean()),
+        is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        disable_build_cache: z.optional(z.boolean()),
+        inject_build_args_to_dockerfile: z.optional(z.boolean()),
+        include_source_commit_in_build: z.optional(z.boolean()),
+        is_env_sorting_enabled: z.optional(z.boolean()),
+        is_pr_deployments_public_enabled: z.optional(z.boolean()),
+        stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
+        is_gzip_enabled: z.optional(z.boolean()),
+        is_stripprefix_enabled: z.optional(z.boolean()),
+        is_raw_compose_deployment_enabled: z.optional(z.boolean()),
+        is_log_drain_enabled: z.optional(z.boolean()),
+        is_gpu_enabled: z.optional(z.boolean()),
+        gpu_driver: z.optional(z.string()),
+        gpu_count: z.optional(z.string()),
+        gpu_device_ids: z.optional(z.string()),
+        gpu_options: z.optional(z.string()),
+        is_consistent_container_name_enabled: z.optional(z.boolean()),
+        custom_internal_name: z.optional(z.string()),
+        preview_url_template: z.optional(z.string()),
+        max_restart_count: z.optional(z.int().gte(0)),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
@@ -659,6 +798,7 @@ export const zCreatePrivateDeployKeyApplicationData = z.object({
         force_domain_override: z.optional(z.boolean()),
         autogenerate_domain: z.optional(z.boolean()).default(true),
         is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        tags: z.optional(z.array(z.string())),
         is_preserve_repository_enabled: z.optional(z.boolean()).default(false)
     }),
     path: z.optional(z.never()),
@@ -685,6 +825,7 @@ export const zCreateDockerfileApplicationData = z.object({
         name: z.optional(z.string()),
         description: z.optional(z.string()),
         domains: z.optional(z.string()),
+        noindex_domains: z.optional(z.array(z.string())),
         docker_registry_image_name: z.optional(z.string()),
         docker_registry_image_tag: z.optional(z.string()),
         ports_mappings: z.optional(z.string()),
@@ -725,14 +866,40 @@ export const zCreateDockerfileApplicationData = z.object({
         ])),
         instant_deploy: z.optional(z.boolean()),
         is_force_https_enabled: z.optional(z.boolean()),
+        is_preview_deployments_enabled: z.optional(z.boolean()),
         use_build_server: z.optional(z.boolean()),
+        use_build_secrets: z.optional(z.boolean()).default(false),
+        is_git_submodules_enabled: z.optional(z.boolean()),
+        is_git_lfs_enabled: z.optional(z.boolean()),
+        is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        disable_build_cache: z.optional(z.boolean()),
+        inject_build_args_to_dockerfile: z.optional(z.boolean()),
+        include_source_commit_in_build: z.optional(z.boolean()),
+        is_env_sorting_enabled: z.optional(z.boolean()),
+        is_pr_deployments_public_enabled: z.optional(z.boolean()),
+        stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
+        is_gzip_enabled: z.optional(z.boolean()),
+        is_stripprefix_enabled: z.optional(z.boolean()),
+        is_raw_compose_deployment_enabled: z.optional(z.boolean()),
+        is_log_drain_enabled: z.optional(z.boolean()),
+        is_gpu_enabled: z.optional(z.boolean()),
+        gpu_driver: z.optional(z.string()),
+        gpu_count: z.optional(z.string()),
+        gpu_device_ids: z.optional(z.string()),
+        gpu_options: z.optional(z.string()),
+        is_consistent_container_name_enabled: z.optional(z.boolean()),
+        custom_internal_name: z.optional(z.string()),
+        preview_url_template: z.optional(z.string()),
+        max_restart_count: z.optional(z.int().gte(0)),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
         autogenerate_domain: z.optional(z.boolean()).default(true),
-        is_container_label_escape_enabled: z.optional(z.boolean()).default(true)
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -758,6 +925,7 @@ export const zCreateDockerimageApplicationData = z.object({
         name: z.optional(z.string()),
         description: z.optional(z.string()),
         domains: z.optional(z.string()),
+        noindex_domains: z.optional(z.array(z.string())),
         ports_mappings: z.optional(z.string()),
         health_check_enabled: z.optional(z.boolean()),
         health_check_path: z.optional(z.string()),
@@ -795,14 +963,40 @@ export const zCreateDockerimageApplicationData = z.object({
         ])),
         instant_deploy: z.optional(z.boolean()),
         is_force_https_enabled: z.optional(z.boolean()),
+        is_preview_deployments_enabled: z.optional(z.boolean()),
         use_build_server: z.optional(z.boolean()),
+        use_build_secrets: z.optional(z.boolean()).default(false),
+        is_git_submodules_enabled: z.optional(z.boolean()),
+        is_git_lfs_enabled: z.optional(z.boolean()),
+        is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        disable_build_cache: z.optional(z.boolean()),
+        inject_build_args_to_dockerfile: z.optional(z.boolean()),
+        include_source_commit_in_build: z.optional(z.boolean()),
+        is_env_sorting_enabled: z.optional(z.boolean()),
+        is_pr_deployments_public_enabled: z.optional(z.boolean()),
+        stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
+        is_gzip_enabled: z.optional(z.boolean()),
+        is_stripprefix_enabled: z.optional(z.boolean()),
+        is_raw_compose_deployment_enabled: z.optional(z.boolean()),
+        is_log_drain_enabled: z.optional(z.boolean()),
+        is_gpu_enabled: z.optional(z.boolean()),
+        gpu_driver: z.optional(z.string()),
+        gpu_count: z.optional(z.string()),
+        gpu_device_ids: z.optional(z.string()),
+        gpu_options: z.optional(z.string()),
+        is_consistent_container_name_enabled: z.optional(z.boolean()),
+        custom_internal_name: z.optional(z.string()),
+        preview_url_template: z.optional(z.string()),
+        max_restart_count: z.optional(z.int().gte(0)),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
         autogenerate_domain: z.optional(z.boolean()).default(true),
-        is_container_label_escape_enabled: z.optional(z.boolean()).default(true)
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -868,6 +1062,7 @@ export const zUpdateApplicationByUuidData = z.object({
         name: z.optional(z.string()),
         description: z.optional(z.string()),
         domains: z.optional(z.string()),
+        noindex_domains: z.optional(z.array(z.string())),
         git_commit_sha: z.optional(z.string()),
         docker_registry_image_name: z.optional(z.string()),
         docker_registry_image_tag: z.optional(z.string()),
@@ -875,6 +1070,7 @@ export const zUpdateApplicationByUuidData = z.object({
         is_spa: z.optional(z.boolean()),
         is_auto_deploy_enabled: z.optional(z.boolean()),
         is_force_https_enabled: z.optional(z.boolean()),
+        is_preview_deployments_enabled: z.optional(z.boolean()),
         install_command: z.optional(z.string()),
         build_command: z.optional(z.string()),
         start_command: z.optional(z.string()),
@@ -923,10 +1119,39 @@ export const zUpdateApplicationByUuidData = z.object({
         docker_compose_custom_build_command: z.optional(z.string()),
         docker_compose_domains: z.optional(z.array(z.object({
             name: z.optional(z.string()),
-            domain: z.optional(z.string())
+            domain: z.optional(z.string()),
+            redirect: z.optional(z.enum([
+                'www',
+                'non-www',
+                'both'
+            ]))
         }))),
         watch_paths: z.optional(z.string()),
         use_build_server: z.optional(z.boolean()),
+        use_build_secrets: z.optional(z.boolean()),
+        is_git_submodules_enabled: z.optional(z.boolean()),
+        is_git_lfs_enabled: z.optional(z.boolean()),
+        is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        disable_build_cache: z.optional(z.boolean()),
+        inject_build_args_to_dockerfile: z.optional(z.boolean()),
+        include_source_commit_in_build: z.optional(z.boolean()),
+        is_env_sorting_enabled: z.optional(z.boolean()),
+        is_pr_deployments_public_enabled: z.optional(z.boolean()),
+        stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
+        is_gzip_enabled: z.optional(z.boolean()),
+        is_stripprefix_enabled: z.optional(z.boolean()),
+        is_raw_compose_deployment_enabled: z.optional(z.boolean()),
+        is_log_drain_enabled: z.optional(z.boolean()),
+        is_gpu_enabled: z.optional(z.boolean()),
+        gpu_driver: z.optional(z.string()),
+        gpu_count: z.optional(z.string()),
+        gpu_device_ids: z.optional(z.string()),
+        gpu_options: z.optional(z.string()),
+        is_consistent_container_name_enabled: z.optional(z.boolean()),
+        custom_internal_name: z.optional(z.string()),
+        preview_url_template: z.optional(z.string()),
+        max_restart_count: z.optional(z.int().gte(0)),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
         is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
@@ -951,7 +1176,8 @@ export const zGetApplicationLogsByUuidData = z.object({
         uuid: z.string()
     }),
     query: z.optional(z.object({
-        lines: z.optional(z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })).default(100)
+        lines: z.optional(z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })).default(100),
+        show_timestamps: z.optional(z.boolean()).default(false)
     }))
 });
 
@@ -1408,7 +1634,8 @@ export const zCreateDatabasePostgresqlData = z.object({
         limits_cpus: z.optional(z.string()),
         limits_cpuset: z.optional(z.string()),
         limits_cpu_shares: z.optional(z.int()),
-        instant_deploy: z.optional(z.boolean())
+        instant_deploy: z.optional(z.boolean()),
+        tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -1436,7 +1663,8 @@ export const zCreateDatabaseClickhouseData = z.object({
         limits_cpus: z.optional(z.string()),
         limits_cpuset: z.optional(z.string()),
         limits_cpu_shares: z.optional(z.int()),
-        instant_deploy: z.optional(z.boolean())
+        instant_deploy: z.optional(z.boolean()),
+        tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -1463,7 +1691,8 @@ export const zCreateDatabaseDragonflyData = z.object({
         limits_cpus: z.optional(z.string()),
         limits_cpuset: z.optional(z.string()),
         limits_cpu_shares: z.optional(z.int()),
-        instant_deploy: z.optional(z.boolean())
+        instant_deploy: z.optional(z.boolean()),
+        tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -1491,7 +1720,8 @@ export const zCreateDatabaseRedisData = z.object({
         limits_cpus: z.optional(z.string()),
         limits_cpuset: z.optional(z.string()),
         limits_cpu_shares: z.optional(z.int()),
-        instant_deploy: z.optional(z.boolean())
+        instant_deploy: z.optional(z.boolean()),
+        tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -1519,7 +1749,8 @@ export const zCreateDatabaseKeydbData = z.object({
         limits_cpus: z.optional(z.string()),
         limits_cpuset: z.optional(z.string()),
         limits_cpu_shares: z.optional(z.int()),
-        instant_deploy: z.optional(z.boolean())
+        instant_deploy: z.optional(z.boolean()),
+        tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -1550,7 +1781,8 @@ export const zCreateDatabaseMariadbData = z.object({
         limits_cpus: z.optional(z.string()),
         limits_cpuset: z.optional(z.string()),
         limits_cpu_shares: z.optional(z.int()),
-        instant_deploy: z.optional(z.boolean())
+        instant_deploy: z.optional(z.boolean()),
+        tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -1581,7 +1813,8 @@ export const zCreateDatabaseMysqlData = z.object({
         limits_cpus: z.optional(z.string()),
         limits_cpuset: z.optional(z.string()),
         limits_cpu_shares: z.optional(z.int()),
-        instant_deploy: z.optional(z.boolean())
+        instant_deploy: z.optional(z.boolean()),
+        tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -1609,7 +1842,8 @@ export const zCreateDatabaseMongodbData = z.object({
         limits_cpus: z.optional(z.string()),
         limits_cpuset: z.optional(z.string()),
         limits_cpu_shares: z.optional(z.int()),
-        instant_deploy: z.optional(z.boolean())
+        instant_deploy: z.optional(z.boolean()),
+        tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -2540,7 +2774,9 @@ export const zGetDomainsByServerUuidResponse = z.array(z.object({
 }));
 
 export const zValidateServerByUuidData = z.object({
-    body: z.optional(z.never()),
+    body: z.optional(z.object({
+        install: z.optional(z.boolean()).default(false)
+    })),
     path: z.object({
         uuid: z.string()
     }),
@@ -2582,7 +2818,8 @@ export const zCreateServiceData = z.object({
             url: z.optional(z.string())
         }))),
         force_domain_override: z.optional(z.boolean()).default(false),
-        is_container_label_escape_enabled: z.optional(z.boolean()).default(true)
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -2633,11 +2870,6 @@ export const zUpdateServiceByUuidData = z.object({
     body: z.object({
         name: z.optional(z.string()),
         description: z.optional(z.string()),
-        project_uuid: z.optional(z.string()),
-        environment_name: z.optional(z.string()),
-        environment_uuid: z.optional(z.string()),
-        server_uuid: z.optional(z.string()),
-        destination_uuid: z.optional(z.string()),
         instant_deploy: z.optional(z.boolean()),
         connect_to_docker_network: z.optional(z.boolean()).default(false),
         docker_compose_raw: z.optional(z.string()),
@@ -2917,24 +3149,24 @@ export const zGetMembersByTeamIdData = z.object({
  */
 export const zGetMembersByTeamIdResponse = z.array(zUser);
 
-export const zGetCurrentTeamData = z.object({
+export const zGetTokenTeamData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
     query: z.optional(z.never())
 });
 
 /**
- * Current Team.
+ * Team bound to the API token.
  */
-export const zGetCurrentTeamResponse = zTeam;
+export const zGetTokenTeamResponse = zTeam;
 
-export const zGetCurrentTeamMembersData = z.object({
+export const zGetTokenTeamMembersData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
     query: z.optional(z.never())
 });
 
 /**
- * Currently authenticated team members.
+ * Members of the team bound to the API token.
  */
-export const zGetCurrentTeamMembersResponse = z.array(zUser);
+export const zGetTokenTeamMembersResponse = z.array(zUser);

@@ -233,12 +233,12 @@ export function registerResourceTools(server: McpServer) {
         case "current":
           return ok(
             "Current team fetched.",
-            await unwrap(sdk.getCurrentTeam(), "teams(current)")
+            await unwrap(sdk.getTokenTeam(), "teams(current)")
           );
         case "current_members":
           return list(
             "Current team members fetched.",
-            await unwrap(sdk.getCurrentTeamMembers(), "teams(current_members)")
+            await unwrap(sdk.getTokenTeamMembers(), "teams(current_members)")
           );
         case "get":
           return ok(
