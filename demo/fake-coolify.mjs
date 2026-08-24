@@ -26,7 +26,7 @@ const failedLogs = JSON.stringify([
 
 const routes = {
   '/api/v1/health': () => 'OK',
-  '/api/v1/version': () => 'v4.1.2',
+  '/api/v1/version': () => 'v4.3.10',
   '/api/v1/servers': () => [
     { id: 1, uuid: 's1', name: 'prod-1', ip: '10.0.0.11', proxy_type: 'traefik' },
     { id: 2, uuid: 's2', name: 'prod-2', ip: '10.0.0.12', proxy_type: 'traefik' },

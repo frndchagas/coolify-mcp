@@ -211,7 +211,7 @@ describe("resource tools dispatch", () => {
     const teams = tools.get("teams")!.handler;
     await expect(teams({ action: "get" })).rejects.toThrow(/id is required/);
     await teams({ action: "current" });
-    expect(sdkFn("getCurrentTeam")).toHaveBeenCalledTimes(1);
+    expect(sdkFn("getTokenTeam")).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -12,7 +12,7 @@ MCP server for Coolify API - enables full deployment workflows from zero to prod
 
 ![coolify-mcp demo](docs/demo.gif)
 
-Targets the **Coolify v4.1.2** API. Types and schemas are generated directly from Coolify's official OpenAPI spec, so tool inputs always match what the API actually accepts.
+Targets the **Coolify v4.3.10** API. Types and schemas are generated directly from Coolify's official OpenAPI spec, so tool inputs always match what the API actually accepts.
 
 ## Features
 
