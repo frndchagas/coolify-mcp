@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.3.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.2.1...coolify-mcp-v2.3.0) (2026-08-24)
+
+
+### Features
+
+* target Coolify v4.3.10 API ([#50](https://github.com/frndchagas/coolify-mcp/issues/50)) ([0588faf](https://github.com/frndchagas/coolify-mcp/commit/0588fafab83c9e062ee19f4edb930c46d8797520))
+
+
+### Bug Fixes
+
+* **ci:** exclude demo scripts from linting ([16ecdf1](https://github.com/frndchagas/coolify-mcp/commit/16ecdf1ab187455ec9f16146470f6b0afcec9b54))
+* **ci:** exclude demo scripts from linting ([ed4f05d](https://github.com/frndchagas/coolify-mcp/commit/ed4f05d410a0f67a5f6646e6b486ec4570e6625b))
+* isolate stateless MCP server requests ([#49](https://github.com/frndchagas/coolify-mcp/issues/49)) ([79d226c](https://github.com/frndchagas/coolify-mcp/commit/79d226c96b689419944b2869df88b664f99a0977))
+
 ## [2.2.1](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.2.0...coolify-mcp-v2.2.1) (2026-08-06)
 
 
