@@ -1,5 +1,5 @@
 // Builds docs-index.json from the official Coolify documentation repo
-// (coollabsio/coolify-docs, branch v4.x). Run on demand via `npm run docs:index`
+// (coollabsio/coolify-docs, branch main). Run on demand via `npm run docs:index`
 // and commit the result — the searchDocs tool reads it locally at runtime.
 
 import { execFileSync } from "node:child_process";
@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 
 const DOCS_TARBALL =
-  "https://codeload.github.com/coollabsio/coolify-docs/tar.gz/refs/heads/v4.x";
+  "https://codeload.github.com/coollabsio/coolify-docs/tar.gz/refs/heads/main";
 const BODY_LIMIT = 4000;
 
 const workDir = mkdtempSync(join(tmpdir(), "coolify-docs-"));

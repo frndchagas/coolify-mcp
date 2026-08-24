@@ -44,7 +44,7 @@ jobs:
           if [ -z "$existing" ]; then
             gh pr create --repo "$GITHUB_REPOSITORY" \
               --title "chore: refresh bundled docs index" \
-              --body "Weekly rebuild of docs-index.json from coollabsio/coolify-docs (v4.x)." \
+              --body "Weekly rebuild of docs-index.json from coollabsio/coolify-docs (main)." \
               --head chore/docs-index-refresh
           else
             echo "PR #$existing already open — branch updated."
