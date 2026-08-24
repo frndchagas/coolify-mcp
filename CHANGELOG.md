@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.3.0...coolify-mcp-v2.3.1) (2026-08-24)
+
+
+### Bug Fixes
+
+* **docs:** follow upstream main branch ([#52](https://github.com/frndchagas/coolify-mcp/issues/52)) ([5b4f0cd](https://github.com/frndchagas/coolify-mcp/commit/5b4f0cdf108909f03afc9bf3589eea2b98a4c5e4))
+
 ## [2.3.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.2.1...coolify-mcp-v2.3.0) (2026-08-24)
 
 
