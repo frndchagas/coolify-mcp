@@ -1,4 +1,4 @@
-export const COOLIFY_VERSION = "v4.3.10";
+export const COOLIFY_VERSION = "v4.7.5";
 
 const COOLIFY_REPO = "coollabsio/coolify";
 
