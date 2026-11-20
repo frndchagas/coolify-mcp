@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.3.1...coolify-mcp-v2.4.0) (2026-11-20)
+
+
+### Features
+
+* target Coolify v4.7.5 API and PATCH /security/keys/{uuid} ([#59](https://github.com/frndchagas/coolify-mcp/issues/59)) ([61d76e9](https://github.com/frndchagas/coolify-mcp/commit/61d76e9ecab2af983ad067d74c0284d5669fd1c0))
+
 ## [2.3.1](https://github.com/frndchagas/coolify-mcp/compare/coolify-mcp-v2.3.0...coolify-mcp-v2.3.1) (2026-08-24)
 
 
