@@ -5,6 +5,7 @@ function transport() {
   return {
     get: vi.fn(),
     post: vi.fn(),
+    patch: vi.fn(),
   };
 }
 
@@ -77,7 +78,7 @@ const mutatingOperations = [
   ],
 ] as const;
 
-describe("Coolify v4.3.10 generated transport contract", () => {
+describe("Coolify v4.7.5 generated transport contract", () => {
   it.each(mutatingOperations)("%s uses POST %s", (_name, url, invoke) => {
     const client = transport();
 
@@ -97,5 +98,19 @@ describe("Coolify v4.3.10 generated transport contract", () => {
 
     expect(client.get).toHaveBeenCalledWith(expect.objectContaining({ url }));
     expect(client.post).not.toHaveBeenCalled();
+  });
+
+  it("updates private keys via PATCH /security/keys/{uuid}", () => {
+    const client = transport();
+
+    sdk.updatePrivateKey({
+      client: client as never,
+      path: { uuid: "key-uuid" },
+      body: { name: "renamed" },
+    });
+
+    expect(client.patch).toHaveBeenCalledWith(
+      expect.objectContaining({ url: "/security/keys/{uuid}" }),
+    );
   });
 });

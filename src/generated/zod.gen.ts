@@ -29,6 +29,8 @@ export const zTeam = z.object({
     updated_at: z.optional(z.string()),
     show_boarding: z.optional(z.boolean()),
     custom_server_limit: z.optional(z.string()),
+    is_build_server_fallback_enabled: z.optional(z.boolean()),
+    scan_images_on_new_servers: z.optional(z.boolean()),
     members: z.optional(z.array(zUser))
 });
 
@@ -48,6 +50,7 @@ export const zService = z.object({
     destination_id: z.optional(z.int()),
     connect_to_docker_network: z.optional(z.boolean()),
     is_container_label_escape_enabled: z.optional(z.boolean()),
+    redact_all_env_values_in_logs: z.optional(z.boolean()),
     is_container_label_readonly_enabled: z.optional(z.boolean()),
     config_hash: z.optional(z.string()),
     service_type: z.optional(z.string()),
@@ -63,18 +66,50 @@ export const zServerSetting = z.object({
     id: z.optional(z.int()),
     concurrent_builds: z.optional(z.int()),
     deployment_queue_limit: z.optional(z.int()),
+    backup_compression_cpu_percentage: z.optional(z.int()),
     dynamic_timeout: z.optional(z.int()),
     force_disabled: z.optional(z.boolean()),
     force_server_cleanup: z.optional(z.boolean()),
-    is_build_server: z.optional(z.boolean()),
+    server_role: z.optional(z.enum([
+        'deployment',
+        'build',
+        'both'
+    ])),
+    is_build_server: z.optional(z.boolean().readonly()),
     is_cloudflare_tunnel: z.optional(z.boolean()),
     is_jump_server: z.optional(z.boolean()),
     is_logdrain_axiom_enabled: z.optional(z.boolean()),
+    is_logdrain_cloudwatch_enabled: z.optional(z.boolean()),
     is_logdrain_custom_enabled: z.optional(z.boolean()),
-    is_logdrain_highlight_enabled: z.optional(z.boolean()),
     is_logdrain_newrelic_enabled: z.optional(z.boolean()),
     is_metrics_enabled: z.optional(z.boolean()),
+    is_traffic_analytics_enabled: z.optional(z.boolean()),
+    traffic_topn: z.optional(z.int()),
+    traffic_sample_threshold: z.optional(z.int()),
+    traffic_retention_1h_days: z.optional(z.int()),
+    traffic_retention_1d_days: z.optional(z.int()),
+    is_geoip_enabled: z.optional(z.boolean()),
+    geoip_refresh_days: z.optional(z.int()),
+    traffic_ip_mode: z.optional(z.enum([
+        'full',
+        'anonymized',
+        'off'
+    ])),
+    traefik_certificate_resolver: z.optional(z.string()),
     is_reachable: z.optional(z.boolean()),
+    ssh_host_key: z.optional(z.string()),
+    ssh_host_key_source: z.optional(z.enum([
+        'tofu',
+        'upgrade',
+        'transfer',
+        'manual'
+    ])),
+    ssh_host_key_trusted_at: z.optional(z.iso.datetime()),
+    ssh_host_key_pending: z.optional(z.string()),
+    is_ssh_host_key_check_disabled: z.optional(z.boolean()),
+    is_ssh_host_key_check_enforced: z.optional(z.boolean()),
+    ssh_host_key_fingerprints: z.optional(z.array(z.string()).readonly()),
+    ssh_host_key_pending_fingerprints: z.optional(z.array(z.string()).readonly()),
     is_sentinel_enabled: z.optional(z.boolean()),
     is_swarm_manager: z.optional(z.boolean()),
     is_swarm_worker: z.optional(z.boolean()),
@@ -82,9 +117,12 @@ export const zServerSetting = z.object({
     is_usable: z.optional(z.boolean()),
     logdrain_axiom_api_key: z.optional(z.string()),
     logdrain_axiom_dataset_name: z.optional(z.string()),
+    logdrain_axiom_domain: z.optional(z.string()),
+    logdrain_cloudwatch_region: z.optional(z.string()),
+    logdrain_cloudwatch_group: z.optional(z.string()),
+    logdrain_cloudwatch_stream_prefix: z.optional(z.string()),
     logdrain_custom_config: z.optional(z.string()),
     logdrain_custom_config_parser: z.optional(z.string()),
-    logdrain_highlight_project_id: z.optional(z.string()),
     logdrain_newrelic_base_uri: z.optional(z.string()),
     logdrain_newrelic_license_key: z.optional(z.string()),
     sentinel_metrics_history_days: z.optional(z.int()),
@@ -98,7 +136,11 @@ export const zServerSetting = z.object({
     updated_at: z.optional(z.string()),
     delete_unused_volumes: z.optional(z.boolean()),
     delete_unused_networks: z.optional(z.boolean()),
-    connection_timeout: z.optional(z.int())
+    connection_timeout: z.optional(z.int()),
+    docker_version: z.optional(z.string()),
+    docker_version_checked_at: z.optional(z.string()),
+    compose_version: z.optional(z.string()),
+    compose_version_checked_at: z.optional(z.string())
 });
 
 /**
@@ -112,7 +154,6 @@ export const zServer = z.object({
     ip: z.optional(z.string()),
     user: z.optional(z.string()),
     port: z.optional(z.int()),
-    proxy: z.optional(z.record(z.string(), z.unknown())),
     proxy_type: z.optional(z.enum([
         'traefik',
         'caddy',
@@ -158,6 +199,10 @@ export const zScheduledTask = z.object({
     frequency: z.optional(z.string()),
     container: z.optional(z.string()),
     timeout: z.optional(z.int()),
+    use_shell: z.optional(z.boolean()),
+    consecutive_failures: z.optional(z.int()),
+    failing_since: z.optional(z.iso.datetime()),
+    disabled_reason: z.optional(z.string()),
     created_at: z.optional(z.iso.datetime()),
     updated_at: z.optional(z.iso.datetime())
 });
@@ -248,11 +293,15 @@ export const zApplicationSetting = z.object({
     is_build_server_enabled: z.optional(z.boolean()),
     is_consistent_container_name_enabled: z.optional(z.boolean()),
     is_gzip_enabled: z.optional(z.boolean()),
+    traefik_certificate_resolver: z.optional(z.string()),
     is_stripprefix_enabled: z.optional(z.boolean()),
+    is_permanent_redirect_enabled: z.optional(z.boolean()),
     connect_to_docker_network: z.optional(z.boolean()),
     custom_internal_name: z.optional(z.string()),
+    custom_container_name_prefix: z.optional(z.string()),
     is_container_label_escape_enabled: z.optional(z.boolean()),
     is_env_sorting_enabled: z.optional(z.boolean()),
+    include_coolify_default_variables: z.optional(z.boolean()),
     is_container_label_readonly_enabled: z.optional(z.boolean()),
     is_preserve_repository_enabled: z.optional(z.boolean()),
     disable_build_cache: z.optional(z.boolean()),
@@ -260,10 +309,13 @@ export const zApplicationSetting = z.object({
     is_git_shallow_clone_enabled: z.optional(z.boolean()),
     is_pr_deployments_public_enabled: z.optional(z.boolean()),
     use_build_secrets: z.optional(z.boolean()),
+    redact_all_env_values_in_logs: z.optional(z.boolean()),
     inject_build_args_to_dockerfile: z.optional(z.boolean()),
     include_source_commit_in_build: z.optional(z.boolean()),
+    include_network_hosts_in_build: z.optional(z.boolean()),
     docker_images_to_keep: z.optional(z.int()),
-    stop_grace_period: z.optional(z.int())
+    stop_grace_period: z.optional(z.int()),
+    rolling_update_drain_seconds: z.optional(z.int())
 });
 
 /**
@@ -283,6 +335,7 @@ export const zApplicationDeploymentQueue = z.object({
     status: z.optional(z.string()),
     is_webhook: z.optional(z.boolean()),
     is_api: z.optional(z.boolean()),
+    is_mcp: z.optional(z.boolean()),
     created_at: z.optional(z.string()),
     updated_at: z.optional(z.string()),
     logs: z.optional(z.string()),
@@ -295,6 +348,7 @@ export const zApplicationDeploymentQueue = z.object({
     deployment_url: z.optional(z.string()),
     destination_id: z.optional(z.string()),
     only_this_server: z.optional(z.boolean()),
+    parent_deployment_uuid: z.optional(z.string()),
     rollback: z.optional(z.boolean()),
     commit_message: z.optional(z.string())
 });
@@ -315,6 +369,8 @@ export const zApplication = z.object({
     git_branch: z.optional(z.string()),
     git_commit_sha: z.optional(z.string()),
     git_full_url: z.optional(z.string()),
+    git_ssh_known_hosts: z.optional(z.string()),
+    git_https_username: z.optional(z.string()),
     docker_registry_image_name: z.optional(z.string()),
     docker_registry_image_tag: z.optional(z.string()),
     build_pack: z.optional(z.enum([
@@ -398,7 +454,487 @@ export const zApplication = z.object({
     is_http_basic_auth_enabled: z.optional(z.boolean()),
     http_basic_auth_username: z.optional(z.string()),
     http_basic_auth_password: z.optional(z.string()),
+    http_basic_auth_hash_algorithm: z.optional(z.enum(['bcrypt', 'argon2id'])),
+    http_basic_auth_bcrypt_cost: z.optional(z.int().gte(4).lte(14)),
+    http_basic_auth_argon2id_memory_cost: z.optional(z.int().gte(8192).lte(262144)),
+    http_basic_auth_argon2id_time_cost: z.optional(z.int().gte(1).lte(12)),
     settings: z.optional(zApplicationSetting)
+});
+
+/**
+ * Standalone database. The fields that start with an engine name (for example postgres_ or redis_) are only returned for that engine. Passwords, connection URLs and init_scripts are only returned for tokens with the read:sensitive or root ability.
+ */
+export const zDatabase = z.object({
+    uuid: z.optional(z.string()),
+    name: z.optional(z.string()),
+    description: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    database_type: z.optional(z.enum([
+        'standalone-postgresql',
+        'standalone-redis',
+        'standalone-mongodb',
+        'standalone-mysql',
+        'standalone-mariadb',
+        'standalone-keydb',
+        'standalone-dragonfly',
+        'standalone-clickhouse',
+        'standalone-sqlite'
+    ])),
+    image: z.optional(z.string()),
+    status: z.optional(z.string()),
+    server_status: z.optional(z.boolean()),
+    environment_id: z.optional(z.int()),
+    environment: z.optional(zEnvironment),
+    destination_id: z.optional(z.int()),
+    destination_type: z.optional(z.string()),
+    destination: z.optional(z.object({
+        uuid: z.optional(z.string()),
+        name: z.optional(z.string()),
+        network: z.optional(z.string()),
+        server_id: z.optional(z.int()),
+        server: z.optional(zServer),
+        created_at: z.optional(z.iso.datetime()),
+        updated_at: z.optional(z.iso.datetime())
+    })),
+    is_public: z.optional(z.boolean()),
+    public_port: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    public_port_timeout: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    ports_mappings: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    enable_ssl: z.optional(z.boolean()),
+    ssl_mode: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    internal_db_url: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    external_db_url: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    init_scripts: z.optional(z.union([
+        z.array(z.object({
+            index: z.optional(z.int()),
+            filename: z.optional(z.string()),
+            content: z.optional(z.string())
+        })),
+        z.null()
+    ])),
+    custom_docker_run_options: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    is_log_drain_enabled: z.optional(z.boolean()),
+    is_include_timestamps: z.optional(z.boolean()),
+    include_coolify_default_variables: z.optional(z.boolean()),
+    redact_all_env_values_in_logs: z.optional(z.boolean()),
+    health_check_enabled: z.optional(z.boolean()),
+    health_check_interval: z.optional(z.int()),
+    health_check_timeout: z.optional(z.int()),
+    health_check_retries: z.optional(z.int()),
+    health_check_start_period: z.optional(z.int()),
+    limits_memory: z.optional(z.string()),
+    limits_memory_swap: z.optional(z.string()),
+    limits_memory_swappiness: z.optional(z.int()),
+    limits_memory_reservation: z.optional(z.string()),
+    limits_cpus: z.optional(z.string()),
+    limits_cpuset: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    limits_cpu_shares: z.optional(z.int()),
+    config_hash: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    restart_count: z.optional(z.int()),
+    last_restart_at: z.optional(z.union([
+        z.iso.datetime(),
+        z.null()
+    ])),
+    last_restart_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    last_online_at: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    started_at: z.optional(z.union([
+        z.iso.datetime(),
+        z.null()
+    ])),
+    backup_configs: z.optional(z.array(z.unknown())),
+    postgres_user: z.optional(z.string()),
+    postgres_password: z.optional(z.string()),
+    postgres_db: z.optional(z.string()),
+    postgres_initdb_args: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    postgres_host_auth_method: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    postgres_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    redis_password: z.optional(z.string()),
+    redis_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    mongo_initdb_root_username: z.optional(z.string()),
+    mongo_initdb_root_password: z.optional(z.string()),
+    mongo_initdb_database: z.optional(z.string()),
+    mongo_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    mysql_user: z.optional(z.string()),
+    mysql_password: z.optional(z.string()),
+    mysql_root_password: z.optional(z.string()),
+    mysql_database: z.optional(z.string()),
+    mysql_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    mariadb_user: z.optional(z.string()),
+    mariadb_password: z.optional(z.string()),
+    mariadb_root_password: z.optional(z.string()),
+    mariadb_database: z.optional(z.string()),
+    mariadb_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    keydb_password: z.optional(z.string()),
+    keydb_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    dragonfly_password: z.optional(z.string()),
+    clickhouse_admin_user: z.optional(z.string()),
+    clickhouse_admin_password: z.optional(z.string()),
+    clickhouse_db: z.optional(z.string()),
+    sqlite_databases: z.optional(z.string()),
+    created_at: z.optional(z.iso.datetime()),
+    updated_at: z.optional(z.iso.datetime()),
+    deleted_at: z.optional(z.union([
+        z.iso.datetime(),
+        z.null()
+    ]))
+});
+
+/**
+ * Server Settings model
+ */
+export const zServerSettingWritable = z.object({
+    id: z.optional(z.int()),
+    concurrent_builds: z.optional(z.int()),
+    deployment_queue_limit: z.optional(z.int()),
+    backup_compression_cpu_percentage: z.optional(z.int()),
+    dynamic_timeout: z.optional(z.int()),
+    force_disabled: z.optional(z.boolean()),
+    force_server_cleanup: z.optional(z.boolean()),
+    server_role: z.optional(z.enum([
+        'deployment',
+        'build',
+        'both'
+    ])),
+    is_cloudflare_tunnel: z.optional(z.boolean()),
+    is_jump_server: z.optional(z.boolean()),
+    is_logdrain_axiom_enabled: z.optional(z.boolean()),
+    is_logdrain_cloudwatch_enabled: z.optional(z.boolean()),
+    is_logdrain_custom_enabled: z.optional(z.boolean()),
+    is_logdrain_newrelic_enabled: z.optional(z.boolean()),
+    is_metrics_enabled: z.optional(z.boolean()),
+    is_traffic_analytics_enabled: z.optional(z.boolean()),
+    traffic_topn: z.optional(z.int()),
+    traffic_sample_threshold: z.optional(z.int()),
+    traffic_retention_1h_days: z.optional(z.int()),
+    traffic_retention_1d_days: z.optional(z.int()),
+    is_geoip_enabled: z.optional(z.boolean()),
+    geoip_refresh_days: z.optional(z.int()),
+    traffic_ip_mode: z.optional(z.enum([
+        'full',
+        'anonymized',
+        'off'
+    ])),
+    traefik_certificate_resolver: z.optional(z.string()),
+    is_reachable: z.optional(z.boolean()),
+    ssh_host_key: z.optional(z.string()),
+    ssh_host_key_source: z.optional(z.enum([
+        'tofu',
+        'upgrade',
+        'transfer',
+        'manual'
+    ])),
+    ssh_host_key_trusted_at: z.optional(z.iso.datetime()),
+    ssh_host_key_pending: z.optional(z.string()),
+    is_ssh_host_key_check_disabled: z.optional(z.boolean()),
+    is_ssh_host_key_check_enforced: z.optional(z.boolean()),
+    is_sentinel_enabled: z.optional(z.boolean()),
+    is_swarm_manager: z.optional(z.boolean()),
+    is_swarm_worker: z.optional(z.boolean()),
+    is_terminal_enabled: z.optional(z.boolean()),
+    is_usable: z.optional(z.boolean()),
+    logdrain_axiom_api_key: z.optional(z.string()),
+    logdrain_axiom_dataset_name: z.optional(z.string()),
+    logdrain_axiom_domain: z.optional(z.string()),
+    logdrain_cloudwatch_region: z.optional(z.string()),
+    logdrain_cloudwatch_group: z.optional(z.string()),
+    logdrain_cloudwatch_stream_prefix: z.optional(z.string()),
+    logdrain_custom_config: z.optional(z.string()),
+    logdrain_custom_config_parser: z.optional(z.string()),
+    logdrain_newrelic_base_uri: z.optional(z.string()),
+    logdrain_newrelic_license_key: z.optional(z.string()),
+    sentinel_metrics_history_days: z.optional(z.int()),
+    sentinel_metrics_refresh_rate_seconds: z.optional(z.int()),
+    sentinel_token: z.optional(z.string()),
+    docker_cleanup_frequency: z.optional(z.string()),
+    docker_cleanup_threshold: z.optional(z.int()),
+    server_id: z.optional(z.int()),
+    wildcard_domain: z.optional(z.string()),
+    created_at: z.optional(z.string()),
+    updated_at: z.optional(z.string()),
+    delete_unused_volumes: z.optional(z.boolean()),
+    delete_unused_networks: z.optional(z.boolean()),
+    connection_timeout: z.optional(z.int()),
+    docker_version: z.optional(z.string()),
+    docker_version_checked_at: z.optional(z.string()),
+    compose_version: z.optional(z.string()),
+    compose_version_checked_at: z.optional(z.string())
+});
+
+/**
+ * Server model
+ */
+export const zServerWritable = z.object({
+    id: z.optional(z.int()),
+    uuid: z.optional(z.string()),
+    name: z.optional(z.string()),
+    description: z.optional(z.string()),
+    ip: z.optional(z.string()),
+    user: z.optional(z.string()),
+    port: z.optional(z.int()),
+    proxy_type: z.optional(z.enum([
+        'traefik',
+        'caddy',
+        'none'
+    ])),
+    high_disk_usage_notification_sent: z.optional(z.boolean()),
+    unreachable_notification_sent: z.optional(z.boolean()),
+    unreachable_count: z.optional(z.int()),
+    validation_logs: z.optional(z.string()),
+    log_drain_notification_sent: z.optional(z.boolean()),
+    swarm_cluster: z.optional(z.string()),
+    settings: z.optional(zServerSettingWritable)
+});
+
+/**
+ * Standalone database. The fields that start with an engine name (for example postgres_ or redis_) are only returned for that engine. Passwords, connection URLs and init_scripts are only returned for tokens with the read:sensitive or root ability.
+ */
+export const zDatabaseWritable = z.object({
+    uuid: z.optional(z.string()),
+    name: z.optional(z.string()),
+    description: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    database_type: z.optional(z.enum([
+        'standalone-postgresql',
+        'standalone-redis',
+        'standalone-mongodb',
+        'standalone-mysql',
+        'standalone-mariadb',
+        'standalone-keydb',
+        'standalone-dragonfly',
+        'standalone-clickhouse',
+        'standalone-sqlite'
+    ])),
+    image: z.optional(z.string()),
+    status: z.optional(z.string()),
+    server_status: z.optional(z.boolean()),
+    environment_id: z.optional(z.int()),
+    environment: z.optional(zEnvironment),
+    destination_id: z.optional(z.int()),
+    destination_type: z.optional(z.string()),
+    destination: z.optional(z.object({
+        uuid: z.optional(z.string()),
+        name: z.optional(z.string()),
+        network: z.optional(z.string()),
+        server_id: z.optional(z.int()),
+        server: z.optional(zServerWritable),
+        created_at: z.optional(z.iso.datetime()),
+        updated_at: z.optional(z.iso.datetime())
+    })),
+    is_public: z.optional(z.boolean()),
+    public_port: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    public_port_timeout: z.optional(z.union([
+        z.int(),
+        z.null()
+    ])),
+    ports_mappings: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    enable_ssl: z.optional(z.boolean()),
+    ssl_mode: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    internal_db_url: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    external_db_url: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    init_scripts: z.optional(z.union([
+        z.array(z.object({
+            index: z.optional(z.int()),
+            filename: z.optional(z.string()),
+            content: z.optional(z.string())
+        })),
+        z.null()
+    ])),
+    custom_docker_run_options: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    is_log_drain_enabled: z.optional(z.boolean()),
+    is_include_timestamps: z.optional(z.boolean()),
+    include_coolify_default_variables: z.optional(z.boolean()),
+    redact_all_env_values_in_logs: z.optional(z.boolean()),
+    health_check_enabled: z.optional(z.boolean()),
+    health_check_interval: z.optional(z.int()),
+    health_check_timeout: z.optional(z.int()),
+    health_check_retries: z.optional(z.int()),
+    health_check_start_period: z.optional(z.int()),
+    limits_memory: z.optional(z.string()),
+    limits_memory_swap: z.optional(z.string()),
+    limits_memory_swappiness: z.optional(z.int()),
+    limits_memory_reservation: z.optional(z.string()),
+    limits_cpus: z.optional(z.string()),
+    limits_cpuset: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    limits_cpu_shares: z.optional(z.int()),
+    config_hash: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    restart_count: z.optional(z.int()),
+    last_restart_at: z.optional(z.union([
+        z.iso.datetime(),
+        z.null()
+    ])),
+    last_restart_type: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    last_online_at: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    started_at: z.optional(z.union([
+        z.iso.datetime(),
+        z.null()
+    ])),
+    backup_configs: z.optional(z.array(z.unknown())),
+    postgres_user: z.optional(z.string()),
+    postgres_password: z.optional(z.string()),
+    postgres_db: z.optional(z.string()),
+    postgres_initdb_args: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    postgres_host_auth_method: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    postgres_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    redis_password: z.optional(z.string()),
+    redis_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    mongo_initdb_root_username: z.optional(z.string()),
+    mongo_initdb_root_password: z.optional(z.string()),
+    mongo_initdb_database: z.optional(z.string()),
+    mongo_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    mysql_user: z.optional(z.string()),
+    mysql_password: z.optional(z.string()),
+    mysql_root_password: z.optional(z.string()),
+    mysql_database: z.optional(z.string()),
+    mysql_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    mariadb_user: z.optional(z.string()),
+    mariadb_password: z.optional(z.string()),
+    mariadb_root_password: z.optional(z.string()),
+    mariadb_database: z.optional(z.string()),
+    mariadb_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    keydb_password: z.optional(z.string()),
+    keydb_conf: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    dragonfly_password: z.optional(z.string()),
+    clickhouse_admin_user: z.optional(z.string()),
+    clickhouse_admin_password: z.optional(z.string()),
+    clickhouse_db: z.optional(z.string()),
+    sqlite_databases: z.optional(z.string()),
+    created_at: z.optional(z.iso.datetime()),
+    updated_at: z.optional(z.iso.datetime()),
+    deleted_at: z.optional(z.union([
+        z.iso.datetime(),
+        z.null()
+    ]))
+});
+
+export const zDeletePreviewDeploymentByPullRequestIdData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        uuid: z.string(),
+        pull_request_id: z.int()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Preview deletion queued.
+ */
+export const zDeletePreviewDeploymentByPullRequestIdResponse = z.object({
+    message: z.optional(z.string())
 });
 
 export const zListApplicationsData = z.object({
@@ -422,6 +958,8 @@ export const zCreatePublicApplicationData = z.object({
         environment_uuid: z.optional(z.string()),
         git_repository: z.string(),
         git_branch: z.string(),
+        git_https_username: z.optional(z.string()),
+        git_https_password: z.optional(z.string()),
         build_pack: z.enum([
             'nixpacks',
             'railpack',
@@ -487,6 +1025,7 @@ export const zCreatePublicApplicationData = z.object({
         instant_deploy: z.optional(z.boolean()),
         dockerfile: z.optional(z.string()),
         dockerfile_location: z.optional(z.string()),
+        dockerfile_target_build: z.optional(z.string()),
         docker_compose_location: z.optional(z.string()),
         docker_compose_custom_start_command: z.optional(z.string()),
         docker_compose_custom_build_command: z.optional(z.string()),
@@ -505,15 +1044,24 @@ export const zCreatePublicApplicationData = z.object({
         is_git_submodules_enabled: z.optional(z.boolean()),
         is_git_lfs_enabled: z.optional(z.boolean()),
         is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        is_auto_cancel_queued_deployments_enabled: z.optional(z.boolean()),
+        is_auto_cancel_building_deployments_enabled: z.optional(z.boolean()),
         disable_build_cache: z.optional(z.boolean()),
         inject_build_args_to_dockerfile: z.optional(z.boolean()),
         include_source_commit_in_build: z.optional(z.boolean()),
+        include_network_hosts_in_build: z.optional(z.boolean()),
         is_env_sorting_enabled: z.optional(z.boolean()),
+        redact_all_env_values_in_logs: z.optional(z.boolean()),
+        include_coolify_default_variables: z.optional(z.boolean()).default(true),
         is_pr_deployments_public_enabled: z.optional(z.boolean()),
         stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        rolling_update_drain_seconds: z.optional(z.int().gte(0).lte(300)),
         docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
         is_gzip_enabled: z.optional(z.boolean()),
         is_stripprefix_enabled: z.optional(z.boolean()),
+        is_permanent_redirect_enabled: z.optional(z.boolean()),
+        traefik_certificate_resolver: z.optional(z.string()),
+        is_container_label_readonly_enabled: z.optional(z.boolean()).default(true),
         is_raw_compose_deployment_enabled: z.optional(z.boolean()),
         is_log_drain_enabled: z.optional(z.boolean()),
         is_gpu_enabled: z.optional(z.boolean()),
@@ -522,12 +1070,18 @@ export const zCreatePublicApplicationData = z.object({
         gpu_device_ids: z.optional(z.string()),
         gpu_options: z.optional(z.string()),
         is_consistent_container_name_enabled: z.optional(z.boolean()),
+        is_image_scan_enabled: z.optional(z.boolean()),
         custom_internal_name: z.optional(z.string()),
+        custom_container_name_prefix: z.optional(z.string()),
         preview_url_template: z.optional(z.string()),
         max_restart_count: z.optional(z.int().gte(0)),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
+        http_basic_auth_hash_algorithm: z.optional(z.enum(['bcrypt', 'argon2id'])),
+        http_basic_auth_bcrypt_cost: z.optional(z.int().gte(4).lte(14)).default(10),
+        http_basic_auth_argon2id_memory_cost: z.optional(z.int().gte(8192).lte(262144)).default(65536),
+        http_basic_auth_argon2id_time_cost: z.optional(z.int().gte(1).lte(12)).default(4),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
         autogenerate_domain: z.optional(z.boolean()).default(true),
@@ -620,6 +1174,7 @@ export const zCreatePrivateGithubAppApplicationData = z.object({
         instant_deploy: z.optional(z.boolean()),
         dockerfile: z.optional(z.string()),
         dockerfile_location: z.optional(z.string()),
+        dockerfile_target_build: z.optional(z.string()),
         docker_compose_location: z.optional(z.string()),
         docker_compose_custom_start_command: z.optional(z.string()),
         docker_compose_custom_build_command: z.optional(z.string()),
@@ -638,15 +1193,24 @@ export const zCreatePrivateGithubAppApplicationData = z.object({
         is_git_submodules_enabled: z.optional(z.boolean()),
         is_git_lfs_enabled: z.optional(z.boolean()),
         is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        is_auto_cancel_queued_deployments_enabled: z.optional(z.boolean()),
+        is_auto_cancel_building_deployments_enabled: z.optional(z.boolean()),
         disable_build_cache: z.optional(z.boolean()),
         inject_build_args_to_dockerfile: z.optional(z.boolean()),
         include_source_commit_in_build: z.optional(z.boolean()),
+        include_network_hosts_in_build: z.optional(z.boolean()),
         is_env_sorting_enabled: z.optional(z.boolean()),
+        redact_all_env_values_in_logs: z.optional(z.boolean()),
+        include_coolify_default_variables: z.optional(z.boolean()).default(true),
         is_pr_deployments_public_enabled: z.optional(z.boolean()),
         stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        rolling_update_drain_seconds: z.optional(z.int().gte(0).lte(300)),
         docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
         is_gzip_enabled: z.optional(z.boolean()),
         is_stripprefix_enabled: z.optional(z.boolean()),
+        is_permanent_redirect_enabled: z.optional(z.boolean()),
+        traefik_certificate_resolver: z.optional(z.string()),
+        is_container_label_readonly_enabled: z.optional(z.boolean()).default(true),
         is_raw_compose_deployment_enabled: z.optional(z.boolean()),
         is_log_drain_enabled: z.optional(z.boolean()),
         is_gpu_enabled: z.optional(z.boolean()),
@@ -655,12 +1219,18 @@ export const zCreatePrivateGithubAppApplicationData = z.object({
         gpu_device_ids: z.optional(z.string()),
         gpu_options: z.optional(z.string()),
         is_consistent_container_name_enabled: z.optional(z.boolean()),
+        is_image_scan_enabled: z.optional(z.boolean()),
         custom_internal_name: z.optional(z.string()),
+        custom_container_name_prefix: z.optional(z.string()),
         preview_url_template: z.optional(z.string()),
         max_restart_count: z.optional(z.int().gte(0)),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
+        http_basic_auth_hash_algorithm: z.optional(z.enum(['bcrypt', 'argon2id'])),
+        http_basic_auth_bcrypt_cost: z.optional(z.int().gte(4).lte(14)).default(10),
+        http_basic_auth_argon2id_memory_cost: z.optional(z.int().gte(8192).lte(262144)).default(65536),
+        http_basic_auth_argon2id_time_cost: z.optional(z.int().gte(1).lte(12)).default(4),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
         autogenerate_domain: z.optional(z.boolean()).default(true),
@@ -753,6 +1323,7 @@ export const zCreatePrivateDeployKeyApplicationData = z.object({
         instant_deploy: z.optional(z.boolean()),
         dockerfile: z.optional(z.string()),
         dockerfile_location: z.optional(z.string()),
+        dockerfile_target_build: z.optional(z.string()),
         docker_compose_location: z.optional(z.string()),
         docker_compose_custom_start_command: z.optional(z.string()),
         docker_compose_custom_build_command: z.optional(z.string()),
@@ -771,15 +1342,24 @@ export const zCreatePrivateDeployKeyApplicationData = z.object({
         is_git_submodules_enabled: z.optional(z.boolean()),
         is_git_lfs_enabled: z.optional(z.boolean()),
         is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        is_auto_cancel_queued_deployments_enabled: z.optional(z.boolean()),
+        is_auto_cancel_building_deployments_enabled: z.optional(z.boolean()),
         disable_build_cache: z.optional(z.boolean()),
         inject_build_args_to_dockerfile: z.optional(z.boolean()),
         include_source_commit_in_build: z.optional(z.boolean()),
+        include_network_hosts_in_build: z.optional(z.boolean()),
         is_env_sorting_enabled: z.optional(z.boolean()),
+        redact_all_env_values_in_logs: z.optional(z.boolean()),
+        include_coolify_default_variables: z.optional(z.boolean()).default(true),
         is_pr_deployments_public_enabled: z.optional(z.boolean()),
         stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        rolling_update_drain_seconds: z.optional(z.int().gte(0).lte(300)),
         docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
         is_gzip_enabled: z.optional(z.boolean()),
         is_stripprefix_enabled: z.optional(z.boolean()),
+        is_permanent_redirect_enabled: z.optional(z.boolean()),
+        traefik_certificate_resolver: z.optional(z.string()),
+        is_container_label_readonly_enabled: z.optional(z.boolean()).default(true),
         is_raw_compose_deployment_enabled: z.optional(z.boolean()),
         is_log_drain_enabled: z.optional(z.boolean()),
         is_gpu_enabled: z.optional(z.boolean()),
@@ -788,12 +1368,18 @@ export const zCreatePrivateDeployKeyApplicationData = z.object({
         gpu_device_ids: z.optional(z.string()),
         gpu_options: z.optional(z.string()),
         is_consistent_container_name_enabled: z.optional(z.boolean()),
+        is_image_scan_enabled: z.optional(z.boolean()),
         custom_internal_name: z.optional(z.string()),
+        custom_container_name_prefix: z.optional(z.string()),
         preview_url_template: z.optional(z.string()),
         max_restart_count: z.optional(z.int().gte(0)),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
+        http_basic_auth_hash_algorithm: z.optional(z.enum(['bcrypt', 'argon2id'])),
+        http_basic_auth_bcrypt_cost: z.optional(z.int().gte(4).lte(14)).default(10),
+        http_basic_auth_argon2id_memory_cost: z.optional(z.int().gte(8192).lte(262144)).default(65536),
+        http_basic_auth_argon2id_time_cost: z.optional(z.int().gte(1).lte(12)).default(4),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
         autogenerate_domain: z.optional(z.boolean()).default(true),
@@ -872,15 +1458,24 @@ export const zCreateDockerfileApplicationData = z.object({
         is_git_submodules_enabled: z.optional(z.boolean()),
         is_git_lfs_enabled: z.optional(z.boolean()),
         is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        is_auto_cancel_queued_deployments_enabled: z.optional(z.boolean()),
+        is_auto_cancel_building_deployments_enabled: z.optional(z.boolean()),
         disable_build_cache: z.optional(z.boolean()),
         inject_build_args_to_dockerfile: z.optional(z.boolean()),
         include_source_commit_in_build: z.optional(z.boolean()),
+        include_network_hosts_in_build: z.optional(z.boolean()),
         is_env_sorting_enabled: z.optional(z.boolean()),
+        redact_all_env_values_in_logs: z.optional(z.boolean()),
+        include_coolify_default_variables: z.optional(z.boolean()).default(true),
         is_pr_deployments_public_enabled: z.optional(z.boolean()),
         stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        rolling_update_drain_seconds: z.optional(z.int().gte(0).lte(300)),
         docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
         is_gzip_enabled: z.optional(z.boolean()),
         is_stripprefix_enabled: z.optional(z.boolean()),
+        is_permanent_redirect_enabled: z.optional(z.boolean()),
+        traefik_certificate_resolver: z.optional(z.string()),
+        is_container_label_readonly_enabled: z.optional(z.boolean()).default(true),
         is_raw_compose_deployment_enabled: z.optional(z.boolean()),
         is_log_drain_enabled: z.optional(z.boolean()),
         is_gpu_enabled: z.optional(z.boolean()),
@@ -889,12 +1484,18 @@ export const zCreateDockerfileApplicationData = z.object({
         gpu_device_ids: z.optional(z.string()),
         gpu_options: z.optional(z.string()),
         is_consistent_container_name_enabled: z.optional(z.boolean()),
+        is_image_scan_enabled: z.optional(z.boolean()),
         custom_internal_name: z.optional(z.string()),
+        custom_container_name_prefix: z.optional(z.string()),
         preview_url_template: z.optional(z.string()),
         max_restart_count: z.optional(z.int().gte(0)),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
+        http_basic_auth_hash_algorithm: z.optional(z.enum(['bcrypt', 'argon2id'])),
+        http_basic_auth_bcrypt_cost: z.optional(z.int().gte(4).lte(14)).default(10),
+        http_basic_auth_argon2id_memory_cost: z.optional(z.int().gte(8192).lte(262144)).default(65536),
+        http_basic_auth_argon2id_time_cost: z.optional(z.int().gte(1).lte(12)).default(4),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
         autogenerate_domain: z.optional(z.boolean()).default(true),
@@ -969,15 +1570,24 @@ export const zCreateDockerimageApplicationData = z.object({
         is_git_submodules_enabled: z.optional(z.boolean()),
         is_git_lfs_enabled: z.optional(z.boolean()),
         is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        is_auto_cancel_queued_deployments_enabled: z.optional(z.boolean()),
+        is_auto_cancel_building_deployments_enabled: z.optional(z.boolean()),
         disable_build_cache: z.optional(z.boolean()),
         inject_build_args_to_dockerfile: z.optional(z.boolean()),
         include_source_commit_in_build: z.optional(z.boolean()),
+        include_network_hosts_in_build: z.optional(z.boolean()),
         is_env_sorting_enabled: z.optional(z.boolean()),
+        redact_all_env_values_in_logs: z.optional(z.boolean()),
+        include_coolify_default_variables: z.optional(z.boolean()).default(true),
         is_pr_deployments_public_enabled: z.optional(z.boolean()),
         stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        rolling_update_drain_seconds: z.optional(z.int().gte(0).lte(300)),
         docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
         is_gzip_enabled: z.optional(z.boolean()),
         is_stripprefix_enabled: z.optional(z.boolean()),
+        is_permanent_redirect_enabled: z.optional(z.boolean()),
+        traefik_certificate_resolver: z.optional(z.string()),
+        is_container_label_readonly_enabled: z.optional(z.boolean()).default(true),
         is_raw_compose_deployment_enabled: z.optional(z.boolean()),
         is_log_drain_enabled: z.optional(z.boolean()),
         is_gpu_enabled: z.optional(z.boolean()),
@@ -986,12 +1596,18 @@ export const zCreateDockerimageApplicationData = z.object({
         gpu_device_ids: z.optional(z.string()),
         gpu_options: z.optional(z.string()),
         is_consistent_container_name_enabled: z.optional(z.boolean()),
+        is_image_scan_enabled: z.optional(z.boolean()),
         custom_internal_name: z.optional(z.string()),
+        custom_container_name_prefix: z.optional(z.string()),
         preview_url_template: z.optional(z.string()),
         max_restart_count: z.optional(z.int().gte(0)),
         is_http_basic_auth_enabled: z.optional(z.boolean()),
         http_basic_auth_username: z.optional(z.string()),
         http_basic_auth_password: z.optional(z.string()),
+        http_basic_auth_hash_algorithm: z.optional(z.enum(['bcrypt', 'argon2id'])),
+        http_basic_auth_bcrypt_cost: z.optional(z.int().gte(4).lte(14)).default(10),
+        http_basic_auth_argon2id_memory_cost: z.optional(z.int().gte(8192).lte(262144)).default(65536),
+        http_basic_auth_argon2id_time_cost: z.optional(z.int().gte(1).lte(12)).default(4),
         connect_to_docker_network: z.optional(z.boolean()),
         force_domain_override: z.optional(z.boolean()),
         autogenerate_domain: z.optional(z.boolean()).default(true),
@@ -1044,14 +1660,13 @@ export const zGetApplicationByUuidResponse = zApplication;
 
 export const zUpdateApplicationByUuidData = z.object({
     body: z.object({
-        project_uuid: z.optional(z.string()),
-        server_uuid: z.optional(z.string()),
-        environment_name: z.optional(z.string()),
         github_app_uuid: z.optional(z.string()),
+        gitea_app_uuid: z.optional(z.string()),
         git_repository: z.optional(z.string()),
         git_branch: z.optional(z.string()),
+        git_https_username: z.optional(z.string()),
+        git_https_password: z.optional(z.string()),
         ports_exposes: z.optional(z.string()),
-        destination_uuid: z.optional(z.string()),
         build_pack: z.optional(z.enum([
             'nixpacks',
             'railpack',
@@ -1114,6 +1729,7 @@ export const zUpdateApplicationByUuidData = z.object({
         instant_deploy: z.optional(z.boolean()),
         dockerfile: z.optional(z.string()),
         dockerfile_location: z.optional(z.string()),
+        dockerfile_target_build: z.optional(z.string()),
         docker_compose_location: z.optional(z.string()),
         docker_compose_custom_start_command: z.optional(z.string()),
         docker_compose_custom_build_command: z.optional(z.string()),
@@ -1129,18 +1745,31 @@ export const zUpdateApplicationByUuidData = z.object({
         watch_paths: z.optional(z.string()),
         use_build_server: z.optional(z.boolean()),
         use_build_secrets: z.optional(z.boolean()),
+        http_basic_auth_hash_algorithm: z.optional(z.enum(['bcrypt', 'argon2id'])),
+        http_basic_auth_bcrypt_cost: z.optional(z.int().gte(4).lte(14)),
+        http_basic_auth_argon2id_memory_cost: z.optional(z.int().gte(8192).lte(262144)),
+        http_basic_auth_argon2id_time_cost: z.optional(z.int().gte(1).lte(12)),
         is_git_submodules_enabled: z.optional(z.boolean()),
         is_git_lfs_enabled: z.optional(z.boolean()),
         is_git_shallow_clone_enabled: z.optional(z.boolean()),
+        is_auto_cancel_queued_deployments_enabled: z.optional(z.boolean()),
+        is_auto_cancel_building_deployments_enabled: z.optional(z.boolean()),
         disable_build_cache: z.optional(z.boolean()),
         inject_build_args_to_dockerfile: z.optional(z.boolean()),
         include_source_commit_in_build: z.optional(z.boolean()),
+        include_network_hosts_in_build: z.optional(z.boolean()),
         is_env_sorting_enabled: z.optional(z.boolean()),
+        redact_all_env_values_in_logs: z.optional(z.boolean()),
+        include_coolify_default_variables: z.optional(z.boolean()).default(true),
         is_pr_deployments_public_enabled: z.optional(z.boolean()),
         stop_grace_period: z.optional(z.int().gte(1).lte(3600)),
+        rolling_update_drain_seconds: z.optional(z.int().gte(0).lte(300)),
         docker_images_to_keep: z.optional(z.int().gte(0).lte(100)),
         is_gzip_enabled: z.optional(z.boolean()),
         is_stripprefix_enabled: z.optional(z.boolean()),
+        is_permanent_redirect_enabled: z.optional(z.boolean()),
+        traefik_certificate_resolver: z.optional(z.string()),
+        is_container_label_readonly_enabled: z.optional(z.boolean()).default(true),
         is_raw_compose_deployment_enabled: z.optional(z.boolean()),
         is_log_drain_enabled: z.optional(z.boolean()),
         is_gpu_enabled: z.optional(z.boolean()),
@@ -1149,7 +1778,9 @@ export const zUpdateApplicationByUuidData = z.object({
         gpu_device_ids: z.optional(z.string()),
         gpu_options: z.optional(z.string()),
         is_consistent_container_name_enabled: z.optional(z.boolean()),
+        is_image_scan_enabled: z.optional(z.boolean()),
         custom_internal_name: z.optional(z.string()),
+        custom_container_name_prefix: z.optional(z.string()),
         preview_url_template: z.optional(z.string()),
         max_restart_count: z.optional(z.int().gte(0)),
         connect_to_docker_network: z.optional(z.boolean()),
@@ -1176,8 +1807,12 @@ export const zGetApplicationLogsByUuidData = z.object({
         uuid: z.string()
     }),
     query: z.optional(z.object({
-        lines: z.optional(z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })).default(100),
-        show_timestamps: z.optional(z.boolean()).default(false)
+        lines: z.optional(z.union([
+            z.int().gte(-1).lte(10000).default(100),
+            z.enum(['all'])
+        ])),
+        show_timestamps: z.optional(z.boolean()).default(false),
+        service_name: z.optional(z.string())
     }))
 });
 
@@ -1357,7 +1992,6 @@ export const zUpdateStorageByApplicationUuidData = z.object({
         is_preview_suffix_enabled: z.optional(z.boolean()),
         name: z.optional(z.string()),
         mount_path: z.optional(z.string()),
-        host_path: z.optional(z.string()),
         content: z.optional(z.string())
     }),
     path: z.object({
@@ -1376,7 +2010,6 @@ export const zCreateStorageByApplicationUuidData = z.object({
         type: z.enum(['persistent', 'file']),
         name: z.optional(z.string()),
         mount_path: z.string(),
-        host_path: z.optional(z.string()),
         content: z.optional(z.string()),
         is_directory: z.optional(z.boolean()),
         fs_path: z.optional(z.string())
@@ -1408,22 +2041,6 @@ export const zDeleteStorageByApplicationUuidResponse = z.object({
     message: z.optional(z.string())
 });
 
-export const zDeletePreviewDeploymentByPullRequestIdData = z.object({
-    body: z.optional(z.never()),
-    path: z.object({
-        uuid: z.string(),
-        pull_request_id: z.int()
-    }),
-    query: z.optional(z.never())
-});
-
-/**
- * Preview deletion queued.
- */
-export const zDeletePreviewDeploymentByPullRequestIdResponse = z.object({
-    message: z.optional(z.string())
-});
-
 export const zListDatabasesData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
@@ -1433,7 +2050,7 @@ export const zListDatabasesData = z.object({
 /**
  * Get all databases
  */
-export const zListDatabasesResponse = z.string();
+export const zListDatabasesResponse = z.array(zDatabase);
 
 export const zGetDatabaseBackupsByUuidData = z.object({
     body: z.optional(z.never()),
@@ -1444,7 +2061,7 @@ export const zGetDatabaseBackupsByUuidData = z.object({
 });
 
 /**
- * Get all backups for a database
+ * Get all backups for a database. Each backup includes s3_storage_uuid (primary S3 destination) and s3_storage_uuids (every S3 destination, primary first).
  */
 export const zGetDatabaseBackupsByUuidResponse = z.string();
 
@@ -1453,7 +2070,9 @@ export const zCreateDatabaseBackupData = z.object({
         frequency: z.string(),
         enabled: z.optional(z.boolean()).default(true),
         save_s3: z.optional(z.boolean()).default(false),
+        disable_local_backup: z.optional(z.boolean()).default(false),
         s3_storage_uuid: z.optional(z.string()),
+        s3_storage_uuids: z.optional(z.array(z.string())),
         databases_to_backup: z.optional(z.string()),
         dump_all: z.optional(z.boolean()).default(false),
         backup_now: z.optional(z.boolean()),
@@ -1463,7 +2082,8 @@ export const zCreateDatabaseBackupData = z.object({
         database_backup_retention_amount_s3: z.optional(z.int()),
         database_backup_retention_days_s3: z.optional(z.int()),
         database_backup_retention_max_storage_s3: z.optional(z.number()),
-        timeout: z.optional(z.int()).default(3600)
+        timeout: z.optional(z.int()).default(3600),
+        missing_backup_notification_days: z.optional(z.int().gte(0).lte(365)).default(0)
     }),
     path: z.object({
         uuid: z.string()
@@ -1508,9 +2128,9 @@ export const zGetDatabaseByUuidData = z.object({
 });
 
 /**
- * Get all databases
+ * Get database by UUID
  */
-export const zGetDatabaseByUuidResponse = z.string();
+export const zGetDatabaseByUuidResponse = zDatabase;
 
 export const zUpdateDatabaseByUuidData = z.object({
     body: z.object({
@@ -1527,6 +2147,7 @@ export const zUpdateDatabaseByUuidData = z.object({
         limits_cpus: z.optional(z.string()),
         limits_cpuset: z.optional(z.string()),
         limits_cpu_shares: z.optional(z.int()),
+        instant_deploy: z.optional(z.boolean()),
         postgres_user: z.optional(z.string()),
         postgres_password: z.optional(z.string()),
         postgres_db: z.optional(z.string()),
@@ -1554,11 +2175,15 @@ export const zUpdateDatabaseByUuidData = z.object({
         mysql_user: z.optional(z.string()),
         mysql_database: z.optional(z.string()),
         mysql_conf: z.optional(z.string()),
+        sqlite_databases: z.optional(z.string()),
         health_check_enabled: z.optional(z.boolean()).default(true),
         health_check_interval: z.optional(z.int().gte(1)).default(15),
         health_check_timeout: z.optional(z.int().gte(1)).default(5),
         health_check_retries: z.optional(z.int().gte(1)).default(5),
-        health_check_start_period: z.optional(z.int().gte(0)).default(5)
+        health_check_start_period: z.optional(z.int().gte(0)).default(5),
+        redact_all_env_values_in_logs: z.optional(z.boolean()),
+        include_coolify_default_variables: z.optional(z.boolean()),
+        is_log_drain_enabled: z.optional(z.boolean())
     }),
     path: z.object({
         uuid: z.string()
@@ -1587,7 +2212,9 @@ export const zDeleteBackupConfigurationByUuidResponse = z.object({
 export const zUpdateDatabaseBackupData = z.object({
     body: z.object({
         save_s3: z.optional(z.boolean()),
+        disable_local_backup: z.optional(z.boolean()),
         s3_storage_uuid: z.optional(z.string()),
+        s3_storage_uuids: z.optional(z.array(z.string())),
         backup_now: z.optional(z.boolean()),
         enabled: z.optional(z.boolean()),
         databases_to_backup: z.optional(z.string()),
@@ -1599,7 +2226,8 @@ export const zUpdateDatabaseBackupData = z.object({
         database_backup_retention_amount_s3: z.optional(z.int()),
         database_backup_retention_days_s3: z.optional(z.int()),
         database_backup_retention_max_storage_s3: z.optional(z.number()),
-        timeout: z.optional(z.int()).default(3600)
+        timeout: z.optional(z.int()).default(3600),
+        missing_backup_notification_days: z.optional(z.int().gte(0).lte(365))
     }),
     path: z.object({
         uuid: z.string(),
@@ -1886,7 +2514,10 @@ export const zListBackupExecutionsResponse = z.object({
         filename: z.optional(z.string()),
         size: z.optional(z.int()),
         created_at: z.optional(z.string()),
-        message: z.optional(z.string()),
+        message: z.optional(z.union([
+            z.string(),
+            z.null()
+        ])),
         status: z.optional(z.string())
     })))
 });
@@ -2052,7 +2683,6 @@ export const zUpdateStorageByDatabaseUuidData = z.object({
         is_preview_suffix_enabled: z.optional(z.boolean()),
         name: z.optional(z.string()),
         mount_path: z.optional(z.string()),
-        host_path: z.optional(z.string()),
         content: z.optional(z.string())
     }),
     path: z.object({
@@ -2071,7 +2701,6 @@ export const zCreateStorageByDatabaseUuidData = z.object({
         type: z.enum(['persistent', 'file']),
         name: z.optional(z.string()),
         mount_path: z.string(),
-        host_path: z.optional(z.string()),
         content: z.optional(z.string()),
         is_directory: z.optional(z.boolean()),
         fs_path: z.optional(z.string())
@@ -2151,9 +2780,14 @@ export const zDeployByTagOrUuidData = z.object({
         tag: z.optional(z.string()),
         uuid: z.optional(z.string()),
         force: z.optional(z.boolean()),
-        pr: z.optional(z.int()),
-        pull_request_id: z.optional(z.int()),
-        docker_tag: z.optional(z.string())
+        pr: z.optional(z.int().lte(2147483647)),
+        pull_request_id: z.optional(z.int().lte(2147483647)),
+        docker_tag: z.optional(z.string()),
+        cancel_previous: z.optional(z.enum([
+            'none',
+            'queued',
+            'building'
+        ]))
     }))
 });
 
@@ -2392,9 +3026,21 @@ export const zListResourcesData = z.object({
 });
 
 /**
- * Get all resources
+ * Get all applications, services and standalone databases. The other fields of each resource are the fields of the Application, Service or Database schema.
  */
-export const zListResourcesResponse = z.string();
+export const zListResourcesResponse = z.array(z.object({
+    uuid: z.optional(z.string()),
+    name: z.optional(z.string()),
+    description: z.optional(z.union([
+        z.string(),
+        z.null()
+    ])),
+    type: z.optional(z.string()),
+    status: z.optional(z.string()),
+    environment_id: z.optional(z.int()),
+    created_at: z.optional(z.iso.datetime()),
+    updated_at: z.optional(z.iso.datetime())
+}));
 
 export const zListScheduledTasksByApplicationUuidData = z.object({
     body: z.optional(z.never()),
@@ -2415,7 +3061,8 @@ export const zCreateScheduledTaskByApplicationUuidData = z.object({
         command: z.string(),
         frequency: z.string(),
         container: z.optional(z.string()),
-        timeout: z.optional(z.int()).default(300),
+        timeout: z.optional(z.int().lte(36000)).default(300),
+        use_shell: z.optional(z.boolean()).default(true),
         enabled: z.optional(z.boolean()).default(true)
     }),
     path: z.object({
@@ -2451,7 +3098,8 @@ export const zUpdateScheduledTaskByApplicationUuidData = z.object({
         command: z.optional(z.string()),
         frequency: z.optional(z.string()),
         container: z.optional(z.string()),
-        timeout: z.optional(z.int()).default(300),
+        timeout: z.optional(z.int().lte(36000)).default(300),
+        use_shell: z.optional(z.boolean()).default(true),
         enabled: z.optional(z.boolean()).default(true)
     }),
     path: z.object({
@@ -2499,7 +3147,8 @@ export const zCreateScheduledTaskByServiceUuidData = z.object({
         command: z.string(),
         frequency: z.string(),
         container: z.optional(z.string()),
-        timeout: z.optional(z.int()).default(300),
+        timeout: z.optional(z.int().lte(36000)).default(300),
+        use_shell: z.optional(z.boolean()).default(true),
         enabled: z.optional(z.boolean()).default(true)
     }),
     path: z.object({
@@ -2535,7 +3184,8 @@ export const zUpdateScheduledTaskByServiceUuidData = z.object({
         command: z.optional(z.string()),
         frequency: z.optional(z.string()),
         container: z.optional(z.string()),
-        timeout: z.optional(z.int()).default(300),
+        timeout: z.optional(z.int().lte(36000)).default(300),
+        use_shell: z.optional(z.boolean()).default(true),
         enabled: z.optional(z.boolean()).default(true)
     }),
     path: z.object({
@@ -2574,23 +3224,6 @@ export const zListPrivateKeysData = z.object({
  * Get all private keys.
  */
 export const zListPrivateKeysResponse = z.array(zPrivateKey);
-
-export const zUpdatePrivateKeyData = z.object({
-    body: z.object({
-        name: z.optional(z.string()),
-        description: z.optional(z.string()),
-        private_key: z.string()
-    }),
-    path: z.optional(z.never()),
-    query: z.optional(z.never())
-});
-
-/**
- * The updated private key's UUID.
- */
-export const zUpdatePrivateKeyResponse = z.object({
-    uuid: z.optional(z.string())
-});
 
 export const zCreatePrivateKeyData = z.object({
     body: z.object({
@@ -2637,6 +3270,25 @@ export const zGetPrivateKeyByUuidData = z.object({
  */
 export const zGetPrivateKeyByUuidResponse = zPrivateKey;
 
+export const zUpdatePrivateKeyData = z.object({
+    body: z.object({
+        name: z.optional(z.string()),
+        description: z.optional(z.string()),
+        private_key: z.optional(z.string())
+    }),
+    path: z.object({
+        uuid: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * The updated private key's UUID.
+ */
+export const zUpdatePrivateKeyResponse = z.object({
+    uuid: z.optional(z.string())
+});
+
 export const zListServersData = z.object({
     body: z.optional(z.never()),
     path: z.optional(z.never()),
@@ -2656,13 +3308,19 @@ export const zCreateServerData = z.object({
         port: z.optional(z.int()),
         user: z.optional(z.string()),
         private_key_uuid: z.optional(z.string()),
+        server_role: z.optional(z.enum([
+            'deployment',
+            'build',
+            'both'
+        ])),
         is_build_server: z.optional(z.boolean()),
         instant_validate: z.optional(z.boolean()),
         proxy_type: z.optional(z.enum([
             'traefik',
             'caddy',
             'none'
-        ]))
+        ])),
+        ssh_host_key: z.optional(z.string())
     }),
     path: z.optional(z.never()),
     query: z.optional(z.never())
@@ -2680,7 +3338,11 @@ export const zDeleteServerByUuidData = z.object({
     path: z.object({
         uuid: z.string()
     }),
-    query: z.optional(z.never())
+    query: z.optional(z.object({
+        force: z.optional(z.boolean()).default(false),
+        delete_from_provider: z.optional(z.boolean()).default(false),
+        remove_ssh_key: z.optional(z.boolean()).default(false)
+    }))
 });
 
 /**
@@ -2711,6 +3373,11 @@ export const zUpdateServerByUuidData = z.object({
         port: z.optional(z.int()),
         user: z.optional(z.string()),
         private_key_uuid: z.optional(z.string()),
+        server_role: z.optional(z.enum([
+            'deployment',
+            'build',
+            'both'
+        ])),
         is_build_server: z.optional(z.boolean()),
         instant_validate: z.optional(z.boolean()),
         proxy_type: z.optional(z.enum([
@@ -2723,7 +3390,16 @@ export const zUpdateServerByUuidData = z.object({
         deployment_queue_limit: z.optional(z.int()),
         server_disk_usage_notification_threshold: z.optional(z.int()),
         server_disk_usage_check_frequency: z.optional(z.string()),
-        connection_timeout: z.optional(z.int())
+        server_disk_usage_notification_interval_hours: z.optional(z.int()),
+        connection_timeout: z.optional(z.int()),
+        wildcard_domain: z.optional(z.string()),
+        server_timezone: z.optional(z.string()),
+        backup_compression_cpu_percentage: z.optional(z.union([
+            z.literal(25),
+            z.literal(50),
+            z.literal(75),
+            z.literal(100)
+        ]))
     }),
     path: z.object({
         uuid: z.string()
@@ -2813,12 +3489,14 @@ export const zCreateServiceData = z.object({
         destination_uuid: z.optional(z.string()),
         instant_deploy: z.optional(z.boolean()).default(false),
         docker_compose_raw: z.optional(z.string()),
+        connect_to_docker_network: z.optional(z.boolean()).default(false),
         urls: z.optional(z.array(z.object({
             name: z.optional(z.string()),
             url: z.optional(z.string())
         }))),
         force_domain_override: z.optional(z.boolean()).default(false),
         is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        redact_all_env_values_in_logs: z.optional(z.boolean()).default(true),
         tags: z.optional(z.array(z.string()))
     }),
     path: z.optional(z.never()),
@@ -2878,7 +3556,9 @@ export const zUpdateServiceByUuidData = z.object({
             url: z.optional(z.string())
         }))),
         force_domain_override: z.optional(z.boolean()).default(false),
-        is_container_label_escape_enabled: z.optional(z.boolean()).default(true)
+        is_container_label_escape_enabled: z.optional(z.boolean()).default(true),
+        redact_all_env_values_in_logs: z.optional(z.boolean()).default(true),
+        include_coolify_default_variables: z.optional(z.boolean()).default(true)
     }),
     path: z.object({
         uuid: z.string()
@@ -2911,7 +3591,6 @@ export const zUpdateEnvByServiceUuidData = z.object({
     body: z.object({
         key: z.string(),
         value: z.string(),
-        is_preview: z.optional(z.boolean()),
         is_literal: z.optional(z.boolean()),
         is_multiline: z.optional(z.boolean()),
         is_shown_once: z.optional(z.boolean())
@@ -2931,7 +3610,6 @@ export const zCreateEnvByServiceUuidData = z.object({
     body: z.object({
         key: z.optional(z.string()),
         value: z.optional(z.string()),
-        is_preview: z.optional(z.boolean()),
         is_literal: z.optional(z.boolean()),
         is_multiline: z.optional(z.boolean()),
         is_shown_once: z.optional(z.boolean())
@@ -2954,7 +3632,6 @@ export const zUpdateEnvsByServiceUuidData = z.object({
         data: z.array(z.object({
             key: z.optional(z.string()),
             value: z.optional(z.string()),
-            is_preview: z.optional(z.boolean()),
             is_literal: z.optional(z.boolean()),
             is_multiline: z.optional(z.boolean()),
             is_shown_once: z.optional(z.boolean())
@@ -3060,7 +3737,6 @@ export const zUpdateStorageByServiceUuidData = z.object({
         is_preview_suffix_enabled: z.optional(z.boolean()),
         name: z.optional(z.string()),
         mount_path: z.optional(z.string()),
-        host_path: z.optional(z.string()),
         content: z.optional(z.string())
     }),
     path: z.object({
@@ -3080,7 +3756,6 @@ export const zCreateStorageByServiceUuidData = z.object({
         resource_uuid: z.string(),
         name: z.optional(z.string()),
         mount_path: z.string(),
-        host_path: z.optional(z.string()),
         content: z.optional(z.string()),
         is_directory: z.optional(z.boolean()),
         fs_path: z.optional(z.string())

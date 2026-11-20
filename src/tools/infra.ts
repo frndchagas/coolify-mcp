@@ -140,12 +140,18 @@ export function registerInfraTools(server: McpServer) {
       title: "Update private key",
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
       description:
-        "Update an SSH private key. The Coolify API identifies the key by its private_key content (required); name and description are optional.",
-      inputSchema: z.zUpdatePrivateKeyData.shape.body.shape,
+        "Update an SSH private key by UUID. Name, description, and private_key are optional.",
+      inputSchema: {
+        ...z.zUpdatePrivateKeyData.shape.path.shape,
+        ...z.zUpdatePrivateKeyData.shape.body.shape,
+      },
     },
-    async (body) => {
+    async ({ uuid, ...body }) => {
       requireWrite();
-      const data = await unwrap(sdk.updatePrivateKey({ body }), "updatePrivateKey");
+      const data = await unwrap(
+        sdk.updatePrivateKey({ path: { uuid }, body }),
+        "updatePrivateKey"
+      );
       return ok("Private key updated.", redactSecrets(data));
     }
   );

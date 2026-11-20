@@ -20,6 +20,18 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 /**
+ * Delete Preview Deployment
+ *
+ * Delete a preview deployment for a pull request. Cancels active deployments, stops containers, removes volumes/networks, and deletes the preview record. Needs a token with the write and deploy permissions.
+ */
+export const deletePreviewDeploymentByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<DeletePreviewDeploymentByPullRequestIdData, ThrowOnError>) => (options.client ?? client).delete<DeletePreviewDeploymentByPullRequestIdResponses, DeletePreviewDeploymentByPullRequestIdErrors, ThrowOnError>({
+    requestValidator: async (data) => await zDeletePreviewDeploymentByPullRequestIdData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/applications/{uuid}/previews/{pull_request_id}',
+    ...options
+});
+
+/**
  * List
  *
  * List all applications.
@@ -114,7 +126,7 @@ export const createDockerimageApplication = <ThrowOnError extends boolean = fals
 /**
  * Delete
  *
- * Delete application by UUID.
+ * Delete application by UUID. Needs a token with the write and deploy permissions.
  */
 export const deleteApplicationByUuid = <ThrowOnError extends boolean = false>(options: Options<DeleteApplicationByUuidData, ThrowOnError>) => (options.client ?? client).delete<DeleteApplicationByUuidResponses, DeleteApplicationByUuidErrors, ThrowOnError>({
     requestValidator: async (data) => await zDeleteApplicationByUuidData.parseAsync(data),
@@ -154,7 +166,7 @@ export const updateApplicationByUuid = <ThrowOnError extends boolean = false>(op
 /**
  * Get application logs.
  *
- * Get application logs by UUID.
+ * Get application logs by UUID. Requires the `read:sensitive` or `root` token ability.
  */
 export const getApplicationLogsByUuid = <ThrowOnError extends boolean = false>(options: Options<GetApplicationLogsByUuidData, ThrowOnError>) => (options.client ?? client).get<GetApplicationLogsByUuidResponses, GetApplicationLogsByUuidErrors, ThrowOnError>({
     requestValidator: async (data) => await zGetApplicationLogsByUuidData.parseAsync(data),
@@ -286,7 +298,7 @@ export const listStoragesByApplicationUuid = <ThrowOnError extends boolean = fal
 /**
  * Update Storage
  *
- * Update a persistent storage or file storage by application UUID.
+ * Update a persistent storage or file storage by application UUID. Changed file content is saved right away and written to the server in the background, so a failed write does not change the response.
  */
 export const updateStorageByApplicationUuid = <ThrowOnError extends boolean = false>(options: Options<UpdateStorageByApplicationUuidData, ThrowOnError>) => (options.client ?? client).patch<UpdateStorageByApplicationUuidResponses, UpdateStorageByApplicationUuidErrors, ThrowOnError>({
     requestValidator: async (data) => await zUpdateStorageByApplicationUuidData.parseAsync(data),
@@ -324,18 +336,6 @@ export const deleteStorageByApplicationUuid = <ThrowOnError extends boolean = fa
     requestValidator: async (data) => await zDeleteStorageByApplicationUuidData.parseAsync(data),
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/applications/{uuid}/storages/{storage_uuid}',
-    ...options
-});
-
-/**
- * Delete Preview Deployment
- *
- * Delete a preview deployment for a pull request. Cancels active deployments, stops containers, removes volumes/networks, and deletes the preview record.
- */
-export const deletePreviewDeploymentByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<DeletePreviewDeploymentByPullRequestIdData, ThrowOnError>) => (options.client ?? client).delete<DeletePreviewDeploymentByPullRequestIdResponses, DeletePreviewDeploymentByPullRequestIdErrors, ThrowOnError>({
-    requestValidator: async (data) => await zDeletePreviewDeploymentByPullRequestIdData.parseAsync(data),
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/applications/{uuid}/previews/{pull_request_id}',
     ...options
 });
 
@@ -382,7 +382,7 @@ export const createDatabaseBackup = <ThrowOnError extends boolean = false>(optio
 /**
  * Delete
  *
- * Delete database by UUID.
+ * Delete database by UUID. Needs a token with the write and deploy permissions.
  */
 export const deleteDatabaseByUuid = <ThrowOnError extends boolean = false>(options: Options<DeleteDatabaseByUuidData, ThrowOnError>) => (options.client ?? client).delete<DeleteDatabaseByUuidResponses, DeleteDatabaseByUuidErrors, ThrowOnError>({
     requestValidator: async (data) => await zDeleteDatabaseByUuidData.parseAsync(data),
@@ -496,9 +496,9 @@ export const createDatabaseDragonfly = <ThrowOnError extends boolean = false>(op
 });
 
 /**
- * Create (Redis)
+ * Create (Redis / Valkey)
  *
- * Create a new Redis database.
+ * Create a new Redis or Valkey database. Valkey (valkey/valkey:9-alpine) is the default. Set image to a Redis image (for example redis:8) for Redis.
  */
 export const createDatabaseRedis = <ThrowOnError extends boolean = false>(options: Options<CreateDatabaseRedisData, ThrowOnError>) => (options.client ?? client).post<CreateDatabaseRedisResponses, CreateDatabaseRedisErrors, ThrowOnError>({
     requestValidator: async (data) => await zCreateDatabaseRedisData.parseAsync(data),
@@ -590,7 +590,7 @@ export const deleteBackupExecutionByUuid = <ThrowOnError extends boolean = false
 /**
  * List backup executions
  *
- * Get all executions for a specific backup configuration.
+ * Get all executions for a specific backup configuration. The execution `message` is only returned (redacted) to tokens with the `read:sensitive` or `root` ability; otherwise it is `null`.
  */
 export const listBackupExecutions = <ThrowOnError extends boolean = false>(options: Options<ListBackupExecutionsData, ThrowOnError>) => (options.client ?? client).get<ListBackupExecutionsResponses, ListBackupExecutionsErrors, ThrowOnError>({
     requestValidator: async (data) => await zListBackupExecutionsData.parseAsync(data),
@@ -722,7 +722,7 @@ export const listStoragesByDatabaseUuid = <ThrowOnError extends boolean = false>
 /**
  * Update Storage
  *
- * Update a persistent storage or file storage by database UUID.
+ * Update a persistent storage or file storage by database UUID. Changed file content is saved right away and written to the server in the background, so a failed write does not change the response.
  */
 export const updateStorageByDatabaseUuid = <ThrowOnError extends boolean = false>(options: Options<UpdateStorageByDatabaseUuidData, ThrowOnError>) => (options.client ?? client).patch<UpdateStorageByDatabaseUuidResponses, UpdateStorageByDatabaseUuidErrors, ThrowOnError>({
     requestValidator: async (data) => await zUpdateStorageByDatabaseUuidData.parseAsync(data),
@@ -1151,22 +1151,6 @@ export const listPrivateKeys = <ThrowOnError extends boolean = false>(options?: 
 });
 
 /**
- * Update
- *
- * Update a private key.
- */
-export const updatePrivateKey = <ThrowOnError extends boolean = false>(options: Options<UpdatePrivateKeyData, ThrowOnError>) => (options.client ?? client).patch<UpdatePrivateKeyResponses, UpdatePrivateKeyErrors, ThrowOnError>({
-    requestValidator: async (data) => await zUpdatePrivateKeyData.parseAsync(data),
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/security/keys',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
  * Create
  *
  * Create a new private key.
@@ -1207,6 +1191,22 @@ export const getPrivateKeyByUuid = <ThrowOnError extends boolean = false>(option
 });
 
 /**
+ * Update
+ *
+ * Update a private key.
+ */
+export const updatePrivateKey = <ThrowOnError extends boolean = false>(options: Options<UpdatePrivateKeyData, ThrowOnError>) => (options.client ?? client).patch<UpdatePrivateKeyResponses, UpdatePrivateKeyErrors, ThrowOnError>({
+    requestValidator: async (data) => await zUpdatePrivateKeyData.parseAsync(data),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/security/keys/{uuid}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * List
  *
  * List all servers.
@@ -1237,7 +1237,7 @@ export const createServer = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * Delete
  *
- * Delete server by UUID.
+ * Delete server by UUID. With force or delete_from_provider, needs a token with the write and deploy permissions.
  */
 export const deleteServerByUuid = <ThrowOnError extends boolean = false>(options: Options<DeleteServerByUuidData, ThrowOnError>) => (options.client ?? client).delete<DeleteServerByUuidResponses, DeleteServerByUuidErrors, ThrowOnError>({
     requestValidator: async (data) => await zDeleteServerByUuidData.parseAsync(data),
@@ -1261,7 +1261,7 @@ export const getServerByUuid = <ThrowOnError extends boolean = false>(options: O
 /**
  * Update
  *
- * Update Server.
+ * Update Server. Changing proxy_type needs a token with the write and deploy permissions.
  */
 export const updateServerByUuid = <ThrowOnError extends boolean = false>(options: Options<UpdateServerByUuidData, ThrowOnError>) => (options.client ?? client).patch<UpdateServerByUuidResponses, UpdateServerByUuidErrors, ThrowOnError>({
     requestValidator: async (data) => await zUpdateServerByUuidData.parseAsync(data),
@@ -1301,7 +1301,7 @@ export const getDomainsByServerUuid = <ThrowOnError extends boolean = false>(opt
 /**
  * Validate
  *
- * Validate server by UUID.
+ * Validate server by UUID. With install=true, needs a token with the write and deploy permissions.
  */
 export const validateServerByUuid = <ThrowOnError extends boolean = false>(options: Options<ValidateServerByUuidData, ThrowOnError>) => (options.client ?? client).post<ValidateServerByUuidResponses, ValidateServerByUuidErrors, ThrowOnError>({
     requestValidator: async (data) => await zValidateServerByUuidData.parseAsync(data),
@@ -1345,7 +1345,7 @@ export const createService = <ThrowOnError extends boolean = false>(options: Opt
 /**
  * Delete
  *
- * Delete service by UUID.
+ * Delete service by UUID. Needs a token with the write and deploy permissions.
  */
 export const deleteServiceByUuid = <ThrowOnError extends boolean = false>(options: Options<DeleteServiceByUuidData, ThrowOnError>) => (options.client ?? client).delete<DeleteServiceByUuidResponses, DeleteServiceByUuidErrors, ThrowOnError>({
     requestValidator: async (data) => await zDeleteServiceByUuidData.parseAsync(data),
@@ -1505,7 +1505,7 @@ export const listStoragesByServiceUuid = <ThrowOnError extends boolean = false>(
 /**
  * Update Storage
  *
- * Update a persistent storage or file storage by service UUID.
+ * Update a persistent storage or file storage by service UUID. Changed file content is saved right away and written to the server in the background, so a failed write does not change the response.
  */
 export const updateStorageByServiceUuid = <ThrowOnError extends boolean = false>(options: Options<UpdateStorageByServiceUuidData, ThrowOnError>) => (options.client ?? client).patch<UpdateStorageByServiceUuidResponses, UpdateStorageByServiceUuidErrors, ThrowOnError>({
     requestValidator: async (data) => await zUpdateStorageByServiceUuidData.parseAsync(data),

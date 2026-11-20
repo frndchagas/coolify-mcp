@@ -100,6 +100,23 @@ async function fetchAndFixSpec(): Promise<OpenAPISpec> {
 		`Applied ${envFixCount} fixes (environment_name/environment_uuid one-of relaxation)`
 	);
 
+	// Coolify v4.7.x references #/components/responses/403 without declaring it.
+	const components = (spec.components ??= {}) as Record<string, Record<string, unknown>>;
+	const responses = (components.responses ??= {});
+	if (!responses['403']) {
+		responses['403'] = {
+			description: 'Forbidden.',
+			content: {
+				'application/json': {
+					schema: {
+						type: 'object',
+						properties: { message: { type: 'string' } },
+					},
+				},
+			},
+		};
+	}
+
 	return spec;
 }
 
@@ -129,7 +146,7 @@ const USED_OPERATIONS = [
 	// Private Keys (Security)
 	'GET /security/keys',
 	'POST /security/keys',
-	'PATCH /security/keys',
+	'PATCH /security/keys/{uuid}',
 	'GET /security/keys/{uuid}',
 	'DELETE /security/keys/{uuid}',
 	// GitHub Apps

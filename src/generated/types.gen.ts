@@ -83,6 +83,14 @@ export type Team = {
      */
     custom_server_limit?: string;
     /**
+     * Whether deployments can fall back to the deployment server when no usable dedicated build server is available.
+     */
+    is_build_server_fallback_enabled?: boolean;
+    /**
+     * Whether image scanning is turned on for servers added to the team from now on.
+     */
+    scan_images_on_new_servers?: boolean;
+    /**
      * The members of the team.
      */
     members?: Array<User>;
@@ -141,6 +149,10 @@ export type Service = {
      */
     is_container_label_escape_enabled?: boolean;
     /**
+     * Hide every environment variable value in logs. When false, only locked values are hidden.
+     */
+    redact_all_env_values_in_logs?: boolean;
+    /**
      * The flag to enable the container label readonly.
      */
     is_container_label_readonly_enabled?: boolean;
@@ -173,18 +185,60 @@ export type ServerSetting = {
     id?: number;
     concurrent_builds?: number;
     deployment_queue_limit?: number;
+    backup_compression_cpu_percentage?: number;
     dynamic_timeout?: number;
     force_disabled?: boolean;
     force_server_cleanup?: boolean;
-    is_build_server?: boolean;
+    server_role?: 'deployment' | 'build' | 'both';
+    /**
+     * Deprecated: use server_role instead. true when server_role is build.
+     *
+     * @deprecated
+     */
+    readonly is_build_server?: boolean;
     is_cloudflare_tunnel?: boolean;
     is_jump_server?: boolean;
     is_logdrain_axiom_enabled?: boolean;
+    is_logdrain_cloudwatch_enabled?: boolean;
     is_logdrain_custom_enabled?: boolean;
-    is_logdrain_highlight_enabled?: boolean;
     is_logdrain_newrelic_enabled?: boolean;
     is_metrics_enabled?: boolean;
+    is_traffic_analytics_enabled?: boolean;
+    traffic_topn?: number;
+    traffic_sample_threshold?: number;
+    traffic_retention_1h_days?: number;
+    traffic_retention_1d_days?: number;
+    is_geoip_enabled?: boolean;
+    geoip_refresh_days?: number;
+    traffic_ip_mode?: 'full' | 'anonymized' | 'off';
+    /**
+     * Traefik certificate resolver for generated HTTPS routers. Null when the proxy uses its own certificates.
+     */
+    traefik_certificate_resolver?: string;
     is_reachable?: boolean;
+    /**
+     * Pinned SSH host key(s) of the server, one "type base64" line per key.
+     */
+    ssh_host_key?: string;
+    ssh_host_key_source?: 'tofu' | 'upgrade' | 'transfer' | 'manual';
+    ssh_host_key_trusted_at?: string;
+    /**
+     * Host key that the server sent when it did not match the pinned key.
+     */
+    ssh_host_key_pending?: string;
+    is_ssh_host_key_check_disabled?: boolean;
+    /**
+     * Refuse a changed host key on this server, also when the instance only warns.
+     */
+    is_ssh_host_key_check_enforced?: boolean;
+    /**
+     * SHA256 fingerprints of the pinned host keys, as `ssh-keygen -lf` shows them.
+     */
+    readonly ssh_host_key_fingerprints?: Array<string>;
+    /**
+     * SHA256 fingerprints of the host key that did not match.
+     */
+    readonly ssh_host_key_pending_fingerprints?: Array<string>;
     is_sentinel_enabled?: boolean;
     is_swarm_manager?: boolean;
     is_swarm_worker?: boolean;
@@ -192,9 +246,15 @@ export type ServerSetting = {
     is_usable?: boolean;
     logdrain_axiom_api_key?: string;
     logdrain_axiom_dataset_name?: string;
+    /**
+     * Base domain of the Axiom edge deployment, for example us-east-1.aws.edge.axiom.co or eu-central-1.aws.edge.axiom.co.
+     */
+    logdrain_axiom_domain?: string;
+    logdrain_cloudwatch_region?: string;
+    logdrain_cloudwatch_group?: string;
+    logdrain_cloudwatch_stream_prefix?: string;
     logdrain_custom_config?: string;
     logdrain_custom_config_parser?: string;
-    logdrain_highlight_project_id?: string;
     logdrain_newrelic_base_uri?: string;
     logdrain_newrelic_license_key?: string;
     sentinel_metrics_history_days?: number;
@@ -218,6 +278,22 @@ export type ServerSetting = {
      * SSH connection timeout in seconds.
      */
     connection_timeout?: number;
+    /**
+     * Detected Docker Engine version on the server.
+     */
+    docker_version?: string;
+    /**
+     * When Docker Engine version was last detected.
+     */
+    docker_version_checked_at?: string;
+    /**
+     * Detected Docker Compose plugin version on the server.
+     */
+    compose_version?: string;
+    /**
+     * When Docker Compose version was last detected.
+     */
+    compose_version_checked_at?: string;
 };
 
 /**
@@ -252,12 +328,6 @@ export type Server = {
      * The port number.
      */
     port?: number;
-    /**
-     * The proxy configuration.
-     */
-    proxy?: {
-        [key: string]: unknown;
-    };
     /**
      * The proxy type.
      */
@@ -368,6 +438,22 @@ export type ScheduledTask = {
      */
     timeout?: number;
     /**
+     * Run the command with `sh -c` in the container. Set it to false for containers without a shell: the command is then split into arguments and run directly, without shell features such as variables, pipes, or redirects.
+     */
+    use_shell?: boolean;
+    /**
+     * The number of failed runs since the last successful run.
+     */
+    consecutive_failures?: number;
+    /**
+     * The date and time of the first failed run since the last successful run.
+     */
+    failing_since?: string;
+    /**
+     * Why Coolify disabled the task automatically. It is cleared when the task is enabled again.
+     */
+    disabled_reason?: string;
+    /**
      * The date and time when the scheduled task was created.
      */
     created_at?: string;
@@ -424,6 +510,9 @@ export type EnvironmentVariable = {
     is_runtime?: boolean;
     is_buildtime?: boolean;
     is_shared?: boolean;
+    /**
+     * If true, the saved value is hidden in the UI and API responses. A lock is permanent: false does not unlock a locked variable, but a new value can still replace the locked one. MCP never returns environment variable values.
+     */
     is_shown_once?: boolean;
     key?: string;
     value?: string;
@@ -469,11 +558,21 @@ export type ApplicationSetting = {
     is_build_server_enabled?: boolean;
     is_consistent_container_name_enabled?: boolean;
     is_gzip_enabled?: boolean;
+    /**
+     * Traefik certificate resolver override. Null uses the server setting, "none" uses no resolver.
+     */
+    traefik_certificate_resolver?: string;
     is_stripprefix_enabled?: boolean;
+    /**
+     * Use permanent (301/308) instead of temporary (302/307) proxy redirects.
+     */
+    is_permanent_redirect_enabled?: boolean;
     connect_to_docker_network?: boolean;
     custom_internal_name?: string;
+    custom_container_name_prefix?: string;
     is_container_label_escape_enabled?: boolean;
     is_env_sorting_enabled?: boolean;
+    include_coolify_default_variables?: boolean;
     is_container_label_readonly_enabled?: boolean;
     is_preserve_repository_enabled?: boolean;
     disable_build_cache?: boolean;
@@ -481,10 +580,22 @@ export type ApplicationSetting = {
     is_git_shallow_clone_enabled?: boolean;
     is_pr_deployments_public_enabled?: boolean;
     use_build_secrets?: boolean;
+    /**
+     * Hide every environment variable value in logs. When false, only locked values are hidden.
+     */
+    redact_all_env_values_in_logs?: boolean;
     inject_build_args_to_dockerfile?: boolean;
     include_source_commit_in_build?: boolean;
+    /**
+     * Add the containers of the destination network as build hosts (--add-host). Turn off to keep the build cache when resources on the network change.
+     */
+    include_network_hosts_in_build?: boolean;
     docker_images_to_keep?: number;
     stop_grace_period?: number;
+    /**
+     * Seconds to wait after the new container is healthy before old containers stop during a rolling update. 0 turns the wait off.
+     */
+    rolling_update_drain_seconds?: number;
 };
 
 /**
@@ -508,6 +619,7 @@ export type ApplicationDeploymentQueue = {
     status?: string;
     is_webhook?: boolean;
     is_api?: boolean;
+    is_mcp?: boolean;
     created_at?: string;
     updated_at?: string;
     logs?: string;
@@ -520,6 +632,7 @@ export type ApplicationDeploymentQueue = {
     deployment_url?: string;
     destination_id?: string;
     only_this_server?: boolean;
+    parent_deployment_uuid?: string;
     rollback?: boolean;
     commit_message?: string;
 };
@@ -576,6 +689,14 @@ export type Application = {
      * Git full URL.
      */
     git_full_url?: string;
+    /**
+     * SSH host keys (known_hosts lines) of self-hosted Git hosts that git over SSH accepts. Saved on the first deployment.
+     */
+    git_ssh_known_hosts?: string;
+    /**
+     * Username for HTTPS access to a private repository on a custom Git host. The password or token is never returned.
+     */
+    git_https_username?: string;
     /**
      * Docker registry image name.
      */
@@ -868,8 +989,546 @@ export type Application = {
      * Password for HTTP Basic Authentication
      */
     http_basic_auth_password?: string;
+    /**
+     * Hash algorithm for the HTTP Basic Authentication password. Argon2id needs the Caddy proxy, version 2.11 or newer.
+     */
+    http_basic_auth_hash_algorithm?: 'bcrypt' | 'argon2id';
+    /**
+     * Bcrypt cost for the HTTP Basic Authentication password.
+     */
+    http_basic_auth_bcrypt_cost?: number;
+    /**
+     * Argon2id memory cost in KiB for the HTTP Basic Authentication password.
+     */
+    http_basic_auth_argon2id_memory_cost?: number;
+    /**
+     * Argon2id time cost (iterations) for the HTTP Basic Authentication password.
+     */
+    http_basic_auth_argon2id_time_cost?: number;
     settings?: ApplicationSetting;
 };
+
+/**
+ * Standalone database. The fields that start with an engine name (for example postgres_ or redis_) are only returned for that engine. Passwords, connection URLs and init_scripts are only returned for tokens with the read:sensitive or root ability.
+ */
+export type Database = {
+    uuid?: string;
+    name?: string;
+    description?: string | null;
+    database_type?: 'standalone-postgresql' | 'standalone-redis' | 'standalone-mongodb' | 'standalone-mysql' | 'standalone-mariadb' | 'standalone-keydb' | 'standalone-dragonfly' | 'standalone-clickhouse' | 'standalone-sqlite';
+    image?: string;
+    /**
+     * Container status and health, for example running:healthy or exited:unhealthy.
+     */
+    status?: string;
+    /**
+     * True when the server of the database is reachable and usable.
+     */
+    server_status?: boolean;
+    environment_id?: number;
+    /**
+     * Only returned by GET /databases/{uuid}. Includes the project.
+     */
+    environment?: Environment;
+    destination_id?: number;
+    destination_type?: string;
+    /**
+     * Docker network destination of the database, with its server.
+     */
+    destination?: {
+        uuid?: string;
+        name?: string;
+        network?: string;
+        server_id?: number;
+        server?: Server;
+        created_at?: string;
+        updated_at?: string;
+    };
+    /**
+     * Not returned for SQLite.
+     */
+    is_public?: boolean;
+    /**
+     * Not returned for SQLite.
+     */
+    public_port?: number | null;
+    /**
+     * Proxy timeout of the public port in seconds. Not returned for SQLite.
+     */
+    public_port_timeout?: number | null;
+    /**
+     * Comma-separated host:container port mappings. Not returned for SQLite.
+     */
+    ports_mappings?: string | null;
+    /**
+     * Not returned for ClickHouse and SQLite.
+     */
+    enable_ssl?: boolean;
+    /**
+     * PostgreSQL, MongoDB and MySQL only.
+     */
+    ssl_mode?: string | null;
+    /**
+     * Connection URL inside the Docker network. Contains the password. Not returned for SQLite.
+     */
+    internal_db_url?: string | null;
+    /**
+     * Public connection URL, when the database is public. Contains the password. Not returned for SQLite.
+     */
+    external_db_url?: string | null;
+    /**
+     * PostgreSQL only.
+     */
+    init_scripts?: Array<{
+        index?: number;
+        filename?: string;
+        content?: string;
+    }> | null;
+    custom_docker_run_options?: string | null;
+    is_log_drain_enabled?: boolean;
+    /**
+     * Not returned for MariaDB.
+     */
+    is_include_timestamps?: boolean;
+    include_coolify_default_variables?: boolean;
+    redact_all_env_values_in_logs?: boolean;
+    health_check_enabled?: boolean;
+    health_check_interval?: number;
+    health_check_timeout?: number;
+    health_check_retries?: number;
+    health_check_start_period?: number;
+    limits_memory?: string;
+    limits_memory_swap?: string;
+    limits_memory_swappiness?: number;
+    limits_memory_reservation?: string;
+    limits_cpus?: string;
+    limits_cpuset?: string | null;
+    limits_cpu_shares?: number;
+    /**
+     * Internal hash that Coolify uses to find configuration changes that need a restart. It changes only when the database starts, so do not use it to compare configurations.
+     */
+    config_hash?: string | null;
+    restart_count?: number;
+    last_restart_at?: string | null;
+    last_restart_type?: string | null;
+    last_online_at?: string | null;
+    started_at?: string | null;
+    /**
+     * Only returned by GET /databases. The scheduled backups of the database, as returned by GET /databases/{uuid}/backups.
+     */
+    backup_configs?: Array<unknown>;
+    postgres_user?: string;
+    postgres_password?: string;
+    postgres_db?: string;
+    postgres_initdb_args?: string | null;
+    postgres_host_auth_method?: string | null;
+    postgres_conf?: string | null;
+    redis_password?: string;
+    redis_conf?: string | null;
+    mongo_initdb_root_username?: string;
+    mongo_initdb_root_password?: string;
+    mongo_initdb_database?: string;
+    mongo_conf?: string | null;
+    mysql_user?: string;
+    mysql_password?: string;
+    mysql_root_password?: string;
+    mysql_database?: string;
+    mysql_conf?: string | null;
+    mariadb_user?: string;
+    mariadb_password?: string;
+    mariadb_root_password?: string;
+    mariadb_database?: string;
+    mariadb_conf?: string | null;
+    keydb_password?: string;
+    keydb_conf?: string | null;
+    dragonfly_password?: string;
+    clickhouse_admin_user?: string;
+    clickhouse_admin_password?: string;
+    clickhouse_db?: string;
+    /**
+     * Comma-separated SQLite database file names.
+     */
+    sqlite_databases?: string;
+    created_at?: string;
+    updated_at?: string;
+    deleted_at?: string | null;
+};
+
+/**
+ * Server Settings model
+ */
+export type ServerSettingWritable = {
+    id?: number;
+    concurrent_builds?: number;
+    deployment_queue_limit?: number;
+    backup_compression_cpu_percentage?: number;
+    dynamic_timeout?: number;
+    force_disabled?: boolean;
+    force_server_cleanup?: boolean;
+    server_role?: 'deployment' | 'build' | 'both';
+    is_cloudflare_tunnel?: boolean;
+    is_jump_server?: boolean;
+    is_logdrain_axiom_enabled?: boolean;
+    is_logdrain_cloudwatch_enabled?: boolean;
+    is_logdrain_custom_enabled?: boolean;
+    is_logdrain_newrelic_enabled?: boolean;
+    is_metrics_enabled?: boolean;
+    is_traffic_analytics_enabled?: boolean;
+    traffic_topn?: number;
+    traffic_sample_threshold?: number;
+    traffic_retention_1h_days?: number;
+    traffic_retention_1d_days?: number;
+    is_geoip_enabled?: boolean;
+    geoip_refresh_days?: number;
+    traffic_ip_mode?: 'full' | 'anonymized' | 'off';
+    /**
+     * Traefik certificate resolver for generated HTTPS routers. Null when the proxy uses its own certificates.
+     */
+    traefik_certificate_resolver?: string;
+    is_reachable?: boolean;
+    /**
+     * Pinned SSH host key(s) of the server, one "type base64" line per key.
+     */
+    ssh_host_key?: string;
+    ssh_host_key_source?: 'tofu' | 'upgrade' | 'transfer' | 'manual';
+    ssh_host_key_trusted_at?: string;
+    /**
+     * Host key that the server sent when it did not match the pinned key.
+     */
+    ssh_host_key_pending?: string;
+    is_ssh_host_key_check_disabled?: boolean;
+    /**
+     * Refuse a changed host key on this server, also when the instance only warns.
+     */
+    is_ssh_host_key_check_enforced?: boolean;
+    is_sentinel_enabled?: boolean;
+    is_swarm_manager?: boolean;
+    is_swarm_worker?: boolean;
+    is_terminal_enabled?: boolean;
+    is_usable?: boolean;
+    logdrain_axiom_api_key?: string;
+    logdrain_axiom_dataset_name?: string;
+    /**
+     * Base domain of the Axiom edge deployment, for example us-east-1.aws.edge.axiom.co or eu-central-1.aws.edge.axiom.co.
+     */
+    logdrain_axiom_domain?: string;
+    logdrain_cloudwatch_region?: string;
+    logdrain_cloudwatch_group?: string;
+    logdrain_cloudwatch_stream_prefix?: string;
+    logdrain_custom_config?: string;
+    logdrain_custom_config_parser?: string;
+    logdrain_newrelic_base_uri?: string;
+    logdrain_newrelic_license_key?: string;
+    sentinel_metrics_history_days?: number;
+    sentinel_metrics_refresh_rate_seconds?: number;
+    sentinel_token?: string;
+    docker_cleanup_frequency?: string;
+    docker_cleanup_threshold?: number;
+    server_id?: number;
+    wildcard_domain?: string;
+    created_at?: string;
+    updated_at?: string;
+    /**
+     * The flag to indicate if the unused volumes should be deleted.
+     */
+    delete_unused_volumes?: boolean;
+    /**
+     * The flag to indicate if the unused networks should be deleted.
+     */
+    delete_unused_networks?: boolean;
+    /**
+     * SSH connection timeout in seconds.
+     */
+    connection_timeout?: number;
+    /**
+     * Detected Docker Engine version on the server.
+     */
+    docker_version?: string;
+    /**
+     * When Docker Engine version was last detected.
+     */
+    docker_version_checked_at?: string;
+    /**
+     * Detected Docker Compose plugin version on the server.
+     */
+    compose_version?: string;
+    /**
+     * When Docker Compose version was last detected.
+     */
+    compose_version_checked_at?: string;
+};
+
+/**
+ * Server model
+ */
+export type ServerWritable = {
+    /**
+     * The server ID.
+     */
+    id?: number;
+    /**
+     * The server UUID.
+     */
+    uuid?: string;
+    /**
+     * The server name.
+     */
+    name?: string;
+    /**
+     * The server description.
+     */
+    description?: string;
+    /**
+     * The IP address.
+     */
+    ip?: string;
+    /**
+     * The user.
+     */
+    user?: string;
+    /**
+     * The port number.
+     */
+    port?: number;
+    /**
+     * The proxy type.
+     */
+    proxy_type?: 'traefik' | 'caddy' | 'none';
+    /**
+     * The flag to indicate if the high disk usage notification has been sent.
+     */
+    high_disk_usage_notification_sent?: boolean;
+    /**
+     * The flag to indicate if the unreachable notification has been sent.
+     */
+    unreachable_notification_sent?: boolean;
+    /**
+     * The unreachable count for your server.
+     */
+    unreachable_count?: number;
+    /**
+     * The validation logs.
+     */
+    validation_logs?: string;
+    /**
+     * The flag to indicate if the log drain notification has been sent.
+     */
+    log_drain_notification_sent?: boolean;
+    /**
+     * The swarm cluster configuration.
+     */
+    swarm_cluster?: string;
+    settings?: ServerSettingWritable;
+};
+
+/**
+ * Standalone database. The fields that start with an engine name (for example postgres_ or redis_) are only returned for that engine. Passwords, connection URLs and init_scripts are only returned for tokens with the read:sensitive or root ability.
+ */
+export type DatabaseWritable = {
+    uuid?: string;
+    name?: string;
+    description?: string | null;
+    database_type?: 'standalone-postgresql' | 'standalone-redis' | 'standalone-mongodb' | 'standalone-mysql' | 'standalone-mariadb' | 'standalone-keydb' | 'standalone-dragonfly' | 'standalone-clickhouse' | 'standalone-sqlite';
+    image?: string;
+    /**
+     * Container status and health, for example running:healthy or exited:unhealthy.
+     */
+    status?: string;
+    /**
+     * True when the server of the database is reachable and usable.
+     */
+    server_status?: boolean;
+    environment_id?: number;
+    /**
+     * Only returned by GET /databases/{uuid}. Includes the project.
+     */
+    environment?: Environment;
+    destination_id?: number;
+    destination_type?: string;
+    /**
+     * Docker network destination of the database, with its server.
+     */
+    destination?: {
+        uuid?: string;
+        name?: string;
+        network?: string;
+        server_id?: number;
+        server?: ServerWritable;
+        created_at?: string;
+        updated_at?: string;
+    };
+    /**
+     * Not returned for SQLite.
+     */
+    is_public?: boolean;
+    /**
+     * Not returned for SQLite.
+     */
+    public_port?: number | null;
+    /**
+     * Proxy timeout of the public port in seconds. Not returned for SQLite.
+     */
+    public_port_timeout?: number | null;
+    /**
+     * Comma-separated host:container port mappings. Not returned for SQLite.
+     */
+    ports_mappings?: string | null;
+    /**
+     * Not returned for ClickHouse and SQLite.
+     */
+    enable_ssl?: boolean;
+    /**
+     * PostgreSQL, MongoDB and MySQL only.
+     */
+    ssl_mode?: string | null;
+    /**
+     * Connection URL inside the Docker network. Contains the password. Not returned for SQLite.
+     */
+    internal_db_url?: string | null;
+    /**
+     * Public connection URL, when the database is public. Contains the password. Not returned for SQLite.
+     */
+    external_db_url?: string | null;
+    /**
+     * PostgreSQL only.
+     */
+    init_scripts?: Array<{
+        index?: number;
+        filename?: string;
+        content?: string;
+    }> | null;
+    custom_docker_run_options?: string | null;
+    is_log_drain_enabled?: boolean;
+    /**
+     * Not returned for MariaDB.
+     */
+    is_include_timestamps?: boolean;
+    include_coolify_default_variables?: boolean;
+    redact_all_env_values_in_logs?: boolean;
+    health_check_enabled?: boolean;
+    health_check_interval?: number;
+    health_check_timeout?: number;
+    health_check_retries?: number;
+    health_check_start_period?: number;
+    limits_memory?: string;
+    limits_memory_swap?: string;
+    limits_memory_swappiness?: number;
+    limits_memory_reservation?: string;
+    limits_cpus?: string;
+    limits_cpuset?: string | null;
+    limits_cpu_shares?: number;
+    /**
+     * Internal hash that Coolify uses to find configuration changes that need a restart. It changes only when the database starts, so do not use it to compare configurations.
+     */
+    config_hash?: string | null;
+    restart_count?: number;
+    last_restart_at?: string | null;
+    last_restart_type?: string | null;
+    last_online_at?: string | null;
+    started_at?: string | null;
+    /**
+     * Only returned by GET /databases. The scheduled backups of the database, as returned by GET /databases/{uuid}/backups.
+     */
+    backup_configs?: Array<unknown>;
+    postgres_user?: string;
+    postgres_password?: string;
+    postgres_db?: string;
+    postgres_initdb_args?: string | null;
+    postgres_host_auth_method?: string | null;
+    postgres_conf?: string | null;
+    redis_password?: string;
+    redis_conf?: string | null;
+    mongo_initdb_root_username?: string;
+    mongo_initdb_root_password?: string;
+    mongo_initdb_database?: string;
+    mongo_conf?: string | null;
+    mysql_user?: string;
+    mysql_password?: string;
+    mysql_root_password?: string;
+    mysql_database?: string;
+    mysql_conf?: string | null;
+    mariadb_user?: string;
+    mariadb_password?: string;
+    mariadb_root_password?: string;
+    mariadb_database?: string;
+    mariadb_conf?: string | null;
+    keydb_password?: string;
+    keydb_conf?: string | null;
+    dragonfly_password?: string;
+    clickhouse_admin_user?: string;
+    clickhouse_admin_password?: string;
+    clickhouse_db?: string;
+    /**
+     * Comma-separated SQLite database file names.
+     */
+    sqlite_databases?: string;
+    created_at?: string;
+    updated_at?: string;
+    deleted_at?: string | null;
+};
+
+export type DeletePreviewDeploymentByPullRequestIdData = {
+    body?: never;
+    path: {
+        /**
+         * UUID of the application.
+         */
+        uuid: string;
+        /**
+         * Pull request ID of the preview to delete.
+         */
+        pull_request_id: number;
+    };
+    query?: never;
+    url: '/applications/{uuid}/previews/{pull_request_id}';
+};
+
+export type DeletePreviewDeploymentByPullRequestIdErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * The token needs the write and deploy permissions.
+     */
+    403: unknown;
+    /**
+     * Resource not found.
+     */
+    404: {
+        message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type DeletePreviewDeploymentByPullRequestIdError = DeletePreviewDeploymentByPullRequestIdErrors[keyof DeletePreviewDeploymentByPullRequestIdErrors];
+
+export type DeletePreviewDeploymentByPullRequestIdResponses = {
+    /**
+     * Preview deletion queued.
+     */
+    200: {
+        message?: string;
+    };
+};
+
+export type DeletePreviewDeploymentByPullRequestIdResponse = DeletePreviewDeploymentByPullRequestIdResponses[keyof DeletePreviewDeploymentByPullRequestIdResponses];
 
 export type ListApplicationsData = {
     body?: never;
@@ -938,6 +1597,14 @@ export type CreatePublicApplicationData = {
          * The git branch.
          */
         git_branch: string;
+        /**
+         * Username for HTTPS access to a private repository on a custom Git host (not github.com).
+         */
+        git_https_username?: string;
+        /**
+         * Password or access token for HTTPS access to a private repository on a custom Git host (not github.com). It is stored encrypted and never returned.
+         */
+        git_https_password?: string;
         /**
          * The build pack type.
          */
@@ -1127,19 +1794,19 @@ export type CreatePublicApplicationData = {
          */
         pre_deployment_command_container?: string;
         /**
-         * Manual webhook secret for Github.
+         * Manual webhook secret for Github. Needs the deploy ability.
          */
         manual_webhook_secret_github?: string;
         /**
-         * Manual webhook secret for Gitlab.
+         * Manual webhook secret for Gitlab. Needs the deploy ability.
          */
         manual_webhook_secret_gitlab?: string;
         /**
-         * Manual webhook secret for Bitbucket.
+         * Manual webhook secret for Bitbucket. Needs the deploy ability.
          */
         manual_webhook_secret_bitbucket?: string;
         /**
-         * Manual webhook secret for Gitea.
+         * Manual webhook secret for Gitea. Needs the deploy ability.
          */
         manual_webhook_secret_gitea?: string;
         /**
@@ -1158,6 +1825,10 @@ export type CreatePublicApplicationData = {
          * The Dockerfile location in the repository.
          */
         dockerfile_location?: string;
+        /**
+         * The Docker build target (stage) in the Dockerfile.
+         */
+        dockerfile_target_build?: string;
         /**
          * The Docker Compose location.
          */
@@ -1188,7 +1859,7 @@ export type CreatePublicApplicationData = {
             redirect?: 'www' | 'non-www' | 'both';
         }>;
         /**
-         * The watch paths.
+         * Watch path patterns, one per line (newline-separated). Commas do not separate patterns.
          */
         watch_paths?: string;
         /**
@@ -1212,6 +1883,14 @@ export type CreatePublicApplicationData = {
          */
         is_git_shallow_clone_enabled?: boolean;
         /**
+         * Cancel older queued webhook deployments when a newer push arrives. Default: true.
+         */
+        is_auto_cancel_queued_deployments_enabled?: boolean;
+        /**
+         * Also stop an older webhook deployment that is still building when a newer push arrives. A deployment that already started to replace containers always finishes. This also cancels queued webhook deployments. Default: false.
+         */
+        is_auto_cancel_building_deployments_enabled?: boolean;
+        /**
          * Disable the build cache.
          */
         disable_build_cache?: boolean;
@@ -1224,9 +1903,21 @@ export type CreatePublicApplicationData = {
          */
         include_source_commit_in_build?: boolean;
         /**
+         * Add the containers of the destination network as build hosts.
+         */
+        include_network_hosts_in_build?: boolean;
+        /**
          * Sort environment variables.
          */
         is_env_sorting_enabled?: boolean;
+        /**
+         * Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.
+         */
+        redact_all_env_values_in_logs?: boolean;
+        /**
+         * Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.
+         */
+        include_coolify_default_variables?: boolean;
         /**
          * Make pull request deployments public.
          */
@@ -1235,6 +1926,10 @@ export type CreatePublicApplicationData = {
          * Container stop grace period in seconds.
          */
         stop_grace_period?: number;
+        /**
+         * Seconds to wait after the new container is healthy before old containers stop during a rolling update. 0 turns the wait off. Default: 5.
+         */
+        rolling_update_drain_seconds?: number;
         /**
          * Number of Docker images to retain.
          */
@@ -1247,6 +1942,18 @@ export type CreatePublicApplicationData = {
          * Enable path prefix stripping.
          */
         is_stripprefix_enabled?: boolean;
+        /**
+         * Use permanent redirects (301/308) instead of temporary (302/307) for the HTTP to HTTPS and www redirects. Defaults to false.
+         */
+        is_permanent_redirect_enabled?: boolean;
+        /**
+         * Traefik certificate resolver for this application. Null uses the server setting, "none" uses no resolver.
+         */
+        traefik_certificate_resolver?: string;
+        /**
+         * Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.
+         */
+        is_container_label_readonly_enabled?: boolean;
         /**
          * Deploy the raw Docker Compose definition.
          */
@@ -1280,9 +1987,17 @@ export type CreatePublicApplicationData = {
          */
         is_consistent_container_name_enabled?: boolean;
         /**
-         * Custom internal container name.
+         * Scan the images of the application for vulnerabilities. Needs image scanning on the server. Default true.
+         */
+        is_image_scan_enabled?: boolean;
+        /**
+         * Custom internal container name. Turns is_consistent_container_name_enabled on when that field is not sent; sending it as false together with a name returns 422.
          */
         custom_internal_name?: string;
+        /**
+         * Prefix for generated container names (prefix-20260908T141530). Slugified and unique across the instance.
+         */
+        custom_container_name_prefix?: string;
         /**
          * Preview URL template.
          */
@@ -1304,6 +2019,22 @@ export type CreatePublicApplicationData = {
          */
         http_basic_auth_password?: string;
         /**
+         * Hash algorithm for the HTTP Basic Authentication password. Argon2id needs the Caddy proxy, version 2.11 or newer.
+         */
+        http_basic_auth_hash_algorithm?: 'bcrypt' | 'argon2id';
+        /**
+         * Bcrypt cost for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_bcrypt_cost?: number;
+        /**
+         * Argon2id memory cost in KiB for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_memory_cost?: number;
+        /**
+         * Argon2id time cost (iterations) for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_time_cost?: number;
+        /**
          * The flag to connect the service to the predefined Docker network.
          */
         connect_to_docker_network?: boolean;
@@ -1312,7 +2043,7 @@ export type CreatePublicApplicationData = {
          */
         force_domain_override?: boolean;
         /**
-         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
+         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Ignored for the dockercompose build pack, which uses docker_compose_domains. Default: true.
          */
         autogenerate_domain?: boolean;
         /**
@@ -1346,6 +2077,10 @@ export type CreatePublicApplicationErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy ability to set a manual webhook secret.
+     */
+    403: unknown;
     /**
      * Domain conflicts detected.
      */
@@ -1597,19 +2332,19 @@ export type CreatePrivateGithubAppApplicationData = {
          */
         pre_deployment_command_container?: string;
         /**
-         * Manual webhook secret for Github.
+         * Manual webhook secret for Github. Needs the deploy ability.
          */
         manual_webhook_secret_github?: string;
         /**
-         * Manual webhook secret for Gitlab.
+         * Manual webhook secret for Gitlab. Needs the deploy ability.
          */
         manual_webhook_secret_gitlab?: string;
         /**
-         * Manual webhook secret for Bitbucket.
+         * Manual webhook secret for Bitbucket. Needs the deploy ability.
          */
         manual_webhook_secret_bitbucket?: string;
         /**
-         * Manual webhook secret for Gitea.
+         * Manual webhook secret for Gitea. Needs the deploy ability.
          */
         manual_webhook_secret_gitea?: string;
         /**
@@ -1628,6 +2363,10 @@ export type CreatePrivateGithubAppApplicationData = {
          * The Dockerfile location in the repository
          */
         dockerfile_location?: string;
+        /**
+         * The Docker build target (stage) in the Dockerfile.
+         */
+        dockerfile_target_build?: string;
         /**
          * The Docker Compose location.
          */
@@ -1658,7 +2397,7 @@ export type CreatePrivateGithubAppApplicationData = {
             redirect?: 'www' | 'non-www' | 'both';
         }>;
         /**
-         * The watch paths.
+         * Watch path patterns, one per line (newline-separated). Commas do not separate patterns.
          */
         watch_paths?: string;
         /**
@@ -1682,6 +2421,14 @@ export type CreatePrivateGithubAppApplicationData = {
          */
         is_git_shallow_clone_enabled?: boolean;
         /**
+         * Cancel older queued webhook deployments when a newer push arrives. Default: true.
+         */
+        is_auto_cancel_queued_deployments_enabled?: boolean;
+        /**
+         * Also stop an older webhook deployment that is still building when a newer push arrives. A deployment that already started to replace containers always finishes. This also cancels queued webhook deployments. Default: false.
+         */
+        is_auto_cancel_building_deployments_enabled?: boolean;
+        /**
          * Disable the build cache.
          */
         disable_build_cache?: boolean;
@@ -1694,9 +2441,21 @@ export type CreatePrivateGithubAppApplicationData = {
          */
         include_source_commit_in_build?: boolean;
         /**
+         * Add the containers of the destination network as build hosts.
+         */
+        include_network_hosts_in_build?: boolean;
+        /**
          * Sort environment variables.
          */
         is_env_sorting_enabled?: boolean;
+        /**
+         * Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.
+         */
+        redact_all_env_values_in_logs?: boolean;
+        /**
+         * Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.
+         */
+        include_coolify_default_variables?: boolean;
         /**
          * Make pull request deployments public.
          */
@@ -1705,6 +2464,10 @@ export type CreatePrivateGithubAppApplicationData = {
          * Container stop grace period in seconds.
          */
         stop_grace_period?: number;
+        /**
+         * Seconds to wait after the new container is healthy before old containers stop during a rolling update. 0 turns the wait off. Default: 5.
+         */
+        rolling_update_drain_seconds?: number;
         /**
          * Number of Docker images to retain.
          */
@@ -1717,6 +2480,18 @@ export type CreatePrivateGithubAppApplicationData = {
          * Enable path prefix stripping.
          */
         is_stripprefix_enabled?: boolean;
+        /**
+         * Use permanent redirects (301/308) instead of temporary (302/307) for the HTTP to HTTPS and www redirects. Defaults to false.
+         */
+        is_permanent_redirect_enabled?: boolean;
+        /**
+         * Traefik certificate resolver for this application. Null uses the server setting, "none" uses no resolver.
+         */
+        traefik_certificate_resolver?: string;
+        /**
+         * Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.
+         */
+        is_container_label_readonly_enabled?: boolean;
         /**
          * Deploy the raw Docker Compose definition.
          */
@@ -1750,9 +2525,17 @@ export type CreatePrivateGithubAppApplicationData = {
          */
         is_consistent_container_name_enabled?: boolean;
         /**
-         * Custom internal container name.
+         * Scan the images of the application for vulnerabilities. Needs image scanning on the server. Default true.
+         */
+        is_image_scan_enabled?: boolean;
+        /**
+         * Custom internal container name. Turns is_consistent_container_name_enabled on when that field is not sent; sending it as false together with a name returns 422.
          */
         custom_internal_name?: string;
+        /**
+         * Prefix for generated container names (prefix-20260908T141530). Slugified and unique across the instance.
+         */
+        custom_container_name_prefix?: string;
         /**
          * Preview URL template.
          */
@@ -1774,6 +2557,22 @@ export type CreatePrivateGithubAppApplicationData = {
          */
         http_basic_auth_password?: string;
         /**
+         * Hash algorithm for the HTTP Basic Authentication password. Argon2id needs the Caddy proxy, version 2.11 or newer.
+         */
+        http_basic_auth_hash_algorithm?: 'bcrypt' | 'argon2id';
+        /**
+         * Bcrypt cost for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_bcrypt_cost?: number;
+        /**
+         * Argon2id memory cost in KiB for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_memory_cost?: number;
+        /**
+         * Argon2id time cost (iterations) for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_time_cost?: number;
+        /**
          * The flag to connect the service to the predefined Docker network.
          */
         connect_to_docker_network?: boolean;
@@ -1782,7 +2581,7 @@ export type CreatePrivateGithubAppApplicationData = {
          */
         force_domain_override?: boolean;
         /**
-         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
+         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Ignored for the dockercompose build pack, which uses docker_compose_domains. Default: true.
          */
         autogenerate_domain?: boolean;
         /**
@@ -1816,6 +2615,10 @@ export type CreatePrivateGithubAppApplicationErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy ability to set a manual webhook secret.
+     */
+    403: unknown;
     /**
      * Domain conflicts detected.
      */
@@ -2067,19 +2870,19 @@ export type CreatePrivateDeployKeyApplicationData = {
          */
         pre_deployment_command_container?: string;
         /**
-         * Manual webhook secret for Github.
+         * Manual webhook secret for Github. Needs the deploy ability.
          */
         manual_webhook_secret_github?: string;
         /**
-         * Manual webhook secret for Gitlab.
+         * Manual webhook secret for Gitlab. Needs the deploy ability.
          */
         manual_webhook_secret_gitlab?: string;
         /**
-         * Manual webhook secret for Bitbucket.
+         * Manual webhook secret for Bitbucket. Needs the deploy ability.
          */
         manual_webhook_secret_bitbucket?: string;
         /**
-         * Manual webhook secret for Gitea.
+         * Manual webhook secret for Gitea. Needs the deploy ability.
          */
         manual_webhook_secret_gitea?: string;
         /**
@@ -2098,6 +2901,10 @@ export type CreatePrivateDeployKeyApplicationData = {
          * The Dockerfile location in the repository.
          */
         dockerfile_location?: string;
+        /**
+         * The Docker build target (stage) in the Dockerfile.
+         */
+        dockerfile_target_build?: string;
         /**
          * The Docker Compose location.
          */
@@ -2128,7 +2935,7 @@ export type CreatePrivateDeployKeyApplicationData = {
             redirect?: 'www' | 'non-www' | 'both';
         }>;
         /**
-         * The watch paths.
+         * Watch path patterns, one per line (newline-separated). Commas do not separate patterns.
          */
         watch_paths?: string;
         /**
@@ -2152,6 +2959,14 @@ export type CreatePrivateDeployKeyApplicationData = {
          */
         is_git_shallow_clone_enabled?: boolean;
         /**
+         * Cancel older queued webhook deployments when a newer push arrives. Default: true.
+         */
+        is_auto_cancel_queued_deployments_enabled?: boolean;
+        /**
+         * Also stop an older webhook deployment that is still building when a newer push arrives. A deployment that already started to replace containers always finishes. This also cancels queued webhook deployments. Default: false.
+         */
+        is_auto_cancel_building_deployments_enabled?: boolean;
+        /**
          * Disable the build cache.
          */
         disable_build_cache?: boolean;
@@ -2164,9 +2979,21 @@ export type CreatePrivateDeployKeyApplicationData = {
          */
         include_source_commit_in_build?: boolean;
         /**
+         * Add the containers of the destination network as build hosts.
+         */
+        include_network_hosts_in_build?: boolean;
+        /**
          * Sort environment variables.
          */
         is_env_sorting_enabled?: boolean;
+        /**
+         * Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.
+         */
+        redact_all_env_values_in_logs?: boolean;
+        /**
+         * Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.
+         */
+        include_coolify_default_variables?: boolean;
         /**
          * Make pull request deployments public.
          */
@@ -2175,6 +3002,10 @@ export type CreatePrivateDeployKeyApplicationData = {
          * Container stop grace period in seconds.
          */
         stop_grace_period?: number;
+        /**
+         * Seconds to wait after the new container is healthy before old containers stop during a rolling update. 0 turns the wait off. Default: 5.
+         */
+        rolling_update_drain_seconds?: number;
         /**
          * Number of Docker images to retain.
          */
@@ -2187,6 +3018,18 @@ export type CreatePrivateDeployKeyApplicationData = {
          * Enable path prefix stripping.
          */
         is_stripprefix_enabled?: boolean;
+        /**
+         * Use permanent redirects (301/308) instead of temporary (302/307) for the HTTP to HTTPS and www redirects. Defaults to false.
+         */
+        is_permanent_redirect_enabled?: boolean;
+        /**
+         * Traefik certificate resolver for this application. Null uses the server setting, "none" uses no resolver.
+         */
+        traefik_certificate_resolver?: string;
+        /**
+         * Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.
+         */
+        is_container_label_readonly_enabled?: boolean;
         /**
          * Deploy the raw Docker Compose definition.
          */
@@ -2220,9 +3063,17 @@ export type CreatePrivateDeployKeyApplicationData = {
          */
         is_consistent_container_name_enabled?: boolean;
         /**
-         * Custom internal container name.
+         * Scan the images of the application for vulnerabilities. Needs image scanning on the server. Default true.
+         */
+        is_image_scan_enabled?: boolean;
+        /**
+         * Custom internal container name. Turns is_consistent_container_name_enabled on when that field is not sent; sending it as false together with a name returns 422.
          */
         custom_internal_name?: string;
+        /**
+         * Prefix for generated container names (prefix-20260908T141530). Slugified and unique across the instance.
+         */
+        custom_container_name_prefix?: string;
         /**
          * Preview URL template.
          */
@@ -2244,6 +3095,22 @@ export type CreatePrivateDeployKeyApplicationData = {
          */
         http_basic_auth_password?: string;
         /**
+         * Hash algorithm for the HTTP Basic Authentication password. Argon2id needs the Caddy proxy, version 2.11 or newer.
+         */
+        http_basic_auth_hash_algorithm?: 'bcrypt' | 'argon2id';
+        /**
+         * Bcrypt cost for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_bcrypt_cost?: number;
+        /**
+         * Argon2id memory cost in KiB for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_memory_cost?: number;
+        /**
+         * Argon2id time cost (iterations) for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_time_cost?: number;
+        /**
          * The flag to connect the service to the predefined Docker network.
          */
         connect_to_docker_network?: boolean;
@@ -2252,7 +3119,7 @@ export type CreatePrivateDeployKeyApplicationData = {
          */
         force_domain_override?: boolean;
         /**
-         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
+         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Ignored for the dockercompose build pack, which uses docker_compose_domains. Default: true.
          */
         autogenerate_domain?: boolean;
         /**
@@ -2286,6 +3153,10 @@ export type CreatePrivateDeployKeyApplicationErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy ability to set a manual webhook secret.
+     */
+    403: unknown;
     /**
      * Domain conflicts detected.
      */
@@ -2485,19 +3356,19 @@ export type CreateDockerfileApplicationData = {
          */
         pre_deployment_command_container?: string;
         /**
-         * Manual webhook secret for Github.
+         * Manual webhook secret for Github. Needs the deploy ability.
          */
         manual_webhook_secret_github?: string;
         /**
-         * Manual webhook secret for Gitlab.
+         * Manual webhook secret for Gitlab. Needs the deploy ability.
          */
         manual_webhook_secret_gitlab?: string;
         /**
-         * Manual webhook secret for Bitbucket.
+         * Manual webhook secret for Bitbucket. Needs the deploy ability.
          */
         manual_webhook_secret_bitbucket?: string;
         /**
-         * Manual webhook secret for Gitea.
+         * Manual webhook secret for Gitea. Needs the deploy ability.
          */
         manual_webhook_secret_gitea?: string;
         /**
@@ -2537,6 +3408,14 @@ export type CreateDockerfileApplicationData = {
          */
         is_git_shallow_clone_enabled?: boolean;
         /**
+         * Cancel older queued webhook deployments when a newer push arrives. Default: true.
+         */
+        is_auto_cancel_queued_deployments_enabled?: boolean;
+        /**
+         * Also stop an older webhook deployment that is still building when a newer push arrives. A deployment that already started to replace containers always finishes. This also cancels queued webhook deployments. Default: false.
+         */
+        is_auto_cancel_building_deployments_enabled?: boolean;
+        /**
          * Disable the build cache.
          */
         disable_build_cache?: boolean;
@@ -2549,9 +3428,21 @@ export type CreateDockerfileApplicationData = {
          */
         include_source_commit_in_build?: boolean;
         /**
+         * Add the containers of the destination network as build hosts.
+         */
+        include_network_hosts_in_build?: boolean;
+        /**
          * Sort environment variables.
          */
         is_env_sorting_enabled?: boolean;
+        /**
+         * Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.
+         */
+        redact_all_env_values_in_logs?: boolean;
+        /**
+         * Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.
+         */
+        include_coolify_default_variables?: boolean;
         /**
          * Make pull request deployments public.
          */
@@ -2560,6 +3451,10 @@ export type CreateDockerfileApplicationData = {
          * Container stop grace period in seconds.
          */
         stop_grace_period?: number;
+        /**
+         * Seconds to wait after the new container is healthy before old containers stop during a rolling update. 0 turns the wait off. Default: 5.
+         */
+        rolling_update_drain_seconds?: number;
         /**
          * Number of Docker images to retain.
          */
@@ -2572,6 +3467,18 @@ export type CreateDockerfileApplicationData = {
          * Enable path prefix stripping.
          */
         is_stripprefix_enabled?: boolean;
+        /**
+         * Use permanent redirects (301/308) instead of temporary (302/307) for the HTTP to HTTPS and www redirects. Defaults to false.
+         */
+        is_permanent_redirect_enabled?: boolean;
+        /**
+         * Traefik certificate resolver for this application. Null uses the server setting, "none" uses no resolver.
+         */
+        traefik_certificate_resolver?: string;
+        /**
+         * Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.
+         */
+        is_container_label_readonly_enabled?: boolean;
         /**
          * Deploy the raw Docker Compose definition.
          */
@@ -2605,9 +3512,17 @@ export type CreateDockerfileApplicationData = {
          */
         is_consistent_container_name_enabled?: boolean;
         /**
-         * Custom internal container name.
+         * Scan the images of the application for vulnerabilities. Needs image scanning on the server. Default true.
+         */
+        is_image_scan_enabled?: boolean;
+        /**
+         * Custom internal container name. Turns is_consistent_container_name_enabled on when that field is not sent; sending it as false together with a name returns 422.
          */
         custom_internal_name?: string;
+        /**
+         * Prefix for generated container names (prefix-20260908T141530). Slugified and unique across the instance.
+         */
+        custom_container_name_prefix?: string;
         /**
          * Preview URL template.
          */
@@ -2629,6 +3544,22 @@ export type CreateDockerfileApplicationData = {
          */
         http_basic_auth_password?: string;
         /**
+         * Hash algorithm for the HTTP Basic Authentication password. Argon2id needs the Caddy proxy, version 2.11 or newer.
+         */
+        http_basic_auth_hash_algorithm?: 'bcrypt' | 'argon2id';
+        /**
+         * Bcrypt cost for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_bcrypt_cost?: number;
+        /**
+         * Argon2id memory cost in KiB for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_memory_cost?: number;
+        /**
+         * Argon2id time cost (iterations) for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_time_cost?: number;
+        /**
          * The flag to connect the service to the predefined Docker network.
          */
         connect_to_docker_network?: boolean;
@@ -2637,7 +3568,7 @@ export type CreateDockerfileApplicationData = {
          */
         force_domain_override?: boolean;
         /**
-         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
+         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Ignored for the dockercompose build pack, which uses docker_compose_domains. Default: true.
          */
         autogenerate_domain?: boolean;
         /**
@@ -2667,6 +3598,10 @@ export type CreateDockerfileApplicationErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy ability to set a manual webhook secret.
+     */
+    403: unknown;
     /**
      * Domain conflicts detected.
      */
@@ -2854,19 +3789,19 @@ export type CreateDockerimageApplicationData = {
          */
         pre_deployment_command_container?: string;
         /**
-         * Manual webhook secret for Github.
+         * Manual webhook secret for Github. Needs the deploy ability.
          */
         manual_webhook_secret_github?: string;
         /**
-         * Manual webhook secret for Gitlab.
+         * Manual webhook secret for Gitlab. Needs the deploy ability.
          */
         manual_webhook_secret_gitlab?: string;
         /**
-         * Manual webhook secret for Bitbucket.
+         * Manual webhook secret for Bitbucket. Needs the deploy ability.
          */
         manual_webhook_secret_bitbucket?: string;
         /**
-         * Manual webhook secret for Gitea.
+         * Manual webhook secret for Gitea. Needs the deploy ability.
          */
         manual_webhook_secret_gitea?: string;
         /**
@@ -2906,6 +3841,14 @@ export type CreateDockerimageApplicationData = {
          */
         is_git_shallow_clone_enabled?: boolean;
         /**
+         * Cancel older queued webhook deployments when a newer push arrives. Default: true.
+         */
+        is_auto_cancel_queued_deployments_enabled?: boolean;
+        /**
+         * Also stop an older webhook deployment that is still building when a newer push arrives. A deployment that already started to replace containers always finishes. This also cancels queued webhook deployments. Default: false.
+         */
+        is_auto_cancel_building_deployments_enabled?: boolean;
+        /**
          * Disable the build cache.
          */
         disable_build_cache?: boolean;
@@ -2918,9 +3861,21 @@ export type CreateDockerimageApplicationData = {
          */
         include_source_commit_in_build?: boolean;
         /**
+         * Add the containers of the destination network as build hosts.
+         */
+        include_network_hosts_in_build?: boolean;
+        /**
          * Sort environment variables.
          */
         is_env_sorting_enabled?: boolean;
+        /**
+         * Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.
+         */
+        redact_all_env_values_in_logs?: boolean;
+        /**
+         * Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.
+         */
+        include_coolify_default_variables?: boolean;
         /**
          * Make pull request deployments public.
          */
@@ -2929,6 +3884,10 @@ export type CreateDockerimageApplicationData = {
          * Container stop grace period in seconds.
          */
         stop_grace_period?: number;
+        /**
+         * Seconds to wait after the new container is healthy before old containers stop during a rolling update. 0 turns the wait off. Default: 5.
+         */
+        rolling_update_drain_seconds?: number;
         /**
          * Number of Docker images to retain.
          */
@@ -2941,6 +3900,18 @@ export type CreateDockerimageApplicationData = {
          * Enable path prefix stripping.
          */
         is_stripprefix_enabled?: boolean;
+        /**
+         * Use permanent redirects (301/308) instead of temporary (302/307) for the HTTP to HTTPS and www redirects. Defaults to false.
+         */
+        is_permanent_redirect_enabled?: boolean;
+        /**
+         * Traefik certificate resolver for this application. Null uses the server setting, "none" uses no resolver.
+         */
+        traefik_certificate_resolver?: string;
+        /**
+         * Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.
+         */
+        is_container_label_readonly_enabled?: boolean;
         /**
          * Deploy the raw Docker Compose definition.
          */
@@ -2974,9 +3945,17 @@ export type CreateDockerimageApplicationData = {
          */
         is_consistent_container_name_enabled?: boolean;
         /**
-         * Custom internal container name.
+         * Scan the images of the application for vulnerabilities. Needs image scanning on the server. Default true.
+         */
+        is_image_scan_enabled?: boolean;
+        /**
+         * Custom internal container name. Turns is_consistent_container_name_enabled on when that field is not sent; sending it as false together with a name returns 422.
          */
         custom_internal_name?: string;
+        /**
+         * Prefix for generated container names (prefix-20260908T141530). Slugified and unique across the instance.
+         */
+        custom_container_name_prefix?: string;
         /**
          * Preview URL template.
          */
@@ -2998,6 +3977,22 @@ export type CreateDockerimageApplicationData = {
          */
         http_basic_auth_password?: string;
         /**
+         * Hash algorithm for the HTTP Basic Authentication password. Argon2id needs the Caddy proxy, version 2.11 or newer.
+         */
+        http_basic_auth_hash_algorithm?: 'bcrypt' | 'argon2id';
+        /**
+         * Bcrypt cost for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_bcrypt_cost?: number;
+        /**
+         * Argon2id memory cost in KiB for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_memory_cost?: number;
+        /**
+         * Argon2id time cost (iterations) for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_time_cost?: number;
+        /**
          * The flag to connect the service to the predefined Docker network.
          */
         connect_to_docker_network?: boolean;
@@ -3006,7 +4001,7 @@ export type CreateDockerimageApplicationData = {
          */
         force_domain_override?: boolean;
         /**
-         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Default: true.
+         * If true and domains is empty, auto-generate a domain using the server's wildcard domain or sslip.io fallback. Ignored for the dockercompose build pack, which uses docker_compose_domains. Default: true.
          */
         autogenerate_domain?: boolean;
         /**
@@ -3036,6 +4031,10 @@ export type CreateDockerimageApplicationErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy ability to set a manual webhook secret.
+     */
+    403: unknown;
     /**
      * Domain conflicts detected.
      */
@@ -3083,7 +4082,7 @@ export type DeleteApplicationByUuidData = {
          */
         delete_volumes?: boolean;
         /**
-         * Run docker cleanup.
+         * Run docker cleanup when the server disk usage is at or above its cleanup threshold. Skipped when a cleanup ran on the server in the last hour.
          */
         docker_cleanup?: boolean;
         /**
@@ -3107,6 +4106,10 @@ export type DeleteApplicationByUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the write and deploy permissions.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -3178,21 +4181,13 @@ export type UpdateApplicationByUuidData = {
      */
     body: {
         /**
-         * The project UUID.
-         */
-        project_uuid?: string;
-        /**
-         * The server UUID.
-         */
-        server_uuid?: string;
-        /**
-         * The environment name.
-         */
-        environment_name?: string;
-        /**
          * The Github App UUID.
          */
         github_app_uuid?: string;
+        /**
+         * The Gitea App UUID. The source must be connected. Do not send it together with github_app_uuid.
+         */
+        gitea_app_uuid?: string;
         /**
          * The git repository URL.
          */
@@ -3202,13 +4197,17 @@ export type UpdateApplicationByUuidData = {
          */
         git_branch?: string;
         /**
+         * Username for HTTPS access to a private repository on a custom Git host. Send null to remove it.
+         */
+        git_https_username?: string;
+        /**
+         * Password or access token for HTTPS access to a private repository on a custom Git host. It is stored encrypted and never returned. Send null or an empty string to remove the credentials.
+         */
+        git_https_password?: string;
+        /**
          * The ports to expose.
          */
         ports_exposes?: string;
-        /**
-         * The destination UUID.
-         */
-        destination_uuid?: string;
         /**
          * The build pack type.
          */
@@ -3386,19 +4385,19 @@ export type UpdateApplicationByUuidData = {
          */
         pre_deployment_command_container?: string;
         /**
-         * Manual webhook secret for Github.
+         * Manual webhook secret for Github. Needs the deploy ability.
          */
         manual_webhook_secret_github?: string;
         /**
-         * Manual webhook secret for Gitlab.
+         * Manual webhook secret for Gitlab. Needs the deploy ability.
          */
         manual_webhook_secret_gitlab?: string;
         /**
-         * Manual webhook secret for Bitbucket.
+         * Manual webhook secret for Bitbucket. Needs the deploy ability.
          */
         manual_webhook_secret_bitbucket?: string;
         /**
-         * Manual webhook secret for Gitea.
+         * Manual webhook secret for Gitea. Needs the deploy ability.
          */
         manual_webhook_secret_gitea?: string;
         /**
@@ -3417,6 +4416,10 @@ export type UpdateApplicationByUuidData = {
          * The Dockerfile location in the repository.
          */
         dockerfile_location?: string;
+        /**
+         * The Docker build target (stage) in the Dockerfile.
+         */
+        dockerfile_target_build?: string;
         /**
          * The Docker Compose location.
          */
@@ -3447,7 +4450,7 @@ export type UpdateApplicationByUuidData = {
             redirect?: 'www' | 'non-www' | 'both';
         }>;
         /**
-         * The watch paths.
+         * Watch path patterns, one per line (newline-separated). Commas do not separate patterns.
          */
         watch_paths?: string;
         /**
@@ -3458,6 +4461,22 @@ export type UpdateApplicationByUuidData = {
          * Use Docker Build Secrets for build-time environment variables.
          */
         use_build_secrets?: boolean;
+        /**
+         * Hash algorithm for the HTTP Basic Authentication password. Argon2id needs the Caddy proxy, version 2.11 or newer.
+         */
+        http_basic_auth_hash_algorithm?: 'bcrypt' | 'argon2id';
+        /**
+         * Bcrypt cost for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_bcrypt_cost?: number;
+        /**
+         * Argon2id memory cost in KiB for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_memory_cost?: number;
+        /**
+         * Argon2id time cost (iterations) for the HTTP Basic Authentication password.
+         */
+        http_basic_auth_argon2id_time_cost?: number;
         /**
          * Clone Git submodules.
          */
@@ -3471,6 +4490,14 @@ export type UpdateApplicationByUuidData = {
          */
         is_git_shallow_clone_enabled?: boolean;
         /**
+         * Cancel older queued webhook deployments when a newer push arrives. Default: true.
+         */
+        is_auto_cancel_queued_deployments_enabled?: boolean;
+        /**
+         * Also stop an older webhook deployment that is still building when a newer push arrives. A deployment that already started to replace containers always finishes. This also cancels queued webhook deployments. Default: false.
+         */
+        is_auto_cancel_building_deployments_enabled?: boolean;
+        /**
          * Disable the build cache.
          */
         disable_build_cache?: boolean;
@@ -3483,9 +4510,21 @@ export type UpdateApplicationByUuidData = {
          */
         include_source_commit_in_build?: boolean;
         /**
+         * Add the containers of the destination network as build hosts.
+         */
+        include_network_hosts_in_build?: boolean;
+        /**
          * Sort environment variables.
          */
         is_env_sorting_enabled?: boolean;
+        /**
+         * Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.
+         */
+        redact_all_env_values_in_logs?: boolean;
+        /**
+         * Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.
+         */
+        include_coolify_default_variables?: boolean;
         /**
          * Make pull request deployments public.
          */
@@ -3494,6 +4533,10 @@ export type UpdateApplicationByUuidData = {
          * Container stop grace period in seconds.
          */
         stop_grace_period?: number;
+        /**
+         * Seconds to wait after the new container is healthy before old containers stop during a rolling update. 0 turns the wait off. Default: 5.
+         */
+        rolling_update_drain_seconds?: number;
         /**
          * Number of Docker images to retain.
          */
@@ -3506,6 +4549,18 @@ export type UpdateApplicationByUuidData = {
          * Enable path prefix stripping.
          */
         is_stripprefix_enabled?: boolean;
+        /**
+         * Use permanent redirects (301/308) instead of temporary (302/307) for the HTTP to HTTPS and www redirects. Defaults to false.
+         */
+        is_permanent_redirect_enabled?: boolean;
+        /**
+         * Traefik certificate resolver for this application. Null uses the server setting, "none" uses no resolver.
+         */
+        traefik_certificate_resolver?: string;
+        /**
+         * Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.
+         */
+        is_container_label_readonly_enabled?: boolean;
         /**
          * Deploy the raw Docker Compose definition.
          */
@@ -3539,9 +4594,17 @@ export type UpdateApplicationByUuidData = {
          */
         is_consistent_container_name_enabled?: boolean;
         /**
-         * Custom internal container name.
+         * Scan the images of the application for vulnerabilities. Needs image scanning on the server. Default true.
+         */
+        is_image_scan_enabled?: boolean;
+        /**
+         * Custom internal container name. Turns is_consistent_container_name_enabled on when that field is not sent; sending it as false together with a name returns 422.
          */
         custom_internal_name?: string;
+        /**
+         * Prefix for generated container names (prefix-20260908T141530). Slugified and unique across the instance.
+         */
+        custom_container_name_prefix?: string;
         /**
          * Preview URL template.
          */
@@ -3591,6 +4654,10 @@ export type UpdateApplicationByUuidErrors = {
         message?: string;
     };
     /**
+     * The token needs the deploy ability to set a manual webhook secret.
+     */
+    403: unknown;
+    /**
      * Resource not found.
      */
     404: {
@@ -3635,13 +4702,17 @@ export type GetApplicationLogsByUuidData = {
     };
     query?: {
         /**
-         * Number of lines to show from the end of the logs.
+         * Number of lines to show from the end of the logs. Use `all` to return all logs. `-1` remains available as a compatibility alias.
          */
-        lines?: number;
+        lines?: number | 'all';
         /**
          * Show timestamps in the logs.
          */
         show_timestamps?: boolean;
+        /**
+         * Return logs only from the container of the Docker Compose service with this name. Returns 404 when no container matches. Stopped containers are included.
+         */
+        service_name?: string;
     };
     url: '/applications/{uuid}/logs';
 };
@@ -3750,7 +4821,7 @@ export type UpdateEnvByApplicationUuidData = {
          */
         is_multiline?: boolean;
         /**
-         * The flag to indicate if the environment variable's value is shown on the UI.
+         * If true, the saved value is hidden in the UI and API responses. A lock is permanent: false does not unlock a locked variable, but a new value can still replace the locked one. MCP never returns environment variable values.
          */
         is_shown_once?: boolean;
     };
@@ -3822,7 +4893,7 @@ export type CreateEnvByApplicationUuidData = {
          */
         is_multiline?: boolean;
         /**
-         * The flag to indicate if the environment variable's value is shown on the UI.
+         * If true, the saved value is hidden in the UI and API responses. A lock is permanent: false does not unlock a locked variable, but a new value can still replace the locked one. MCP never returns environment variable values.
          */
         is_shown_once?: boolean;
     };
@@ -3897,7 +4968,7 @@ export type UpdateEnvsByApplicationUuidData = {
              */
             is_multiline?: boolean;
             /**
-             * The flag to indicate if the environment variable's value is shown on the UI.
+             * If true, the saved value is hidden in the UI and API responses. A lock is permanent: false does not unlock a locked variable, but a new value can still replace the locked one. MCP never returns environment variable values.
              */
             is_shown_once?: boolean;
         }>;
@@ -4066,7 +5137,7 @@ export type StopApplicationByUuidData = {
     };
     query?: {
         /**
-         * Perform docker cleanup (prune networks, volumes, etc.).
+         * Run docker cleanup when the server disk usage is at or above its cleanup threshold. Skipped when a cleanup ran on the server in the last hour.
          */
         docker_cleanup?: boolean;
     };
@@ -4238,11 +5309,7 @@ export type UpdateStorageByApplicationUuidData = {
          */
         mount_path?: string;
         /**
-         * The host path (persistent only, not allowed for read-only storages).
-         */
-        host_path?: string;
-        /**
-         * The file content (file only, not allowed for read-only storages).
+         * The file content (file only, not allowed for read-only storages). Changing the content needs the deploy permission.
          */
         content?: string;
     };
@@ -4269,6 +5336,10 @@ export type UpdateStorageByApplicationUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission to change the content of a file outside the resource directory.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -4314,11 +5385,7 @@ export type CreateStorageByApplicationUuidData = {
          */
         mount_path: string;
         /**
-         * The host path (persistent only, optional).
-         */
-        host_path?: string;
-        /**
-         * File content (file only, optional).
+         * File content (file only, optional). Needs the deploy ability when set.
          */
         content?: string;
         /**
@@ -4326,7 +5393,7 @@ export type CreateStorageByApplicationUuidData = {
          */
         is_directory?: boolean;
         /**
-         * Host directory path (required when is_directory is true).
+         * Host path. Required for directory mounts and host file mounts. Optional for file mounts with content (default: inside the resource directory). An absolute path can be anywhere on the host; a relative path is inside the resource directory. A directory or file mount outside the resource directory needs a token with the deploy permission. Coolify never deletes a path outside the resource directory.
          */
         fs_path?: string;
     };
@@ -4353,6 +5420,10 @@ export type CreateStorageByApplicationUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission for a mount outside the resource directory or for a file storage with content.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -4442,65 +5513,6 @@ export type DeleteStorageByApplicationUuidResponses = {
 
 export type DeleteStorageByApplicationUuidResponse = DeleteStorageByApplicationUuidResponses[keyof DeleteStorageByApplicationUuidResponses];
 
-export type DeletePreviewDeploymentByPullRequestIdData = {
-    body?: never;
-    path: {
-        /**
-         * UUID of the application.
-         */
-        uuid: string;
-        /**
-         * Pull request ID of the preview to delete.
-         */
-        pull_request_id: number;
-    };
-    query?: never;
-    url: '/applications/{uuid}/previews/{pull_request_id}';
-};
-
-export type DeletePreviewDeploymentByPullRequestIdErrors = {
-    /**
-     * Invalid token.
-     */
-    400: {
-        message?: string;
-    };
-    /**
-     * Unauthenticated.
-     */
-    401: {
-        message?: string;
-    };
-    /**
-     * Resource not found.
-     */
-    404: {
-        message?: string;
-    };
-    /**
-     * Validation error.
-     */
-    422: {
-        message?: string;
-        errors?: {
-            [key: string]: Array<string>;
-        };
-    };
-};
-
-export type DeletePreviewDeploymentByPullRequestIdError = DeletePreviewDeploymentByPullRequestIdErrors[keyof DeletePreviewDeploymentByPullRequestIdErrors];
-
-export type DeletePreviewDeploymentByPullRequestIdResponses = {
-    /**
-     * Preview deletion queued.
-     */
-    200: {
-        message?: string;
-    };
-};
-
-export type DeletePreviewDeploymentByPullRequestIdResponse = DeletePreviewDeploymentByPullRequestIdResponses[keyof DeletePreviewDeploymentByPullRequestIdResponses];
-
 export type ListDatabasesData = {
     body?: never;
     path?: never;
@@ -4529,7 +5541,7 @@ export type ListDatabasesResponses = {
     /**
      * Get all databases
      */
-    200: string;
+    200: Array<Database>;
 };
 
 export type ListDatabasesResponse = ListDatabasesResponses[keyof ListDatabasesResponses];
@@ -4571,7 +5583,7 @@ export type GetDatabaseBackupsByUuidError = GetDatabaseBackupsByUuidErrors[keyof
 
 export type GetDatabaseBackupsByUuidResponses = {
     /**
-     * Get all backups for a database
+     * Get all backups for a database. Each backup includes s3_storage_uuid (primary S3 destination) and s3_storage_uuids (every S3 destination, primary first).
      */
     200: string;
 };
@@ -4596,9 +5608,17 @@ export type CreateDatabaseBackupData = {
          */
         save_s3?: boolean;
         /**
-         * S3 storage UUID (required if save_s3 is true)
+         * Delete the local backup file after the upload to S3. Only allowed when save_s3 is true.
+         */
+        disable_local_backup?: boolean;
+        /**
+         * Primary S3 storage UUID. Sent without s3_storage_uuids, it selects this storage as the only destination. Either field is required if save_s3 is true.
          */
         s3_storage_uuid?: string;
+        /**
+         * UUIDs of every S3 storage the backup is uploaded to. Replaces the current destinations. When s3_storage_uuid is also sent, it must be in this list and becomes the primary destination; otherwise the first entry is the primary destination.
+         */
+        s3_storage_uuids?: Array<string>;
         /**
          * Comma separated list of databases to backup
          */
@@ -4608,7 +5628,7 @@ export type CreateDatabaseBackupData = {
          */
         dump_all?: boolean;
         /**
-         * Whether to trigger backup immediately after creation
+         * Whether to trigger backup immediately after creation. Needs a token with the deploy permission.
          */
         backup_now?: boolean;
         /**
@@ -4639,6 +5659,10 @@ export type CreateDatabaseBackupData = {
          * Backup job timeout in seconds (min: 60, max: 36000)
          */
         timeout?: number;
+        /**
+         * Alert after this many days without an execution; 0 disables alerts
+         */
+        missing_backup_notification_days?: number;
     };
     path: {
         /**
@@ -4663,6 +5687,10 @@ export type CreateDatabaseBackupErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission to use backup_now.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -4712,7 +5740,7 @@ export type DeleteDatabaseByUuidData = {
          */
         delete_volumes?: boolean;
         /**
-         * Run docker cleanup.
+         * Run docker cleanup when the server disk usage is at or above its cleanup threshold. Skipped when a cleanup ran on the server in the last hour.
          */
         docker_cleanup?: boolean;
         /**
@@ -4736,6 +5764,10 @@ export type DeleteDatabaseByUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the write and deploy permissions.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -4794,9 +5826,9 @@ export type GetDatabaseByUuidError = GetDatabaseByUuidErrors[keyof GetDatabaseBy
 
 export type GetDatabaseByUuidResponses = {
     /**
-     * Get all databases
+     * Get database by UUID
      */
-    200: string;
+    200: Database;
 };
 
 export type GetDatabaseByUuidResponse = GetDatabaseByUuidResponses[keyof GetDatabaseByUuidResponses];
@@ -4819,11 +5851,11 @@ export type UpdateDatabaseByUuidData = {
          */
         image?: string;
         /**
-         * Is the database public?
+         * Is the database public? Changing it starts or stops the database proxy, so it needs a token with the deploy permission.
          */
         is_public?: boolean;
         /**
-         * Public port of the database
+         * Public port of the database (1024-65535)
          */
         public_port?: number;
         /**
@@ -4858,6 +5890,10 @@ export type UpdateDatabaseByUuidData = {
          * CPU shares of the database
          */
         limits_cpu_shares?: number;
+        /**
+         * Restart the database after the update. Requires the deploy ability.
+         */
+        instant_deploy?: boolean;
         /**
          * PostgreSQL user
          */
@@ -4967,6 +6003,10 @@ export type UpdateDatabaseByUuidData = {
          */
         mysql_conf?: string;
         /**
+         * Comma-separated SQLite database file names
+         */
+        sqlite_databases?: string;
+        /**
          * Enable the database healthcheck probe.
          */
         health_check_enabled?: boolean;
@@ -4986,6 +6026,18 @@ export type UpdateDatabaseByUuidData = {
          * Healthcheck start period in seconds.
          */
         health_check_start_period?: number;
+        /**
+         * Redact all environment variable values in logs. When false, only locked (shown once) values, database passwords, and remote secrets are redacted. Requires team admin permissions.
+         */
+        redact_all_env_values_in_logs?: boolean;
+        /**
+         * Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Restart the database to apply it.
+         */
+        include_coolify_default_variables?: boolean;
+        /**
+         * Send the database logs to the log drain of the server. Log drain must be enabled on the server. Restart the database to apply it.
+         */
+        is_log_drain_enabled?: boolean;
     };
     path: {
         /**
@@ -5010,6 +6062,10 @@ export type UpdateDatabaseByUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission to change is_public or to use instant_deploy.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -5089,11 +6145,19 @@ export type UpdateDatabaseBackupData = {
          */
         save_s3?: boolean;
         /**
-         * S3 storage UUID
+         * Delete the local backup file after the upload to S3. Only allowed when save_s3 is true. Turning save_s3 off also turns this off.
+         */
+        disable_local_backup?: boolean;
+        /**
+         * Primary S3 storage UUID. Sent without s3_storage_uuids, it selects this storage as the only destination; when it is already a destination, it becomes the primary destination and the other destinations stay.
          */
         s3_storage_uuid?: string;
         /**
-         * Whether to take a backup now or not
+         * UUIDs of every S3 storage the backup is uploaded to. Replaces the current destinations. When s3_storage_uuid is also sent, it must be in this list and becomes the primary destination; otherwise the first entry is the primary destination.
+         */
+        s3_storage_uuids?: Array<string>;
+        /**
+         * Whether to take a backup now or not. Needs a token with the deploy permission.
          */
         backup_now?: boolean;
         /**
@@ -5140,6 +6204,10 @@ export type UpdateDatabaseBackupData = {
          * Backup job timeout in seconds (min: 60, max: 36000)
          */
         timeout?: number;
+        /**
+         * Alert after this many days without an execution; 0 disables alerts
+         */
+        missing_backup_notification_days?: number;
     };
     path: {
         /**
@@ -5168,6 +6236,10 @@ export type UpdateDatabaseBackupErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission to use backup_now.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -5644,7 +6716,7 @@ export type CreateDatabaseRedisData = {
          */
         description?: string;
         /**
-         * Docker Image of the database
+         * Docker image of the database. Default: valkey/valkey:9-alpine. For Redis, use a Redis image, for example redis:8.
          */
         image?: string;
         /**
@@ -6366,7 +7438,10 @@ export type ListBackupExecutionsResponses = {
             filename?: string;
             size?: number;
             created_at?: string;
-            message?: string;
+            /**
+             * Redacted execution output. Null unless the token has the `read:sensitive` or `root` ability.
+             */
+            message?: string | null;
             status?: string;
         }>;
     };
@@ -6405,6 +7480,14 @@ export type StartDatabaseByUuidErrors = {
     404: {
         message?: string;
     };
+    /**
+     * Another start, restart or import of this database is already in progress.
+     */
+    409: unknown;
+    /**
+     * The database cannot start yet, for example because a CA certificate is missing.
+     */
+    422: unknown;
 };
 
 export type StartDatabaseByUuidError = StartDatabaseByUuidErrors[keyof StartDatabaseByUuidErrors];
@@ -6430,7 +7513,7 @@ export type StopDatabaseByUuidData = {
     };
     query?: {
         /**
-         * Perform docker cleanup (prune networks, volumes, etc.).
+         * Run docker cleanup when the server disk usage is at or above its cleanup threshold. Skipped when a cleanup ran on the server in the last hour.
          */
         docker_cleanup?: boolean;
     };
@@ -6502,6 +7585,14 @@ export type RestartDatabaseByUuidErrors = {
     404: {
         message?: string;
     };
+    /**
+     * Another start, restart or import of this database is already in progress.
+     */
+    409: unknown;
+    /**
+     * The database cannot start yet, for example because a CA certificate is missing.
+     */
+    422: unknown;
 };
 
 export type RestartDatabaseByUuidError = RestartDatabaseByUuidErrors[keyof RestartDatabaseByUuidErrors];
@@ -6583,7 +7674,7 @@ export type UpdateEnvByDatabaseUuidData = {
          */
         is_multiline?: boolean;
         /**
-         * The flag to indicate if the environment variable's value is shown on the UI.
+         * If true, the saved value is hidden in the UI and API responses. A lock is permanent: false does not unlock a locked variable, but a new value can still replace the locked one. MCP never returns environment variable values.
          */
         is_shown_once?: boolean;
     };
@@ -6660,7 +7751,7 @@ export type CreateEnvByDatabaseUuidData = {
          */
         is_multiline?: boolean;
         /**
-         * The flag to indicate if the environment variable's value is shown on the UI.
+         * If true, the saved value is hidden in the UI and API responses. A lock is permanent: false does not unlock a locked variable, but a new value can still replace the locked one. MCP never returns environment variable values.
          */
         is_shown_once?: boolean;
     };
@@ -6740,7 +7831,7 @@ export type UpdateEnvsByDatabaseUuidData = {
              */
             is_multiline?: boolean;
             /**
-             * The flag to indicate if the environment variable's value is shown on the UI.
+             * If true, the saved value is hidden in the UI and API responses. A lock is permanent: false does not unlock a locked variable, but a new value can still replace the locked one. MCP never returns environment variable values.
              */
             is_shown_once?: boolean;
         }>;
@@ -6927,11 +8018,7 @@ export type UpdateStorageByDatabaseUuidData = {
          */
         mount_path?: string;
         /**
-         * The host path (persistent only, not allowed for read-only storages).
-         */
-        host_path?: string;
-        /**
-         * The file content (file only, not allowed for read-only storages).
+         * The file content (file only, not allowed for read-only storages). Changing the content needs the deploy permission.
          */
         content?: string;
     };
@@ -6958,6 +8045,10 @@ export type UpdateStorageByDatabaseUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission to change the content of a file outside the resource directory.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -7003,11 +8094,7 @@ export type CreateStorageByDatabaseUuidData = {
          */
         mount_path: string;
         /**
-         * The host path (persistent only, optional).
-         */
-        host_path?: string;
-        /**
-         * File content (file only, optional).
+         * File content (file only, optional). Needs the deploy ability when set.
          */
         content?: string;
         /**
@@ -7015,7 +8102,7 @@ export type CreateStorageByDatabaseUuidData = {
          */
         is_directory?: boolean;
         /**
-         * Host directory path (required when is_directory is true).
+         * Host path. Required for directory mounts and host file mounts. Optional for file mounts with content (default: inside the resource directory). An absolute path can be anywhere on the host; a relative path is inside the resource directory. A directory or file mount outside the resource directory needs a token with the deploy permission. Coolify never deletes a path outside the resource directory.
          */
         fs_path?: string;
     };
@@ -7042,6 +8129,10 @@ export type CreateStorageByDatabaseUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission for a mount outside the resource directory or for a file storage with content.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -7287,9 +8378,13 @@ export type DeployByTagOrUuidData = {
          */
         pull_request_id?: number;
         /**
-         * Docker image tag for Docker Image preview deployments. Requires pull_request_id.
+         * Docker image tag for Docker Image preview deployments. Requires pull_request_id. Opening a preview or changing its tag also needs the write permission.
          */
         docker_tag?: string;
+        /**
+         * Cancel the older webhook, API, and MCP deployments of the same application, pull request, and server. `queued` cancels the ones that wait in the queue. `building` also stops the ones that are still building; a deployment that already started to replace containers always finishes. Manual, restart, and rollback deployments are never cancelled. Default: `none`.
+         */
+        cancel_previous?: 'none' | 'queued' | 'building';
     };
     url: '/deploy';
 };
@@ -8059,9 +9154,25 @@ export type ListResourcesError = ListResourcesErrors[keyof ListResourcesErrors];
 
 export type ListResourcesResponses = {
     /**
-     * Get all resources
+     * Get all applications, services and standalone databases. The other fields of each resource are the fields of the Application, Service or Database schema.
      */
-    200: string;
+    200: Array<{
+        uuid?: string;
+        name?: string;
+        description?: string | null;
+        /**
+         * application, service, or standalone-<engine> for databases (for example standalone-postgresql).
+         */
+        type?: string;
+        /**
+         * For example running:healthy or exited:unhealthy.
+         */
+        status?: string;
+        environment_id?: number;
+        created_at?: string;
+        updated_at?: string;
+        [key: string]: unknown | string | string | null | number | undefined;
+    }>;
 };
 
 export type ListResourcesResponse = ListResourcesResponses[keyof ListResourcesResponses];
@@ -8130,7 +9241,11 @@ export type CreateScheduledTaskByApplicationUuidData = {
          */
         timeout?: number;
         /**
-         * The flag to indicate if the scheduled task is enabled.
+         * Run the command with `sh -c` in the container. Set it to false for containers without a shell: the command is then split into arguments and run directly, without shell features such as variables, pipes, or redirects.
+         */
+        use_shell?: boolean;
+        /**
+         * The flag to indicate if the scheduled task is enabled. An enabled task requires the deploy ability.
          */
         enabled?: boolean;
     };
@@ -8151,6 +9266,10 @@ export type CreateScheduledTaskByApplicationUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy ability for an enabled task.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -8249,7 +9368,11 @@ export type UpdateScheduledTaskByApplicationUuidData = {
          */
         timeout?: number;
         /**
-         * The flag to indicate if the scheduled task is enabled.
+         * Run the command with `sh -c` in the container. Set it to false for containers without a shell: the command is then split into arguments and run directly, without shell features such as variables, pipes, or redirects.
+         */
+        use_shell?: boolean;
+        /**
+         * The flag to indicate if the scheduled task is enabled. An enabled task requires the deploy ability.
          */
         enabled?: boolean;
     };
@@ -8274,6 +9397,10 @@ export type UpdateScheduledTaskByApplicationUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy ability for an enabled task.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -8408,7 +9535,11 @@ export type CreateScheduledTaskByServiceUuidData = {
          */
         timeout?: number;
         /**
-         * The flag to indicate if the scheduled task is enabled.
+         * Run the command with `sh -c` in the container. Set it to false for containers without a shell: the command is then split into arguments and run directly, without shell features such as variables, pipes, or redirects.
+         */
+        use_shell?: boolean;
+        /**
+         * The flag to indicate if the scheduled task is enabled. An enabled task requires the deploy ability.
          */
         enabled?: boolean;
     };
@@ -8429,6 +9560,10 @@ export type CreateScheduledTaskByServiceUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy ability for an enabled task.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -8527,7 +9662,11 @@ export type UpdateScheduledTaskByServiceUuidData = {
          */
         timeout?: number;
         /**
-         * The flag to indicate if the scheduled task is enabled.
+         * Run the command with `sh -c` in the container. Set it to false for containers without a shell: the command is then split into arguments and run directly, without shell features such as variables, pipes, or redirects.
+         */
+        use_shell?: boolean;
+        /**
+         * The flag to indicate if the scheduled task is enabled. An enabled task requires the deploy ability.
          */
         enabled?: boolean;
     };
@@ -8552,6 +9691,10 @@ export type UpdateScheduledTaskByServiceUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy ability for an enabled task.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -8654,54 +9797,6 @@ export type ListPrivateKeysResponses = {
 };
 
 export type ListPrivateKeysResponse = ListPrivateKeysResponses[keyof ListPrivateKeysResponses];
-
-export type UpdatePrivateKeyData = {
-    body: {
-        name?: string;
-        description?: string;
-        private_key: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/security/keys';
-};
-
-export type UpdatePrivateKeyErrors = {
-    /**
-     * Invalid token.
-     */
-    400: {
-        message?: string;
-    };
-    /**
-     * Unauthenticated.
-     */
-    401: {
-        message?: string;
-    };
-    /**
-     * Validation error.
-     */
-    422: {
-        message?: string;
-        errors?: {
-            [key: string]: Array<string>;
-        };
-    };
-};
-
-export type UpdatePrivateKeyError = UpdatePrivateKeyErrors[keyof UpdatePrivateKeyErrors];
-
-export type UpdatePrivateKeyResponses = {
-    /**
-     * The updated private key's UUID.
-     */
-    201: {
-        uuid?: string;
-    };
-};
-
-export type UpdatePrivateKeyResponse = UpdatePrivateKeyResponses[keyof UpdatePrivateKeyResponses];
 
 export type CreatePrivateKeyData = {
     body: {
@@ -8843,6 +9938,63 @@ export type GetPrivateKeyByUuidResponses = {
 
 export type GetPrivateKeyByUuidResponse = GetPrivateKeyByUuidResponses[keyof GetPrivateKeyByUuidResponses];
 
+export type UpdatePrivateKeyData = {
+    body: {
+        name?: string;
+        description?: string;
+        private_key?: string;
+    };
+    path: {
+        /**
+         * Private Key UUID
+         */
+        uuid: string;
+    };
+    query?: never;
+    url: '/security/keys/{uuid}';
+};
+
+export type UpdatePrivateKeyErrors = {
+    /**
+     * Invalid token.
+     */
+    400: {
+        message?: string;
+    };
+    /**
+     * Unauthenticated.
+     */
+    401: {
+        message?: string;
+    };
+    /**
+     * Private Key not found.
+     */
+    404: unknown;
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UpdatePrivateKeyError = UpdatePrivateKeyErrors[keyof UpdatePrivateKeyErrors];
+
+export type UpdatePrivateKeyResponses = {
+    /**
+     * The updated private key's UUID.
+     */
+    201: {
+        uuid?: string;
+    };
+};
+
+export type UpdatePrivateKeyResponse = UpdatePrivateKeyResponses[keyof UpdatePrivateKeyResponses];
+
 export type ListServersData = {
     body?: never;
     path?: never;
@@ -8882,7 +10034,7 @@ export type CreateServerData = {
      */
     body: {
         /**
-         * The name of the server.
+         * The name of the server. Must not contain control characters such as new lines.
          */
         name?: string;
         /**
@@ -8906,7 +10058,13 @@ export type CreateServerData = {
          */
         private_key_uuid?: string;
         /**
-         * Is build server.
+         * Server role.
+         */
+        server_role?: 'deployment' | 'build' | 'both';
+        /**
+         * Deprecated: use server_role instead. true sets server_role to build, false sets it to both. Must not conflict with server_role.
+         *
+         * @deprecated
          */
         is_build_server?: boolean;
         /**
@@ -8917,6 +10075,10 @@ export type CreateServerData = {
          * The proxy type.
          */
         proxy_type?: 'traefik' | 'caddy' | 'none';
+        /**
+         * The SSH host key(s) of the server, as public key lines (for example the content of /etc/ssh/ssh_host_ed25519_key.pub) or known_hosts lines. Without it, Coolify trusts the key that the server sends on the first connection.
+         */
+        ssh_host_key?: string;
     };
     path?: never;
     query?: never;
@@ -8977,7 +10139,20 @@ export type DeleteServerByUuidData = {
          */
         uuid: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Also delete all resources whose main destination is on the server. Applications that use the server only as an additional destination are not deleted. They are removed from the server and keep running on their other servers. Needs the deploy permission.
+         */
+        force?: boolean;
+        /**
+         * Also delete the server from its cloud provider (Hetzner, Vultr or DigitalOcean). This cannot be undone. Needs the deploy permission.
+         */
+        delete_from_provider?: boolean;
+        /**
+         * Remove the public key of the server's SSH key from ~/.ssh/authorized_keys on the server before the server is deleted. The server must have no resources. If the key cannot be removed, the server is not deleted.
+         */
+        remove_ssh_key?: boolean;
+    };
     url: '/servers/{uuid}';
 };
 
@@ -8994,6 +10169,10 @@ export type DeleteServerByUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission to delete the resources or the cloud server.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -9074,7 +10253,7 @@ export type UpdateServerByUuidData = {
      */
     body: {
         /**
-         * The name of the server.
+         * The name of the server. Must not contain control characters such as new lines.
          */
         name?: string;
         /**
@@ -9098,7 +10277,13 @@ export type UpdateServerByUuidData = {
          */
         private_key_uuid?: string;
         /**
-         * Is build server.
+         * Server role.
+         */
+        server_role?: 'deployment' | 'build' | 'both';
+        /**
+         * Deprecated: use server_role instead. true sets server_role to build, false changes a build server to both and leaves other roles unchanged. Must not conflict with server_role.
+         *
+         * @deprecated
          */
         is_build_server?: boolean;
         /**
@@ -9106,7 +10291,7 @@ export type UpdateServerByUuidData = {
          */
         instant_validate?: boolean;
         /**
-         * The proxy type.
+         * The proxy type. Changing it starts the new proxy on the server and needs the deploy permission.
          */
         proxy_type?: 'traefik' | 'caddy' | 'none';
         /**
@@ -9130,9 +10315,25 @@ export type UpdateServerByUuidData = {
          */
         server_disk_usage_check_frequency?: string;
         /**
+         * Minimum hours between high disk usage notifications (1-720). Default: 24.
+         */
+        server_disk_usage_notification_interval_hours?: number;
+        /**
          * SSH connection timeout in seconds (1-300). Default: 10.
          */
         connection_timeout?: number;
+        /**
+         * Wildcard domain (URL) used to generate domains for new resources on this server. Null removes it.
+         */
+        wildcard_domain?: string;
+        /**
+         * Timezone of the server, for example Europe/Berlin. Scheduled tasks and backups use it.
+         */
+        server_timezone?: string;
+        /**
+         * Maximum CPU percentage that backup compression can use. Default: 25.
+         */
+        backup_compression_cpu_percentage?: 25 | 50 | 75 | 100;
     };
     path: {
         /**
@@ -9157,6 +10358,10 @@ export type UpdateServerByUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission to change the proxy type.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -9275,7 +10480,7 @@ export type GetDomainsByServerUuidResponse = GetDomainsByServerUuidResponses[key
 export type ValidateServerByUuidData = {
     body?: {
         /**
-         * Install missing prerequisites and Docker. This can restart the Docker daemon.
+         * Install missing prerequisites and Docker, then start the proxy. This can restart the Docker daemon. Needs the deploy permission.
          */
         install?: boolean;
     };
@@ -9302,6 +10507,10 @@ export type ValidateServerByUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission to install the server.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -9408,6 +10617,10 @@ export type CreateServiceData = {
          */
         docker_compose_raw?: string;
         /**
+         * Connect the service to the predefined docker network.
+         */
+        connect_to_docker_network?: boolean;
+        /**
          * Array of URLs to be applied to containers of a service.
          */
         urls?: Array<{
@@ -9428,6 +10641,10 @@ export type CreateServiceData = {
          * Escape special characters in labels. By default, $ (and other chars) is escaped. If you want to use env variables inside the labels, turn this off.
          */
         is_container_label_escape_enabled?: boolean;
+        /**
+         * Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.
+         */
+        redact_all_env_values_in_logs?: boolean;
         /**
          * Tags to assign to the service.
          */
@@ -9514,7 +10731,7 @@ export type DeleteServiceByUuidData = {
          */
         delete_volumes?: boolean;
         /**
-         * Run docker cleanup.
+         * Run docker cleanup when the server disk usage is at or above its cleanup threshold. Skipped when a cleanup ran on the server in the last hour.
          */
         docker_cleanup?: boolean;
         /**
@@ -9539,10 +10756,23 @@ export type DeleteServiceByUuidErrors = {
         message?: string;
     };
     /**
+     * The token needs the write and deploy permissions.
+     */
+    403: unknown;
+    /**
      * Resource not found.
      */
     404: {
         message?: string;
+    };
+    /**
+     * Validation error.
+     */
+    422: {
+        message?: string;
+        errors?: {
+            [key: string]: Array<string>;
+        };
     };
 };
 
@@ -9649,6 +10879,14 @@ export type UpdateServiceByUuidData = {
          * Escape special characters in labels. By default, $ (and other chars) is escaped. If you want to use env variables inside the labels, turn this off.
          */
         is_container_label_escape_enabled?: boolean;
+        /**
+         * Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.
+         */
+        redact_all_env_values_in_logs?: boolean;
+        /**
+         * Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.
+         */
+        include_coolify_default_variables?: boolean;
     };
     path: {
         /**
@@ -9782,10 +11020,6 @@ export type UpdateEnvByServiceUuidData = {
          */
         value: string;
         /**
-         * The flag to indicate if the environment variable is used in preview deployments.
-         */
-        is_preview?: boolean;
-        /**
          * The flag to indicate if the environment variable is a literal, nothing espaced.
          */
         is_literal?: boolean;
@@ -9794,7 +11028,7 @@ export type UpdateEnvByServiceUuidData = {
          */
         is_multiline?: boolean;
         /**
-         * The flag to indicate if the environment variable's value is shown on the UI.
+         * If true, the saved value is hidden in the UI and API responses. A lock is permanent: false does not unlock a locked variable, but a new value can still replace the locked one. MCP never returns environment variable values.
          */
         is_shown_once?: boolean;
     };
@@ -9863,10 +11097,6 @@ export type CreateEnvByServiceUuidData = {
          */
         value?: string;
         /**
-         * The flag to indicate if the environment variable is used in preview deployments.
-         */
-        is_preview?: boolean;
-        /**
          * The flag to indicate if the environment variable is a literal, nothing espaced.
          */
         is_literal?: boolean;
@@ -9875,7 +11105,7 @@ export type CreateEnvByServiceUuidData = {
          */
         is_multiline?: boolean;
         /**
-         * The flag to indicate if the environment variable's value is shown on the UI.
+         * If true, the saved value is hidden in the UI and API responses. A lock is permanent: false does not unlock a locked variable, but a new value can still replace the locked one. MCP never returns environment variable values.
          */
         is_shown_once?: boolean;
     };
@@ -9947,10 +11177,6 @@ export type UpdateEnvsByServiceUuidData = {
              */
             value?: string;
             /**
-             * The flag to indicate if the environment variable is used in preview deployments.
-             */
-            is_preview?: boolean;
-            /**
              * The flag to indicate if the environment variable is a literal, nothing espaced.
              */
             is_literal?: boolean;
@@ -9959,7 +11185,7 @@ export type UpdateEnvsByServiceUuidData = {
              */
             is_multiline?: boolean;
             /**
-             * The flag to indicate if the environment variable's value is shown on the UI.
+             * If true, the saved value is hidden in the UI and API responses. A lock is permanent: false does not unlock a locked variable, but a new value can still replace the locked one. MCP never returns environment variable values.
              */
             is_shown_once?: boolean;
         }>;
@@ -10121,7 +11347,7 @@ export type StopServiceByUuidData = {
     };
     query?: {
         /**
-         * Perform docker cleanup (prune networks, volumes, etc.).
+         * Run docker cleanup when the server disk usage is at or above its cleanup threshold. Skipped when a cleanup ran on the server in the last hour.
          */
         docker_cleanup?: boolean;
     };
@@ -10294,11 +11520,7 @@ export type UpdateStorageByServiceUuidData = {
          */
         mount_path?: string;
         /**
-         * The host path (persistent only, not allowed for read-only storages).
-         */
-        host_path?: string;
-        /**
-         * The file content (file only, not allowed for read-only storages).
+         * The file content (file only, not allowed for read-only storages). Changing the content needs the deploy permission.
          */
         content?: string;
     };
@@ -10325,6 +11547,10 @@ export type UpdateStorageByServiceUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission to change the content of a file outside the resource directory.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
@@ -10374,11 +11600,7 @@ export type CreateStorageByServiceUuidData = {
          */
         mount_path: string;
         /**
-         * The host path (persistent only, optional).
-         */
-        host_path?: string;
-        /**
-         * File content (file only, optional).
+         * File content (file only, optional). Needs the deploy ability when set.
          */
         content?: string;
         /**
@@ -10386,7 +11608,7 @@ export type CreateStorageByServiceUuidData = {
          */
         is_directory?: boolean;
         /**
-         * Host directory path (required when is_directory is true).
+         * Host path. Required for directory mounts and host file mounts. Optional for file mounts with content (default: inside the resource directory). An absolute path can be anywhere on the host; a relative path is inside the resource directory. A directory or file mount outside the resource directory needs a token with the deploy permission. Coolify never deletes a path outside the resource directory.
          */
         fs_path?: string;
     };
@@ -10413,6 +11635,10 @@ export type CreateStorageByServiceUuidErrors = {
     401: {
         message?: string;
     };
+    /**
+     * The token needs the deploy permission for a mount outside the resource directory or for a file storage with content.
+     */
+    403: unknown;
     /**
      * Resource not found.
      */
